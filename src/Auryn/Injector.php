@@ -10,7 +10,7 @@ interface Injector {
      * @param string $className
      * @param array $customDefinition
      */
-    function make($className, array $customDefinition);
+    function make($className, array $customDefinition = NULL);
     
     /**
      * Defines custom instantiation parameters for the specified class
