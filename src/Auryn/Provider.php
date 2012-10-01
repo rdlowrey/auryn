@@ -12,6 +12,11 @@ use InvalidArgumentException,
 class Provider implements Injector {
     
     /**
+     * @var string
+     */
+    const RAW_INJECTION_PREFIX = ':';
+    
+    /**
      * @var array
      */
     private $injectionDefinitions = array();
@@ -449,7 +454,7 @@ class Provider implements Injector {
                 continue;
             }
             
-            $rawParamKey = ":$paramName";
+            $rawParamKey = self::RAW_INJECTION_PREFIX . $paramName;
             if (isset($definition[$rawParamKey])) {
                 $instanceArgs[] = $definition[$rawParamKey];
                 continue;
