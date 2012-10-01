@@ -1,0 +1,39 @@
+<phpunit bootstrap="./bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="Unit-Tests">
+            <directory>./src</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist addUncoveredFilesFromWhitelist="true">
+            <directory>../src/Auryn</directory>
+            <exclude>
+                <file>../src/Auryn/ReflectionStorage.php</file>
+                <file>../src/Auryn/InjectionException.php</file>
+                <file>../src/Auryn/InvalidImplementationException.php</file>
+                <file>../src/Auryn/Injector.php</file>
+            </exclude>
+        </whitelist>
+    </filter>
+    
+    <logging>
+        <log
+            type="coverage-text"
+            target="php://stdout"
+            lowUpperBound="35"
+            highLowerBound="70"
+        />
+        <!-- uncomment below to generate HTML code coverage reports -->
+        <!--
+        <log
+            type="coverage-html"
+            target="./coverage"
+            charset="UTF-8"
+            yui="true"
+            lowUpperBound="35"
+            highLowerBound="70"
+            showUncoveredFiles="true"
+        />
+        -->
+    </logging>
+</phpunit>
