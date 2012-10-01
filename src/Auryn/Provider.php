@@ -6,7 +6,6 @@ use InvalidArgumentException,
     OutOfBoundsException,
     ReflectionClass,
     ReflectionException,
-    ArrayAccess,
     Traversable,
     StdClass;
 
@@ -76,11 +75,10 @@ class Provider implements Injector {
     /**
      * Defines a custom injection definition for the specified class
      * 
-     * @param string $class      Class name
-     * @param mixed  $definition An associative array matching constructor
-     *                           parameters to custom values
-     * 
+     * @param string $className
+     * @param array $injectionDefinition An associative array matching constructor params to values
      * @return void
+     * @throws InjectionException
      */
     public function define($className, array $injectionDefinition) {
         $this->validateInjectionDefinition($injectionDefinition);
@@ -88,7 +86,11 @@ class Provider implements Injector {
         $this->injectionDefinitions[$lowClass] = $injectionDefinition;
     }
     
-    private function validateInjectionDefinition($injectionDefinition) {
+    /**
+     * @param array $injectionDefinition
+     * @throws InjectionException
+     */
+    private function validateInjectionDefinition(array $injectionDefinition) {
         foreach ($injectionDefinition as $paramName => $value) {
             if (0 !== strpos($paramName, ':') && !is_string($value)) {
                 throw new InjectionException(
@@ -104,7 +106,6 @@ class Provider implements Injector {
      * Retrieves the custom definition for the specified class
      * 
      * @param string $className
-     * 
      * @return array
      */
     public function getDefinition($className) {
@@ -119,7 +120,6 @@ class Provider implements Injector {
      * Determines if an injection definition exists for the given class name
      * 
      * @param string $class Class name
-     * 
      * @return bool Returns true if a definition is stored or false otherwise
      */
     public function isDefined($class) {
@@ -131,7 +131,6 @@ class Provider implements Injector {
      * Defines multiple injection definitions at one time
      * 
      * @param mixed $iterable The variable to iterate over: an array, StdClass or Traversable
-     * 
      * @return int Returns the number of definitions stored by the operation.
      */
     public function defineAll($iterable) {
@@ -158,7 +157,6 @@ class Provider implements Injector {
      * Clear a previously defined injection definition
      * 
      * @param string $class Class name
-     * 
      * @return void
      */
     public function clearDefinition($class) {
@@ -180,7 +178,6 @@ class Provider implements Injector {
      * 
      * @param string $nonConcreteType
      * @param string $className
-     * 
      * @return void
      */
     public function implement($nonConcreteType, $className) {
@@ -192,9 +189,8 @@ class Provider implements Injector {
      * Retrive the assigned implementation class for the non-concrete type
      * 
      * @param string $nonConcreteType
-     * 
      * @return string Returns the concrete class implementation name
-     * @throws OutOfBoundsException
+     * @throws \OutOfBoundsException
      */
     public function getImplementation($nonConcreteType) {
         if (!$this->isImplemented($nonConcreteType)) {
@@ -210,7 +206,6 @@ class Provider implements Injector {
      * Determines if an implementation is specified for the non-concrete type
      * 
      * @param string $nonConcreteType
-     * 
      * @return bool
      */
     public function isImplemented($nonConcreteType) {
@@ -222,7 +217,6 @@ class Provider implements Injector {
      * Defines multiple type implementations at one time
      * 
      * @param mixed $iterable The variable to iterate over: an array, StdClass or Traversable
-     * 
      * @return int Returns the number of implementations stored by the operation.
      */
     public function implementAll($iterable) {
@@ -249,7 +243,6 @@ class Provider implements Injector {
      * Clears an existing implementation definition for the non-concrete type
      * 
      * @param string $nonConcreteType
-     * 
      * @return void
      */
     public function clearImplementation($nonConcreteType) {
@@ -261,7 +254,6 @@ class Provider implements Injector {
      * Clears an existing implementation definition for the non-concrete type
      * 
      * @param string $nonConcreteType
-     * 
      * @return void
      */
     public function clearAllImplementations() {
@@ -280,7 +272,6 @@ class Provider implements Injector {
      * class it's instance will be stored and shared.
      * 
      * @param mixed $classNameOrInstance
-     * 
      * @return void
      * @throws InvalidArgumentException
      */
@@ -327,7 +318,6 @@ class Provider implements Injector {
      * Determines if a given class name is marked as shared
      * 
      * @param string $class Class name
-     * 
      * @return bool Returns true if a shared instance is stored or false if not
      */
     public function isShared($class) {
@@ -340,7 +330,6 @@ class Provider implements Injector {
      * Forces re-instantiation of a shared class the next time it's requested
      * 
      * @param string $class Class name
-     * 
      * @return void
      */
     public function refresh($class) {
@@ -354,7 +343,6 @@ class Provider implements Injector {
      * Unshares the specified class
      * 
      * @param string $class Class name
-     * 
      * @return void
      */
     public function unshare($class) {
@@ -398,7 +386,8 @@ class Provider implements Injector {
     }
     
     /**
-     * 
+     * @param string $className
+     * @return mixed
      */
     private function buildWithoutConstructorParams($className) {
         if ($this->isInstantiable($className)) {
@@ -420,11 +409,13 @@ class Provider implements Injector {
      * @return bool
      */
     private function isInstantiable($className) {
-        return $this->reflStorage->getClass($className)->isInstantiable();
+        $reflInstance = $this->reflStorage->getClass($className);
+        return $reflInstance ->isInstantiable();
     }
     
     /**
-     * 
+     * @param string $interfaceOrAbstractName
+     * @return mixed
      */
     private function buildImplementation($interfaceOrAbstractName) {
         $implClass = $this->getImplementation($interfaceOrAbstractName);
@@ -441,6 +432,8 @@ class Provider implements Injector {
     }
     
     /**
+     * @param arrayarray $reflectedCtorParams
+     * @param array $definition
      * @return array
      * @throws InjectionException 
      */
@@ -480,7 +473,11 @@ class Provider implements Injector {
     }
     
     /**
-     * 
+     * @param string $typehint
+     * @param string $paramName
+     * @param int $argNum
+     * @return mixed
+     * @throws InjectionException
      */
     private function buildAbstractTypehintParam($typehint, $paramName, $argNum) {
         if ($this->isImplemented($typehint)) {
