@@ -69,7 +69,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
-     * @expectedException Auryn\InvalidImplementationException
+     * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionOnInvalidImplementationTypeMismatch() {
         $provider = new Provider(new ReflectionPool);
