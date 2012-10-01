@@ -140,4 +140,14 @@ interface Injector {
      * @param string $className
      */
     function unshare($className);
+
+    /**
+     * Delegates the creation of $class to $callable.  Passes $class to $callable as the only
+     * argument
+     *
+     * @param string $class
+     * @param callable $callable
+     * @throws \BadFunctionCallException
+     */
+    public function delegate($class, $callable);
 }
