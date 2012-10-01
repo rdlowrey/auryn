@@ -269,6 +269,75 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInternalType('float', $obj->float);
         $this->assertInternalType('bool', $obj->bool);
     }
+
+    /**
+     * @covers Auryn\Provider::make
+     * @expectedException Auryn\InjectionException
+     */
+    public function testMakeThrowsExceptionWhenDelegateDoes() {
+        $provider= new Provider(new ReflectionPool);
+
+        $callable = $this->getMock(
+            'CallableMock',
+            array('__invoke')
+        );
+
+        $provider->delegate('TestDependency', $callable);
+
+        $callable->expects($this->once())
+            ->method('__invoke')
+            ->with('TestDependency')
+            ->will($this->throwException(new Auryn\InjectionException()));
+
+        $provider->make('TestDependency');
+    }
+    /**
+     * @covers Auryn\Provider::make
+     * @expectedException Auryn\InjectionException
+     */
+    public function testMakeThrowsExceptionWhenDelegateFailsToCreateObject() {
+        $provider= new Provider(new ReflectionPool);
+
+        $callable = $this->getMock(
+            'CallableMock',
+            array('__invoke')
+        );
+
+        $provider->delegate('TestDependency', $callable);
+
+        $callable->expects($this->once())
+            ->method('__invoke')
+            ->with('TestDependency')
+            ->will($this->returnValue(new Auryn\InjectionException()));
+
+        $provider->make('TestDependency');
+
+        $this->assertInstanceOf('TestDependency', $obj);
+    }
+
+    /**
+     * @covers Auryn\Provider::delegate
+     * @covers Auryn\Provider::make
+     * @covers Auryn\Provider::isDelegated
+     */
+    public function testMakeDelegate() {
+        $provider= new Provider(new ReflectionPool);
+
+        $callable = $this->getMock(
+            'CallableMock',
+            array('__invoke')
+        );
+        $callable->expects($this->once())
+            ->method('__invoke')
+            ->with('TestDependency')
+            ->will($this->returnValue(new TestDependency()));
+
+        $provider->delegate('TestDependency', $callable);
+
+        $obj = $provider->make('TestDependency');
+
+        $this->assertInstanceOf('TestDependency', $obj);
+    }
     
     public function provideInvalidRawDefinitions() {
         return array(
@@ -570,6 +639,16 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider(new ReflectionPool);
         $provider->getImplementation('InterfaceThatIsNotSetWithAnImplementation');
     }
+
+    /**
+     * @covers Auryn\Provider::delegate
+     * @covers Auryn\Provider::make
+     * @expectedException BadFunctionCallException
+     */
+    public function testDelegateThrowsExceptionIfDelegateIsNotCallable() {
+        $provider= new Provider(new ReflectionPool);
+        $provider->delegate('TestDependency', 'I am not callable');
+    }
 }
 
 class TestNoConstructor {}
@@ -668,6 +747,12 @@ class ProviderTestRawCtorParams {
         $this->array = $array;
         $this->float = $float;
         $this->bool = $bool;
+    }
+}
+
+class CallableMock {
+    function __invoke() {
+
     }
 }
 

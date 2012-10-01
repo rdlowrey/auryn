@@ -2,9 +2,9 @@
 
 namespace Auryn;
 
-use InvalidArgumentException,
+use BadFunctionCallException,
+    InvalidArgumentException,
     OutOfBoundsException,
-    ReflectionClass,
     ReflectionException,
     Traversable,
     StdClass;
@@ -30,7 +30,12 @@ class Provider implements Injector {
      * @var array
      */
     private $sharedClasses = array();
-    
+
+    /**
+     * @var array
+     */
+    private $delegatedClasses = array();
+
     /**
      * @var ReflectionStorage
      */
@@ -53,22 +58,39 @@ class Provider implements Injector {
      * @return mixed A dependency-injected object
      * @throws InjectionException
      */
-    public function make($class, array $customDefinition = null) {
+    public function make($class, array $customDefinition = NULL) {
         $lowClass = strtolower($class);
         
         if (isset($this->sharedClasses[$lowClass])) {
             return $this->sharedClasses[$lowClass];
         }
-        
-        if (!is_null($customDefinition)) {
-            $definition = $customDefinition;
-        } elseif ($this->isDefined($class)) {
-            $definition = $this->injectionDefinitions[$lowClass];
+        if ($this->isDelegated($lowClass)) {
+            try {
+                $obj = call_user_func($this->delegatedClasses[$lowClass], $class);
+            } catch (\Exception $error) {
+                throw new InjectionException(
+                    "Delegated function threw an exception while creating '$class'",
+                    0,
+                    $error
+                );
+            }
+
+            if (!($obj instanceof $class)) {
+                throw new InjectionException(
+                    "Delegated function did not create an instance of '$class'"
+                );
+            }
         } else {
-            $definition = array();
+            if (!is_null($customDefinition)) {
+                $definition = $customDefinition;
+            } elseif ($this->isDefined($class)) {
+                $definition = $this->injectionDefinitions[$lowClass];
+            } else {
+                $definition = array();
+            }
+
+            $obj = $this->getInjectedInstance($class, $definition);
         }
-        
-        $obj = $this->getInjectedInstance($class, $definition);
         
         if ($this->isShared($lowClass)) {
             $this->sharedClasses[$lowClass] = $obj;
@@ -283,7 +305,7 @@ class Provider implements Injector {
     public function share($classNameOrInstance) {
         if (is_string($classNameOrInstance)) {
             $lowClass = strtolower($classNameOrInstance);
-            $this->sharedClasses[$lowClass] = null;
+            $this->sharedClasses[$lowClass] = NULL;
         } elseif (is_object($classNameOrInstance)) {
             $lowClass = strtolower(get_class($classNameOrInstance));
             $this->sharedClasses[$lowClass] = $classNameOrInstance;
@@ -340,7 +362,7 @@ class Provider implements Injector {
     public function refresh($class) {
         $lowClass = strtolower($class);
         if (isset($this->sharedClasses[$lowClass])) {
-            $this->sharedClasses[$lowClass] = null;
+            $this->sharedClasses[$lowClass] = NULL;
         }
     }
     
@@ -353,6 +375,24 @@ class Provider implements Injector {
     public function unshare($class) {
         $lowClass = strtolower($class);
         unset($this->sharedClasses[$lowClass]);
+    }
+
+    /**
+     * Delegates the creation of $class to $callable.  Passes $class to $callable as the only
+     * argument
+     *
+     * @param string $class
+     * @param callable $callable
+     * @throws \BadFunctionCallException
+     */
+    public function delegate($class, $callable) {
+        if (!is_callable($callable)) {
+            throw new BadFunctionCallException(
+                get_class($this) . '::delegate expects the second parameter to be callable'
+            );
+        }
+
+        $this->delegatedClasses[strtolower($class)] = $callable;
     }
     
     /**
@@ -367,7 +407,7 @@ class Provider implements Injector {
             throw new InjectionException(
                 "Provider instantiation failure: $className doesn't exist".
                 ' and could not be found by any registered autoloaders.',
-                null, $e
+                NULL, $e
             );
         }
         
@@ -471,7 +511,7 @@ class Provider implements Injector {
             } elseif ($reflectedParam->isDefaultValueAvailable()) {
                 $instanceArgs[] = $reflectedParam->getDefaultValue();
             } else {
-                $instanceArgs[] = null;
+                $instanceArgs[] = NULL;
             }
         }
         
@@ -493,7 +533,7 @@ class Provider implements Injector {
                 throw new InjectionException(
                     'Bad implementation definition encountered while attempting to provision ' .
                     "non-concrete parameter \$$paramName of type $typehint at argument $argNum",
-                    null,
+                    NULL,
                     $e
                 );
             }
@@ -503,5 +543,9 @@ class Provider implements Injector {
             'Injection definition/implementation required for non-concrete constructor '.
             "parameter \$$paramName of type $typehint at argument $argNum"
         );
+    }
+
+    private function isDelegated($class) {
+        return array_key_exists($class, $this->delegatedClasses);
     }
 }
