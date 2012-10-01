@@ -3,20 +3,20 @@
 namespace Auryn;
  
 interface Injector {
-    
+
     /**
      * Auto-injects class constructor dependencies
-     * 
-     * @param string $class
-     * @param array  $customDefinition
+     *
+     * @param string $className
+     * @param array $customDefinition
      */
     function make($className, array $customDefinition);
     
     /**
      * Defines custom instantiation parameters for the specified class
      * 
-     * @param string $class
-     * @param array  $injectionDefinition
+     * @param string $className
+     * @param array $injectionDefinition
      */
     function define($className, array $injectionDefinition);
     
