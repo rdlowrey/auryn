@@ -460,6 +460,7 @@ class Provider implements Injector {
     
     /**
      * @param string $interfaceOrAbstractName
+     * @throws InjectionException
      * @return mixed
      */
     private function buildImplementation($interfaceOrAbstractName) {
@@ -468,7 +469,7 @@ class Provider implements Injector {
         $implRefl  = $this->reflStorage->getClass($implClass);
         
         if (!$implRefl->isSubclassOf($interfaceOrAbstractName)) {
-            throw new InvalidImplementationException(
+            throw new InjectionException(
                 "Bad implementation: {$implRefl->name} does not implement $interfaceOrAbstractName"
             );
         }
@@ -528,8 +529,8 @@ class Provider implements Injector {
         if ($this->isImplemented($typehint)) {
             try {
                 return $this->buildImplementation($typehint);
-            } catch (InvalidImplementationException $e) {
-                throw new InvalidImplementationException(
+            } catch (InjectionException $e) {
+                throw new InjectionException(
                     'Bad implementation definition encountered while attempting to provision ' .
                     "non-concrete parameter \$$paramName of type $typehint at argument $argNum",
                     NULL,
