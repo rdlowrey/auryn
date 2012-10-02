@@ -24,8 +24,6 @@ interface Injector {
      * Retrieves the assigned definition for the specified class
      * 
      * @param string $className
-     * 
-     * @return array
      */
     function getDefinition($className);
     
@@ -33,15 +31,13 @@ interface Injector {
      * Determines if an injection definition exists for the specified class
      * 
      * @param string $className
-     * @return bool
      */
     function isDefined($className);
     
     /**
      * Defines multiple custom instantiation parameters at once
      * 
-     * @param mixed $iterable The variable to iterate over: an array, StdClass
-     *                        or ArrayAccess instance
+     * @param mixed $iterable The variable to iterate over: an array, StdClass or Traversable
      */
     function defineAll($iterable);
     
@@ -69,8 +65,6 @@ interface Injector {
      * Retrieves the assigned implementation for the non-concrete type
      * 
      * @param string $nonConcreteType
-     * 
-     * @return string Returns the assigned concrete implementation class
      */
     function getImplementation($nonConcreteType);
     
@@ -78,8 +72,6 @@ interface Injector {
      * Determines if an implementation definition exists for the non-concrete type
      * 
      * @param string $nonConcreteType
-     * 
-     * @return bool
      */
     function isImplemented($nonConcreteType);
     
@@ -87,8 +79,6 @@ interface Injector {
      * Defines multiple type implementations at one time
      * 
      * @param mixed $iterable The variable to iterate over: an array, StdClass or Traversable
-     * 
-     * @return int Returns the number of implementations stored by the operation.
      */
     public function implementAll($iterable);
     
@@ -122,8 +112,6 @@ interface Injector {
      * Determines if a given class name is marked as shared
      * 
      * @param string $className
-     * 
-     * @return bool
      */
     function isShared($className);
     

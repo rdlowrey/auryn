@@ -24,7 +24,7 @@ class ReflectionPool implements ReflectionStorage {
     private $ctorParams = array();
     
     /**
-     * @var SplObjectStorage
+     * @var \SplObjectStorage
      */
     private $typehints;
     
@@ -32,8 +32,8 @@ class ReflectionPool implements ReflectionStorage {
      * Retrieves and caches the ReflectionClass objects
      * 
      * @param string $class The class we want to reflect
-     * @return ReflectionClass
-     * @throws ReflectionException If the class can't be found or autoloaded
+     * @throws \ReflectionException If the class can't be found or autoloaded
+     * @return \ReflectionClass
      */
     public function getClass($class) {
         $lowClass = strtolower($class);
@@ -52,8 +52,7 @@ class ReflectionPool implements ReflectionStorage {
      * Retrieves and caches the class's constructor ReflectionMethod
      * 
      * @param string $class The class whose constructor we want to reflect
-     * @return ReflectionMethod Returns the reflected constructor or NULL if
-     *                          the specified class has no constructor.
+     * @return \ReflectionMethod Returns reflected constructor or NULL if class has no constructor.
      */
     public function getConstructor($class) {
         $lowClass = strtolower($class);
@@ -75,11 +74,8 @@ class ReflectionPool implements ReflectionStorage {
     /**
      * Retrieves and caches constructor parameters for the given class name
      * 
-     * @param string $class The name of the class whose constructor 
-     *                          parameters we'd like to retrieve
-     * 
-     * @return array Returns an array of ReflectionParameter objects or 
-     *               NULL if no constructor exists for the class.
+     * @param string $class The class whose constructor parameters we're retrieving
+     * @return array An array of ReflectionParameter objects or NULL if no constructor exists
      */
     public function getConstructorParameters($class) {
         $lowClass = strtolower($class);
@@ -111,8 +107,7 @@ class ReflectionPool implements ReflectionStorage {
      * already have it cached.
      * 
      * @param ReflectionParameter $reflParam
-     * @return string Returns the typehinted class name of the given parameter
-     *                or NULL if none exists.
+     * @return string The typehinted class name of the given parameter or NULL if none
      */
     public function getTypehint(ReflectionParameter $reflParam) {
         if (empty($this->typehints)) {
