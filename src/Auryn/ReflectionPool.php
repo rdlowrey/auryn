@@ -21,19 +21,19 @@ class ReflectionPool implements ReflectionStorage {
     /**
      * @var array
      */ 
-    private $ctorParams = array();
+    private $constructorParams = array();
     
     /**
      * @var SplObjectStorage
      */
-    private $typehints;
+    private $typeHints;
     
     /**
      * Retrieves and caches the ReflectionClass objects
      * 
      * @param string $class The class we want to reflect
+     * @throws \ReflectionException If the class can't be found or auto-loaded
      * @return ReflectionClass
-     * @throws ReflectionException If the class can't be found or autoloaded
      */
     public function getClass($class) {
         $lowClass = strtolower($class);
@@ -42,17 +42,17 @@ class ReflectionPool implements ReflectionStorage {
             return $this->classes[$lowClass];
         }
         
-        $reflClass = new ReflectionClass($class);
-        $this->classes[$lowClass] = $reflClass;
+        $reflectionClass = new ReflectionClass($class);
+        $this->classes[$lowClass] = $reflectionClass;
         
-        return $reflClass;
+        return $reflectionClass;
     }
     
     /**
      * Retrieves and caches the class's constructor ReflectionMethod
      * 
      * @param string $class The class whose constructor we want to reflect
-     * @return ReflectionMethod Returns the reflected constructor or NULL if
+     * @return \ReflectionMethod Returns the reflected constructor or NULL if
      *                          the specified class has no constructor.
      */
     public function getConstructor($class) {
@@ -64,12 +64,12 @@ class ReflectionPool implements ReflectionStorage {
             return $this->constructors[$lowClass];
         }
         
-        $reflClass = $this->getClass($class);
-        $reflCtor  = $reflClass->getConstructor();
+        $reflectionClass = $this->getClass($class);
+        $reflectionConstructor  = $reflectionClass->getConstructor();
         
-        $this->constructors[$lowClass] = $reflCtor;
+        $this->constructors[$lowClass] = $reflectionConstructor;
         
-        return $reflCtor;
+        return $reflectionConstructor;
     }
     
     /**
@@ -77,65 +77,66 @@ class ReflectionPool implements ReflectionStorage {
      * 
      * @param string $class The name of the class whose constructor 
      *                          parameters we'd like to retrieve
-     * 
-     * @return array Returns an array of ReflectionParameter objects or 
-     *               NULL if no constructor exists for the class.
+     *
+     * @return array[ReflectionParameter] Returns an array of
+     *               ReflectionParameter objects or NULL if no
+     *               constructor exists for the class.
      */
     public function getConstructorParameters($class) {
         $lowClass = strtolower($class);
         
-        if (isset($this->ctorParams[$lowClass])
-            || array_key_exists($lowClass, $this->ctorParams)
+        if (isset($this->constructorParams[$lowClass])
+            || array_key_exists($lowClass, $this->constructorParams)
         ) {
-            return $this->ctorParams[$lowClass];
+            return $this->constructorParams[$lowClass];
         }
         
-        if ($reflCtor = $this->getConstructor($class)) {
-            $ctorParams = $reflCtor->getParameters();
+        if ($reflectionConstructor = $this->getConstructor($class)) {
+            $constructorParameters = $reflectionConstructor->getParameters();
         } else {
-            $ctorParams = NULL;
+            $constructorParameters = NULL;
         }
         
-        $this->ctorParams[$lowClass] = $ctorParams;
+        $this->constructorParams[$lowClass] = $constructorParameters;
         
-        return $ctorParams;
+        return $constructorParameters;
     }
     
     /**
-     * Retrieves the class typehint from a given ReflectionParameter
+     * Retrieves the class type-hint from a given ReflectionParameter
      * 
-     * There is no way to directly access a parameter's typehint without
+     * There is no way to directly access a parameter's type-hint without
      * instantiating a new ReflectionClass instance and calling its getName()
      * method. This method stores the results of this approach so that if
-     * the same parameter typehint or ReflectionClass is needed again we
+     * the same parameter type-hint or ReflectionClass is needed again we
      * already have it cached.
      * 
-     * @param ReflectionParameter $reflParam
-     * @return string Returns the typehinted class name of the given parameter
+     * @param ReflectionParameter $reflectionParameter
+     * @return string Returns the type-hinted class name of the given parameter
      *                or NULL if none exists.
      */
-    public function getTypehint(ReflectionParameter $reflParam) {
-        if (empty($this->typehints)) {
-            $this->typehints = new SplObjectStorage;
+    public function getTypeHint(ReflectionParameter $reflectionParameter) {
+        if (empty($this->typeHints)) {
+            $this->typeHints = new SplObjectStorage;
         }
         
-        if ($this->typehints->contains($reflParam)) {
-            return $this->typehints->offsetGet($reflParam);
+        if ($this->typeHints->contains($reflectionParameter)) {
+            return $this->typeHints->offsetGet($reflectionParameter);
         }
         
-        if ($reflClass = $reflParam->getClass()) {
-            $class = $reflClass->getName();
+        if ($reflectionClass = $reflectionParameter->getClass()) {
+            $class = $reflectionClass->getName();
             $lowClass  = strtolower($class);
             if (!isset($this->classes[$lowClass])) {
-                $this->classes[$lowClass] = $reflClass;
+                $this->classes[$lowClass] = $reflectionClass;
             }
-            $typehint = $class;
+            $typeHint = $class;
         } else {
-            $typehint = NULL;
+            $typeHint = NULL;
         }
         
-        $this->typehints->attach($reflParam, $typehint);
+        $this->typeHints->attach($reflectionParameter, $typeHint);
         
-        return $typehint;
+        return $typeHint;
     }
 }

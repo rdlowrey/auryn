@@ -10,6 +10,7 @@ interface ReflectionStorage {
      * Retrieves ReflectionClass instances, caching them for future retrieval
      * 
      * @param string $class
+     * @return \ReflectionClass
      */
     function getClass($class);
     
@@ -17,6 +18,7 @@ interface ReflectionStorage {
      * Retrieves and caches the constructor (ReflectionMethod) for the specified class
      * 
      * @param string $class
+     * @return \ReflectionMethod
      */
     function getConstructor($class);
     
@@ -24,19 +26,20 @@ interface ReflectionStorage {
      * Retrieves and caches an array of constructor parameters for the given class
      * 
      * @param string $class
+     * @return array[ReflectionParameter]
      */
     function getConstructorParameters($class);
     
     /**
-     * Retrieves the class typehint from a given ReflectionParameter
+     * Retrieves the class type-hint from a given ReflectionParameter
      * 
-     * There is no way to directly access a parameter's typehint without
+     * There is no way to directly access a parameter's type-hint without
      * instantiating a new ReflectionClass instance and calling its getName()
      * method. This method stores the results of this approach so that if
-     * the same parameter typehint or ReflectionClass is needed again we
+     * the same parameter type-hint or ReflectionClass is needed again we
      * already have it cached.
      * 
-     * @param ReflectionParameter $reflParam
+     * @param ReflectionParameter $reflectionParameter
      */
-    function getTypehint(ReflectionParameter $reflParam);
+    function getTypeHint(ReflectionParameter $reflectionParameter);
 }

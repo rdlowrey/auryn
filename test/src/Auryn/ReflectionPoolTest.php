@@ -95,7 +95,7 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @depends testGetCtorParamsRetrievesCachedReflectionIfAvailable
-     * @covers Auryn\ReflectionPool::getTypehint
+     * @covers Auryn\ReflectionPool::getTypeHint
      */
     public function testGetTypehintRetrievesNewClassNameIfNotStoredForParam($rc)
     {
@@ -108,7 +108,7 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @depends testGetTypehintRetrievesNewClassNameIfNotStoredForParam
-     * @covers Auryn\ReflectionPool::getTypehint
+     * @covers Auryn\ReflectionPool::getTypeHint
      */
     public function testGetTypehintFetchesCachedParamTypehintIfAvailable($rc)
     {
@@ -121,7 +121,7 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @depends testGetTypehintFetchesCachedParamTypehintIfAvailable
-     * @covers Auryn\ReflectionPool::getTypehint
+     * @covers Auryn\ReflectionPool::getTypeHint
      */
     public function testGetTypehintStoresNewReflectionClassIfFound($rc)
     {
@@ -136,7 +136,7 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @depends testGetTypehintStoresNewReflectionClassIfFound
-     * @covers Auryn\ReflectionPool::getTypehint
+     * @covers Auryn\ReflectionPool::getTypeHint
      */
     public function testGetTypehintReturnsNullIfParamHasNoTypehint($rc)
     {
