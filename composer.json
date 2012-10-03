@@ -1,7 +1,7 @@
 {
-  "name": "rdlowrey/Auryn",
+  "name": "rdlowrey/auryn",
   "homepage": "https://github.com/rdlowrey/Auryn",
-  "description": "Auryn is a Dependency Injection Container (DIC) to assist in the implementation of Inversion of Control (IOC) principles in object-oriented (OO) PHP code.",
+  "description": "Auryn is a Dependency Injection Container designed to wire together S.O.L.I.D., object-oriented PHP applications.",
   "keywords": ["dependency injection", "dic", "ioc"],
   "license": "MIT",
   "authors": [

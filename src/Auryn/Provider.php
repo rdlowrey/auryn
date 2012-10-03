@@ -54,9 +54,8 @@ class Provider implements Injector {
      * 
      * @param string $class Class name
      * @param array  $customDefinition An optional array of custom instantiation parameters
-     * 
-     * @return mixed A dependency-injected object
      * @throws InjectionException
+     * @return mixed A dependency-injected object
      */
     public function make($class, array $customDefinition = NULL) {
         $lowClass = strtolower($class);
@@ -64,6 +63,7 @@ class Provider implements Injector {
         if (isset($this->sharedClasses[$lowClass])) {
             return $this->sharedClasses[$lowClass];
         }
+        
         if ($this->isDelegated($lowClass)) {
             try {
                 $obj = call_user_func($this->delegatedClasses[$lowClass], $class);
@@ -104,8 +104,8 @@ class Provider implements Injector {
      * 
      * @param string $className
      * @param array $injectionDefinition An associative array matching constructor params to values
-     * @return void
      * @throws InjectionException
+     * @return void
      */
     public function define($className, array $injectionDefinition) {
         $this->validateInjectionDefinition($injectionDefinition);
@@ -116,6 +116,7 @@ class Provider implements Injector {
     /**
      * @param array $injectionDefinition
      * @throws InjectionException
+     * @return void
      */
     private function validateInjectionDefinition(array $injectionDefinition) {
         foreach ($injectionDefinition as $paramName => $value) {
@@ -302,7 +303,7 @@ class Provider implements Injector {
      * 
      * @param mixed $classNameOrInstance
      * @return void
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     public function share($classNameOrInstance) {
         if (is_string($classNameOrInstance)) {
@@ -325,7 +326,7 @@ class Provider implements Injector {
      * 
      * @param mixed $arrayOrTraversable
      * @return void
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     public function shareAll($arrayOrTraversable) {
         if (!(is_array($arrayOrTraversable) || $arrayOrTraversable instanceof Traversable)) {
@@ -386,6 +387,7 @@ class Provider implements Injector {
      * @param string $class
      * @param callable $callable
      * @throws \BadFunctionCallException
+     * @return void
      */
     public function delegate($class, $callable) {
         if (!is_callable($callable)) {
@@ -550,7 +552,11 @@ class Provider implements Injector {
             "parameter \$$paramName of type $typehint at argument $argNum"
         );
     }
-
+    
+    /**
+     * @param string $class
+     * @return bool
+     */
     private function isDelegated($class) {
         return array_key_exists($class, $this->delegatedClasses);
     }
