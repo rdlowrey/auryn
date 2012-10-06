@@ -272,6 +272,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @covers Auryn\Provider::make
+     * @covers Auryn\Provider::doDelegation
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionWhenDelegateDoes() {
@@ -293,6 +294,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     /**
      * @covers Auryn\Provider::make
+     * @covers Auryn\Provider::doDelegation
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionWhenDelegateFailsToCreateObject() {
@@ -317,6 +319,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @covers Auryn\Provider::delegate
+     * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::isDelegated
      */
@@ -337,6 +340,42 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $obj = $provider->make('TestDependency');
 
         $this->assertInstanceOf('TestDependency', $obj);
+    }
+    
+    /**
+     * @covers Auryn\Provider::doDelegation
+     * @covers Auryn\Provider::make
+     * @covers Auryn\Provider::isDelegated
+     */
+    public function testMakeWithStringDelegate() {
+        $provider= new Provider(new ReflectionPool);
+        $provider->delegate('StdClass', 'StringStdClassDelegateMock');
+        $obj = $provider->make('StdClass');
+        $this->assertEquals(42, $obj->test);
+    }
+    
+    /**
+     * @covers Auryn\Provider::doDelegation
+     * @covers Auryn\Provider::make
+     * @covers Auryn\Provider::isDelegated
+     * @expectedException Auryn\InjectionException
+     */
+    public function testMakeThrowsExceptionIfStringDelegateClassHasNoInvokeMethod() {
+        $provider= new Provider(new ReflectionPool);
+        $provider->delegate('StdClass', 'StringDelegateWithNoInvokeMethod');
+        $obj = $provider->make('StdClass');
+    }
+    
+    /**
+     * @covers Auryn\Provider::doDelegation
+     * @covers Auryn\Provider::make
+     * @covers Auryn\Provider::isDelegated
+     * @expectedException Auryn\InjectionException
+     */
+    public function testMakeThrowsExceptionIfStringDelegateClassInstantiationFails() {
+        $provider= new Provider(new ReflectionPool);
+        $provider->delegate('StdClass', 'SomeClassThatDefinitelyDoesNotExistForReal');
+        $obj = $provider->make('StdClass');
     }
     
     public function provideInvalidRawDefinitions() {
@@ -617,14 +656,23 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertFalse($provider->isImplemented('DepInterface'));
     }
 
+    public function provideInvalidDelegates() {
+        return array(
+            array(new StdClass),
+            array(42),
+            array(true)
+        );
+    }
+    
     /**
+     * @dataProvider provideInvalidDelegates
      * @covers Auryn\Provider::delegate
      * @covers Auryn\Provider::make
      * @expectedException BadFunctionCallException
      */
-    public function testDelegateThrowsExceptionIfDelegateIsNotCallable() {
+    public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate) {
         $provider= new Provider(new ReflectionPool);
-        $provider->delegate('TestDependency', 'I am not callable');
+        $provider->delegate('TestDependency', $badDelegate);
     }
 }
 
@@ -733,25 +781,15 @@ class CallableMock {
     }
 }
 
+class StringStdClassDelegateMock {
+    function __invoke() {
+        return $this->make();
+    }
+    private function make() {
+        $obj = new StdClass;
+        $obj->test = 42;
+        return $obj;
+    }
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class StringDelegateWithNoInvokeMethod {}

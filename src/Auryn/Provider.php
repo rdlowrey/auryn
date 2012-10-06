@@ -65,21 +65,7 @@ class Provider implements Injector {
         }
         
         if ($this->isDelegated($lowClass)) {
-            try {
-                $obj = call_user_func($this->delegatedClasses[$lowClass], $class);
-            } catch (\Exception $error) {
-                throw new InjectionException(
-                    "Delegated function threw an exception while creating '$class'",
-                    0,
-                    $error
-                );
-            }
-
-            if (!($obj instanceof $class)) {
-                throw new InjectionException(
-                    "Delegated function did not create an instance of '$class'"
-                );
-            }
+            $obj = $this->doDelegation($this->delegatedClasses[$lowClass], $class);
         } else {
             if (!is_null($customDefinition)) {
                 $definition = $customDefinition;
@@ -94,6 +80,60 @@ class Provider implements Injector {
         
         if ($this->isShared($lowClass)) {
             $this->sharedClasses[$lowClass] = $obj;
+        }
+        
+        return $obj;
+    }
+    
+    /**
+     * @param string $class
+     * @return bool
+     */
+    private function isDelegated($class) {
+        return array_key_exists($class, $this->delegatedClasses);
+    }
+    
+    /**
+     * @param mixed $callable
+     * @param string $class
+     * @throws InjectionException
+     * @return mixed
+     */
+    private function doDelegation($callable, $class) {
+        if (is_string($callable)) {
+            try {
+                $callableObj = $this->make($callable);
+            } catch (\Exception $error) {
+                throw new InjectionException(
+                    "Delegate class instantiation failure: $callable",
+                    0,
+                    $error
+                );
+            }
+            if (!is_callable($callableObj, '__invoke')) {
+                throw new InjectionException(
+                    "Delegate class '$callable' must expose a public __invoke method",
+                    0
+                );
+            }
+            
+            $callable = array($callableObj, '__invoke');
+        }
+        
+        try {
+            $obj = call_user_func($callable, $class);
+        } catch (\Exception $error) {
+            throw new InjectionException(
+                "Delegated function threw an exception while creating '$class'",
+                0,
+                $error
+            );
+        }
+
+        if (!($obj instanceof $class)) {
+            throw new InjectionException(
+                "Delegated function did not create an instance of '$class'"
+            );
         }
         
         return $obj;
@@ -343,7 +383,7 @@ class Provider implements Injector {
      * @param string $class Class name
      * @return void
      */
-    public function unShare($class) {
+    public function unshare($class) {
         $lowClass = strtolower($class);
         unset($this->sharedClasses[$lowClass]);
     }
@@ -358,9 +398,10 @@ class Provider implements Injector {
      * @return void
      */
     public function delegate($class, $callable) {
-        if (!is_callable($callable)) {
+        if (!(is_callable($callable) || is_string($callable))) {
             throw new BadFunctionCallException(
-                get_class($this) . '::delegate expects the second parameter to be callable'
+                get_class($this) . '::delegate expects the second parameter to be a valid ' .
+                'callable or string class name'
             );
         }
 
@@ -520,13 +561,5 @@ class Provider implements Injector {
             'Injection definition/implementation required for non-concrete constructor '.
             "parameter \$$paramName of type $typehint at argument $argNum"
         );
-    }
-    
-    /**
-     * @param string $class
-     * @return bool
-     */
-    private function isDelegated($class) {
-        return array_key_exists($class, $this->delegatedClasses);
     }
 }
