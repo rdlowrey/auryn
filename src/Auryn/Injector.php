@@ -21,13 +21,6 @@ interface Injector {
     function define($className, array $injectionDefinition);
     
     /**
-     * Retrieves the assigned definition for the specified class
-     * 
-     * @param string $className
-     */
-    function getDefinition($className);
-    
-    /**
      * Determines if an injection definition exists for the specified class
      * 
      * @param string $className
@@ -62,13 +55,6 @@ interface Injector {
     function implement($nonConcreteType, $className);
     
     /**
-     * Retrieves the assigned implementation for the non-concrete type
-     * 
-     * @param string $nonConcreteType
-     */
-    function getImplementation($nonConcreteType);
-    
-    /**
      * Determines if an implementation definition exists for the non-concrete type
      * 
      * @param string $nonConcreteType
@@ -80,7 +66,7 @@ interface Injector {
      * 
      * @param mixed $iterable The variable to iterate over: an array, StdClass or Traversable
      */
-    public function implementAll($iterable);
+    function implementAll($iterable);
     
     /**
      * Clears an existing implementation class for the specified non-concrete type
@@ -120,14 +106,14 @@ interface Injector {
      * 
      * @param string $className
      */
-    function refresh($className);
+    function refreshShare($className);
     
     /**
      * Unshares the specified class
      * 
      * @param string $className
      */
-    function unshare($className);
+    function unShare($className);
 
     /**
      * Delegates the creation of $class to $callable.  Passes $class to $callable as the only
@@ -137,5 +123,5 @@ interface Injector {
      * @param callable $callable
      * @throws \BadFunctionCallException
      */
-    public function delegate($class, $callable);
+    function delegate($class, $callable);
 }

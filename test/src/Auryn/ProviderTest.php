@@ -373,7 +373,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @covers Auryn\Provider::define
-     * @covers Auryn\Provider::getDefinition
      */
     public function testDefineAssignsPassedDefinition() {
         
@@ -381,7 +380,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $definition = array('dep' => 'DepImplementation');
         $provider->define('RequiresInterface', $definition);
         $this->assertInstanceOf('RequiresInterface', $provider->make('RequiresInterface'));
-        $this->assertEquals($definition, $provider->getDefinition('RequiresInterface'));
     }
     
     /**
@@ -392,16 +390,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         
         $provider = new Provider(new ReflectionPool);
         $provider->defineAll(1);
-    }
-    
-    /**
-     * @covers Auryn\Provider::getDefinition
-     * @expectedException OutOfBoundsException
-     */
-    public function testGetDefinitionThrowsExceptionOnUndefinedClass() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $provider->getDefinition('ClassThatHasntBeenDefined');
     }
     
     /**
@@ -457,9 +445,9 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @covers Auryn\Provider::refresh
+     * @covers Auryn\Provider::refreshShare
      */
-    public function testRefreshClearsSharedInstanceAndReturnsNull() {
+    public function testRefreshShareClearsSharedInstanceAndReturnsNull() {
         
         $provider = new Provider(new ReflectionPool);
         $provider->share('TestDependency');
@@ -467,7 +455,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertTrue($provider->isShared('TestDependency'));
         $obj->testProp = 42;
         
-        $this->assertEquals(null, $provider->refresh('TestDependency'));
+        $this->assertEquals(null, $provider->refreshShare('TestDependency'));
         $this->assertTrue($provider->isShared('TestDependency'));
         $refreshedObj = $provider->make('TestDependency');
         $this->assertEquals('testVal', $refreshedObj->testProp);
@@ -570,7 +558,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @covers Auryn\Provider::implement
-     * @covers Auryn\Provider::getImplementation
      * @covers Auryn\Provider::isImplemented
      */
     public function testImplementAssignsValueAndReturnsNull() {
@@ -578,7 +565,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider(new ReflectionPool);
         $this->assertEquals(null, $provider->implement('DepInterface', 'DepImplementation'));
         $this->assertTrue($provider->isImplemented('DepInterface'));
-        $this->assertEquals('DepImplementation', $provider->getImplementation('DepInterface'));
     }
     
     /**
@@ -629,15 +615,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertTrue($provider->isImplemented('DepInterface'));
         $this->assertEquals(null, $provider->clearImplementation('DepInterface'));
         $this->assertFalse($provider->isImplemented('DepInterface'));
-    }
-    
-    /**
-     * @covers Auryn\Provider::getImplementation
-     * @expectedException OutOfBoundsException
-     */
-    public function testGetImplementationThrowsExceptionIfSpecifiedImplementationDoesntExist() {
-        $provider = new Provider(new ReflectionPool);
-        $provider->getImplementation('InterfaceThatIsNotSetWithAnImplementation');
     }
 
     /**

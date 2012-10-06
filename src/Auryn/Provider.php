@@ -129,21 +129,6 @@ class Provider implements Injector {
             }
         }
     }
-
-    /**
-     * Retrieves the custom definition for the specified class
-     *
-     * @param string $className
-     * @throws \OutOfBoundsException
-     * @return array
-     */
-    public function getDefinition($className) {
-        if (!$this->isDefined($className)) {
-            throw new OutOfBoundsException("No definition specified for $className");
-        }
-        $lowClass = strtolower($className);
-        return $this->injectionDefinitions[$lowClass];
-    }
     
     /**
      * Determines if an injection definition exists for the given class name
@@ -213,23 +198,6 @@ class Provider implements Injector {
     public function implement($nonConcreteType, $className) {
         $lowNonConcrete = strtolower($nonConcreteType);
         $this->nonConcreteImplementations[$lowNonConcrete] = $className;
-    }
-    
-    /**
-     * Retrive the assigned implementation class for the non-concrete type
-     * 
-     * @param string $nonConcreteType
-     * @return string Returns the concrete class implementation name
-     * @throws \OutOfBoundsException
-     */
-    public function getImplementation($nonConcreteType) {
-        if (!$this->isImplemented($nonConcreteType)) {
-            throw new OutOfBoundsException(
-                "The non-concrete typehint $nonConcreteType has no assigned implementation"
-            );
-        }
-        $lowNonConcrete = strtolower($nonConcreteType);
-        return $this->nonConcreteImplementations[$lowNonConcrete];
     }
     
     /**
@@ -362,7 +330,7 @@ class Provider implements Injector {
      * @param string $class Class name
      * @return void
      */
-    public function refresh($class) {
+    public function refreshShare($class) {
         $lowClass = strtolower($class);
         if (isset($this->sharedClasses[$lowClass])) {
             $this->sharedClasses[$lowClass] = NULL;
@@ -375,7 +343,7 @@ class Provider implements Injector {
      * @param string $class Class name
      * @return void
      */
-    public function unshare($class) {
+    public function unShare($class) {
         $lowClass = strtolower($class);
         unset($this->sharedClasses[$lowClass]);
     }
@@ -469,7 +437,8 @@ class Provider implements Injector {
      * @return mixed
      */
     private function buildImplementation($interfaceOrAbstractName) {
-        $implClass = $this->getImplementation($interfaceOrAbstractName);
+        $lowClass  = strtolower($interfaceOrAbstractName);
+        $implClass = $this->nonConcreteImplementations[$lowClass];
         $implObj   = $this->make($implClass);
         $implRefl  = $this->reflectionStorage->getClass($implClass);
         
