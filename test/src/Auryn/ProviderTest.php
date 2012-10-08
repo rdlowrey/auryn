@@ -180,6 +180,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
+     * @covers Auryn\Provider::selectDefinition
      * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::isInstantiable
      */
@@ -412,6 +413,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @covers Auryn\Provider::define
+     * @covers Auryn\Provider::selectDefinition
      */
     public function testDefineAssignsPassedDefinition() {
         

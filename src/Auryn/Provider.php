@@ -67,14 +67,7 @@ class Provider implements Injector {
         if ($this->isDelegated($lowClass)) {
             $obj = $this->doDelegation($this->delegatedClasses[$lowClass], $class);
         } else {
-            if (!is_null($customDefinition)) {
-                $definition = $customDefinition;
-            } elseif ($this->isDefined($class)) {
-                $definition = $this->injectionDefinitions[$lowClass];
-            } else {
-                $definition = array();
-            }
-
+            $definition = $this->selectDefinition($lowClass, $customDefinition);
             $obj = $this->getInjectedInstance($class, $definition);
         }
         
@@ -140,6 +133,21 @@ class Provider implements Injector {
     }
     
     /**
+     * @param string $lowClass
+     * @param array $customDefinition
+     * @return array
+     */
+    private function selectDefinition($lowClass, $customDefinition) {
+        if (!is_null($customDefinition)) {
+            return $customDefinition;
+        } elseif ($this->isDefined($lowClass)) {
+            return $this->injectionDefinitions[$lowClass];
+        } else {
+            return array();
+        }
+    }
+    
+    /**
      * Defines a custom injection definition for the specified class
      * 
      * @param string $className
@@ -160,7 +168,7 @@ class Provider implements Injector {
      */
     private function validateInjectionDefinition(array $injectionDefinition) {
         foreach ($injectionDefinition as $paramName => $value) {
-            if (0 !== strpos($paramName, ':') && !is_string($value)) {
+            if (0 !== strpos($paramName, self::RAW_INJECTION_PREFIX) && !is_string($value)) {
                 throw new InjectionException(
                     "Invalid injection definition for parameter `$paramName`; raw parameter " .
                     "names must be prefixed with `:` (:$paramName) to differentiate them " .
@@ -439,6 +447,7 @@ class Provider implements Injector {
             }
             
             $reflectionClass = $this->reflectionStorage->getClass($className);
+            
             return $reflectionClass->newInstanceArgs($args);
         }
     }
