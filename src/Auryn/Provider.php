@@ -163,8 +163,8 @@ class Provider implements Injector {
             if (0 !== strpos($paramName, ':') && !is_string($value)) {
                 throw new InjectionException(
                     "Invalid injection definition for parameter `$paramName`; raw parameter " .
-                    "names must be prefixed with `r:` (r:$paramName) to differentiate them " .
-                    'from provisionable class names.'
+                    "names must be prefixed with `:` (:$paramName) to differentiate them " .
+                    'from provisionable type-hints.'
                 );
             }
         }
@@ -502,8 +502,11 @@ class Provider implements Injector {
         $instanceArgs = array();
         
         for ($i=0; $i<count($reflectedCtorParams); $i++) {
-            
-            $paramName = $reflectedCtorParams[$i]->name;
+            /**
+             * @var \ReflectionParameter $reflectedParam
+             */
+            $reflectedParam = $reflectedCtorParams[$i];
+            $paramName = $reflectedParam->name;
             
             if (isset($definition[$paramName])) {
                 $instanceArgs[] = $this->make($definition[$paramName]);
@@ -516,10 +519,6 @@ class Provider implements Injector {
                 continue;
             }
 
-            /**
-             * @var \ReflectionParameter $reflectedParam
-             */
-            $reflectedParam = $reflectedCtorParams[$i];
             $typeHint = $this->reflectionStorage->getTypeHint($reflectedParam);
             
             if ($typeHint && $this->isInstantiable($typeHint)) {
