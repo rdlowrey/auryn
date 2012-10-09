@@ -1,0 +1,11 @@
+================================================================================
+v0.2.0
+================================================================================
+- Added ApcReflectionStorage for high-performance environments
+- ReflectionStorage interface change for type-hint retrieval now requires
+the ReflectionMethod along with the ReflectionParameter for improved caching.
+
+================================================================================
+v0.1.0
+================================================================================
+- Initial release
