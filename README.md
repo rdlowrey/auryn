@@ -13,6 +13,9 @@ You can download the latest version of Auryn from the git repository at any time
 $ git clone git://github.com/rdlowrey/Auryn.git
 ```
 
+Additionally, archived tagged release versions are available for manual download on the Github project's
+[Tags](https://github.com/rdlowrey/Auryn/tags) page.
+
 You may also use composer to include Auryn as a dependency in your projects. The relevant package is:
 
 *rdlowrey/auryn*
