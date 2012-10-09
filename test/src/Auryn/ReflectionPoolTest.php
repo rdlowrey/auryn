@@ -3,11 +3,12 @@
 use Auryn\ReflectionPool;
 
 class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
+
     /**
      * @covers Auryn\ReflectionPool::getClass
+     * @covers Auryn\ReflectionPool::storeInCache
      */
-    public function testGetClassRetrievesNewReflectionIfNotCached()
-    {
+    public function testGetClassRetrievesNewReflectionIfNotCached() {
         $rc   = new ReflectionPool;
         $refl = $rc->getClass('Test');
         $this->assertInstanceOf('ReflectionClass', $refl);
@@ -17,11 +18,12 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
     /**
      * @depends testGetClassRetrievesNewReflectionIfNotCached
      * @covers Auryn\ReflectionPool::getClass
+     * @covers Auryn\ReflectionPool::fetchFromCache
+     * @covers Auryn\ReflectionPool::storeInCache
      */
-    public function testGetClassRetrievesCachedReflectionIfAvailable($rc)
-    {
+    public function testGetClassRetrievesCachedReflectionIfAvailable($rc) {
         $cached = $rc->getClass('Test');
-        $new    = new ReflectionPool;
+        $new = new ReflectionPool;
         
         $this->assertFalse($new === $cached);
         $this->assertTrue($rc->getClass('Test') === $cached);
@@ -32,8 +34,7 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
      * @depends testGetClassRetrievesCachedReflectionIfAvailable
      * @covers Auryn\ReflectionPool::getConstructor
      */
-    public function testGetConstructorRetrievesNewReflectionIfNotCached($rc)
-    {
+    public function testGetConstructorRetrievesNewReflectionIfNotCached($rc) {
         $ctor = $rc->getConstructor('Test');
         $this->assertInstanceOf('ReflectionMethod', $ctor);
         return $rc;
@@ -43,8 +44,7 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
      * @depends testGetConstructorRetrievesNewReflectionIfNotCached
      * @covers Auryn\ReflectionPool::getConstructor
      */
-    public function testGetConstructorCachedReflectionIfAvailable($rc)
-    {
+    public function testGetConstructorCachesReflectionIfAvailable($rc) {
         $cached = $rc->getConstructor('Test');
         $new    = $rc->getClass('Test')->getConstructor();
         
@@ -55,11 +55,10 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @depends testGetConstructorCachedReflectionIfAvailable
+     * @depends testGetConstructorCachesReflectionIfAvailable
      * @covers Auryn\ReflectionPool::getConstructorParameters
      */
-    public function testGetCtorParamsRetrievesNewReflectionIfNotCached($rc)
-    {
+    public function testGetCtorParamsRetrievesNewReflectionIfNotCached($rc) {
         $params = $rc->getConstructorParameters('Test');
         $this->assertTrue(is_array($params));
         $this->assertInstanceOf('ReflectionParameter', $params[0]);
@@ -71,8 +70,7 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
      * @depends testGetCtorParamsRetrievesNewReflectionIfNotCached
      * @covers Auryn\ReflectionPool::getConstructorParameters
      */
-    public function testGetCtorParamsReturnsNullIfNoConstructorExists($rc)
-    {
+    public function testGetCtorParamsReturnsNullIfNoConstructorExists($rc) {
         $params = $rc->getConstructorParameters('Param');
         $this->assertNull($params);
         
@@ -83,8 +81,7 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
      * @depends testGetCtorParamsReturnsNullIfNoConstructorExists
      * @covers Auryn\ReflectionPool::getConstructorParameters
      */
-    public function testGetCtorParamsRetrievesCachedReflectionIfAvailable($rc)
-    {
+    public function testGetCtorParamsRetrievesCachedReflectionIfAvailable($rc) {
         $params = $rc->getConstructorParameters('Test');
         $p1 = $rc->getConstructor('Test')->getParameters();
         $this->assertTrue(is_array($p1));
@@ -95,56 +92,54 @@ class ReflectionPoolTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @depends testGetCtorParamsRetrievesCachedReflectionIfAvailable
-     * @covers Auryn\ReflectionPool::getTypeHint
+     * @covers Auryn\ReflectionPool::getParamTypeHint
      */
-    public function testGetTypehintRetrievesNewClassNameIfNotStoredForParam($rc)
-    {
+    public function testGetTypeHintRetrievesNewClassNameIfNotStoredForParam($rc) {
+        $method = $rc->getConstructor('Test');
         $param = $rc->getConstructorParameters('Test');
-        $typehint = $rc->getTypehint($param[0]);
-        $this->assertEquals('Param', $typehint);
+        $typeHint = $rc->getParamTypeHint($method, $param[0]);
+        $this->assertEquals('Param', $typeHint);
         
         return $rc;
     }
     
     /**
-     * @depends testGetTypehintRetrievesNewClassNameIfNotStoredForParam
-     * @covers Auryn\ReflectionPool::getTypeHint
+     * @depends testGetTypeHintRetrievesNewClassNameIfNotStoredForParam
+     * @covers Auryn\ReflectionPool::getParamTypeHint
      */
-    public function testGetTypehintFetchesCachedParamTypehintIfAvailable($rc)
-    {
+    public function testGetTypeHintFetchesCachedParamTypeHintIfAvailable($rc) {
+        $method = $rc->getConstructor('Test');
         $param = $rc->getConstructorParameters('Test');
-        $typehint = $rc->getTypehint($param[0]);
-        $this->assertEquals('Param', $typehint);
+        $typeHint = $rc->getParamTypeHint($method, $param[0]);
+        $this->assertEquals('Param', $typeHint);
         
         return $rc;
     }
     
     /**
-     * @depends testGetTypehintFetchesCachedParamTypehintIfAvailable
-     * @covers Auryn\ReflectionPool::getTypeHint
+     * @depends testGetTypeHintFetchesCachedParamTypeHintIfAvailable
+     * @covers Auryn\ReflectionPool::getParamTypeHint
      */
-    public function testGetTypehintStoresNewReflectionClassIfFound($rc)
-    {
-        $reflMethod = new ReflectionMethod('TypehintTester', 'myMethod');
-        $params = $reflMethod->getParameters();
+    public function testGetTypeHintStoresNewReflectionClassIfFound($rc) {
+        $method = new ReflectionMethod('TypeHintTester', 'myMethod');
+        $params = $method->getParameters();
         
-        $typehint = $rc->getTypehint($params[0]);
-        $this->assertEquals('Typehint', $typehint);
+        $typeHint = $rc->getParamTypeHint($method, $params[0]);
+        $this->assertEquals('TypeHint', $typeHint);
         
         return $rc;
     }
     
     /**
-     * @depends testGetTypehintStoresNewReflectionClassIfFound
-     * @covers Auryn\ReflectionPool::getTypeHint
+     * @depends testGetTypeHintStoresNewReflectionClassIfFound
+     * @covers Auryn\ReflectionPool::getParamTypeHint
      */
-    public function testGetTypehintReturnsNullIfParamHasNoTypehint($rc)
-    {
-        $reflMethod = new ReflectionMethod('TypehintTester', 'myMethod');
-        $params = $reflMethod->getParameters();
+    public function testGetTypeHintReturnsNullIfParamHasNoTypeHint($rc) {
+        $method = new ReflectionMethod('TypeHintTester', 'myMethod');
+        $params = $method->getParameters();
         
-        $typehint = $rc->getTypehint($params[1]);
-        $this->assertEquals(NULL, $typehint);
+        $typeHint = $rc->getParamTypeHint($method, $params[1]);
+        $this->assertEquals(NULL, $typeHint);
         
         return $rc;
     }
@@ -157,11 +152,11 @@ class Test
     public function __construct(Param $param) {}
 }
 
-class Typehint {}
+class TypeHint {}
 
-class TypehintTester 
+class TypeHintTester 
 {
-    public function myMethod(Typehint $arg, $noHint){}
+    public function myMethod(TypeHint $arg, $noHint){}
 }
 
 

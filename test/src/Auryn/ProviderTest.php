@@ -80,7 +80,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
      * @covers Auryn\Provider::buildAbstractTypehintParam
@@ -95,6 +94,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::buildNewInstanceArgs
+     * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
      * @covers Auryn\Provider::buildAbstractTypehintParam
@@ -110,6 +110,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::buildNewInstanceArgs
+     * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
      * @covers Auryn\Provider::buildAbstractTypehintParam
@@ -125,9 +126,10 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::buildNewInstanceArgs
+     * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::isInstantiable
      */
-    public function testMakePassesNullCtorParameterIrNoTypehintOrDefaultCanBeDetermined() {
+    public function testMakePassesNullCtorParameterIfNoTypehintOrDefaultCanBeDetermined() {
         $provider = new Provider(new ReflectionPool);
         $nullCtorParamObj = $provider->make('ProvTestNoDefinitionNullDefaultClass');
         $this->assertEquals(new ProvTestNoDefinitionNullDefaultClass, $nullCtorParamObj);
@@ -182,6 +184,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::selectDefinition
      * @covers Auryn\Provider::buildNewInstanceArgs
+     * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::isInstantiable
      */
     public function testMakeUsesCustomDefinitionIfSpecified() {
@@ -207,6 +210,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::buildNewInstanceArgs
+     * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::isInstantiable
      */
     public function testMakeUsesReflectionForUnknownParamsInMultiBuildWithDeps() {
@@ -226,6 +230,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::buildNewInstanceArgs
+     * @covers Auryn\Provider::buildArgumentFromTypeHint
      */
     public function testMakeInjectsNullOnUntypehintedParameterWithoutDefinitionOrDefault() {
         $provider  = new Provider(new ReflectionPool);

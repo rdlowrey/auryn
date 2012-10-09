@@ -6,6 +6,8 @@ use BadFunctionCallException,
     InvalidArgumentException,
     OutOfBoundsException,
     ReflectionException,
+    ReflectionParameter,
+    ReflectionMethod,
     Traversable,
     StdClass;
 
@@ -424,7 +426,7 @@ class Provider implements Injector {
      */
     protected function getInjectedInstance($className, array $definition) {
         try {
-            $constructorParams = $this->reflectionStorage->getConstructorParameters($className);
+            $ctorParams = $this->reflectionStorage->getConstructorParameters($className);
         } catch (ReflectionException $e) {
             throw new InjectionException(
                 "Provider instantiation failure: $className doesn't exist".
@@ -433,22 +435,12 @@ class Provider implements Injector {
             );
         }
         
-        if (!$constructorParams) {
-        
-            return $this->buildWithoutConstructorParams($className);
-            
-        } else {
-        
-            try {
-                $args = $this->buildNewInstanceArgs($constructorParams, $definition);
-            } catch (InjectionException $e) {
-                $msg = $e->getMessage() . " in $className::__construct";
-                throw new InjectionException($msg);
-            }
-            
+        if ($ctorParams) {
+            $args = $this->buildNewInstanceArgs($className, $definition);
             $reflectionClass = $this->reflectionStorage->getClass($className);
-            
             return $reflectionClass->newInstanceArgs($args);
+        } else {
+            return $this->buildWithoutConstructorParams($className);
         }
     }
 
@@ -502,63 +494,73 @@ class Provider implements Injector {
     }
     
     /**
-     * @param array $reflectedCtorParams
+     * @param ReflectionMethod $reflectedCtor
+     * @param array $reflectedCtorParams[ReflectionParameter]
      * @param array $definition
+     * @throws InjectionException
      * @return array
-     * @throws InjectionException 
      */
-    private function buildNewInstanceArgs(array $reflectedCtorParams, array $definition) {
+    private function buildNewInstanceArgs($className, array $definition) {
         $instanceArgs = array();
         
-        for ($i=0; $i<count($reflectedCtorParams); $i++) {
-            /**
-             * @var \ReflectionParameter $reflectedParam
-             */
-            $reflectedParam = $reflectedCtorParams[$i];
-            $paramName = $reflectedParam->name;
-            
-            if (isset($definition[$paramName])) {
-                $instanceArgs[] = $this->make($definition[$paramName]);
+        $ctorMethod = $this->reflectionStorage->getConstructor($className);
+        $ctorParams = $this->reflectionStorage->getConstructorParameters($className);
+        
+        foreach ($ctorParams as $ctorParam) {
+            if (isset($definition[$ctorParam->name])) {
+                $instanceArgs[] = $this->make($definition[$ctorParam->name]);
                 continue;
             }
             
-            $rawParamKey = self::RAW_INJECTION_PREFIX . $paramName;
+            $rawParamKey = self::RAW_INJECTION_PREFIX . $ctorParam->name;
             if (isset($definition[$rawParamKey])) {
                 $instanceArgs[] = $definition[$rawParamKey];
                 continue;
             }
-
-            $typeHint = $this->reflectionStorage->getTypeHint($reflectedParam);
             
-            if ($typeHint && $this->isInstantiable($typeHint)) {
-                $instanceArgs[] = $this->make($typeHint);
-            } elseif ($typeHint) {
-                $instanceArgs[] = $this->buildAbstractTypehintParam($typeHint, $paramName, $i+1);
-            } elseif ($reflectedParam->isDefaultValueAvailable()) {
-                $instanceArgs[] = $reflectedParam->getDefaultValue();
-            } else {
-                $instanceArgs[] = NULL;
-            }
+            $instanceArgs[] = $this->buildArgumentFromTypeHint($ctorMethod, $ctorParam);
         }
         
         return $instanceArgs;
     }
     
     /**
+     * @param ReflectionMethod $reflectionMethod
+     * @param ReflectionParameter $reflectionParam
+     * @throws InjectionException
+     * @return mixed
+     */
+    private function buildArgumentFromTypeHint(
+        ReflectionMethod $reflectionMethod,
+        ReflectionParameter $reflectionParam
+    ) {
+        $typeHint = $this->reflectionStorage->getParamTypeHint($reflectionMethod, $reflectionParam);
+          
+        if ($typeHint && $this->isInstantiable($typeHint)) {
+            return $this->make($typeHint);
+        } elseif ($typeHint) {
+            return $this->buildAbstractTypehintParam($typeHint, $reflectionParam->name);
+        } elseif ($reflectionParam->isDefaultValueAvailable()) {
+            return $reflectionParam->getDefaultValue();
+        } else {
+            return NULL;
+        }
+    }
+    
+    /**
      * @param string $typehint
      * @param string $paramName
-     * @param int $argNum
      * @return mixed
      * @throws InjectionException
      */
-    private function buildAbstractTypehintParam($typehint, $paramName, $argNum) {
+    private function buildAbstractTypehintParam($typehint, $paramName) {
         if ($this->isImplemented($typehint)) {
             try {
                 return $this->buildImplementation($typehint);
             } catch (InjectionException $e) {
                 throw new InjectionException(
                     'Bad implementation definition encountered while attempting to provision ' .
-                    "non-concrete parameter \$$paramName of type $typehint at argument $argNum",
+                    "non-concrete parameter \$$paramName of type $typehint",
                     0,
                     $e
                 );
@@ -566,8 +568,8 @@ class Provider implements Injector {
         }
         
         throw new InjectionException(
-            'Injection definition/implementation required for non-concrete constructor '.
-            "parameter \$$paramName of type $typehint at argument $argNum"
+            'Injection definition/implementation required for non-concrete parameter '.
+            "\$$paramName of type $typehint"
         );
     }
 }

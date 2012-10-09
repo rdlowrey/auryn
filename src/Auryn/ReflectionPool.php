@@ -2,34 +2,23 @@
 
 namespace Auryn;
 
-use SplObjectStorage,
-    ReflectionClass,
+use ReflectionClass,
+    ReflectionMethod,
     ReflectionParameter;
 
 class ReflectionPool implements ReflectionStorage {
-
+    
+    const CACHE_KEY_CLASSES = 'auryn\\refls\\classes';
+    const CACHE_KEY_CTORS = 'auryn\\refls\\ctors';
+    const CACHE_KEY_CTOR_PARAMS = 'auryn\\refls\\ctor-params';
+    
     /**
      * @var array
      */
-    private $classes = array();
+    protected $cache = array();
     
     /**
-     * @var array
-     */ 
-    private $constructors = array();
-    
-    /**
-     * @var array
-     */ 
-    private $constructorParams = array();
-    
-    /**
-     * @var \SplObjectStorage
-     */
-    private $typeHints;
-    
-    /**
-     * Retrieves and caches the ReflectionClass objects
+     * Retrieves ReflectionClass objects, caching them for future retrievals
      * 
      * @param string $class The class we want to reflect
      * @throws \ReflectionException If the class can't be found or auto-loaded
@@ -37,15 +26,23 @@ class ReflectionPool implements ReflectionStorage {
      */
     public function getClass($class) {
         $lowClass = strtolower($class);
+        $cacheKey = self::CACHE_KEY_CLASSES . '\\' . $lowClass;
         
-        if (isset($this->classes[$lowClass])) {
-            return $this->classes[$lowClass];
+        $reflectionClass = $this->fetchFromCache($cacheKey);
+        if (!$reflectionClass) {
+            $reflectionClass = new ReflectionClass($class);
+            $this->storeInCache($cacheKey, $reflectionClass);
         }
         
-        $reflectionClass = new ReflectionClass($class);
-        $this->classes[$lowClass] = $reflectionClass;
-        
         return $reflectionClass;
+    }
+    
+    protected function fetchFromCache($key) {
+        return array_key_exists($key, $this->cache) ? $this->cache[$key] : false;
+    }
+    
+    protected function storeInCache($key, $data) {
+        $this->cache[$key] = $data;
     }
     
     /**
@@ -56,19 +53,17 @@ class ReflectionPool implements ReflectionStorage {
      */
     public function getConstructor($class) {
         $lowClass = strtolower($class);
+        $cacheKey = self::CACHE_KEY_CTORS . '\\' . $lowClass;
         
-        if (isset($this->constructors[$lowClass])
-            || array_key_exists($lowClass, $this->constructors)
-        ) {
-            return $this->constructors[$lowClass];
+        $reflectedCtor = $this->fetchFromCache($cacheKey);
+        
+        if (false === $reflectedCtor) {
+            $reflectionClass = $this->getClass($class);
+            $reflectedCtor = $reflectionClass->getConstructor();
+            $this->storeInCache($cacheKey, $reflectedCtor);
         }
         
-        $reflectionClass = $this->getClass($class);
-        $reflectionConstructor  = $reflectionClass->getConstructor();
-        
-        $this->constructors[$lowClass] = $reflectionConstructor;
-        
-        return $reflectionConstructor;
+        return $reflectedCtor;
     }
     
     /**
@@ -79,57 +74,56 @@ class ReflectionPool implements ReflectionStorage {
      */
     public function getConstructorParameters($class) {
         $lowClass = strtolower($class);
+        $cacheKey = self::CACHE_KEY_CTOR_PARAMS . '\\' . $lowClass;
         
-        if (isset($this->constructorParams[$lowClass])
-            || array_key_exists($lowClass, $this->constructorParams)
-        ) {
-            return $this->constructorParams[$lowClass];
-        }
+        $reflectedCtorParams = $this->fetchFromCache($cacheKey);
         
-        if ($reflectionConstructor = $this->getConstructor($class)) {
-            $constructorParameters = $reflectionConstructor->getParameters();
+        if (false !== $reflectedCtorParams) {
+            return $reflectedCtorParams;
+        } elseif ($reflectedCtor = $this->getConstructor($class)) {
+            $reflectedCtorParams = $reflectedCtor->getParameters();
         } else {
-            $constructorParameters = NULL;
+            $reflectedCtorParams = NULL;
         }
         
-        $this->constructorParams[$lowClass] = $constructorParameters;
+        $this->storeInCache($cacheKey, $reflectedCtorParams);
         
-        return $constructorParameters;
+        return $reflectedCtorParams;
     }
     
     /**
      * Retrieves the class type-hint from a given ReflectionParameter
      * 
-     * There is no way to directly access a parameter's type-hint without
-     * instantiating a new ReflectionClass instance and calling its getName()
-     * method. This method stores the results of this approach so that if
-     * the same parameter type-hint or ReflectionClass is needed again we
-     * already have it cached.
-     *
-     * @param ReflectionParameter $reflectionParameter
-     * @return string The type-hinted class name of the given parameter or NULL if none
+     * There is no way to retrieve the string type-hint value directly from a ReflectionParameter
+     * instance -- a new ReflectionClass must be generated from the type-hint and its name returned.
+     * We require the ReflectionMethod parameter so that a unique cache key can be generated for
+     * future type-hint retrieval.
+     * 
+     * @param ReflectionFunctionAbstract $function
+     * @param ReflectionParameter $param
+     * @return string The type-hint of the specified parameter or NULL if none exists
      */
-    public function getTypeHint(ReflectionParameter $reflectionParameter) {
-        if (empty($this->typeHints)) {
-            $this->typeHints = new SplObjectStorage;
+    public function getParamTypeHint(ReflectionMethod $method, ReflectionParameter $param) {
+        $lowClass = strtolower($method->class);
+        $lowMethod = strtolower($method->name);
+        $lowParam = strtolower($param->name);
+        
+        $paramCacheKey = self::CACHE_KEY_CLASSES . "\\$lowMethod\\param-$lowParam";
+        $typeHint = $this->fetchFromCache($paramCacheKey);
+        
+        if (false !== $typeHint) {
+            return $typeHint;
         }
         
-        if ($this->typeHints->contains($reflectionParameter)) {
-            return $this->typeHints->offsetGet($reflectionParameter);
-        }
-        
-        if ($reflectionClass = $reflectionParameter->getClass()) {
-            $class = $reflectionClass->getName();
-            $lowClass  = strtolower($class);
-            if (!isset($this->classes[$lowClass])) {
-                $this->classes[$lowClass] = $reflectionClass;
-            }
-            $typeHint = $class;
+        if ($reflectionClass = $param->getClass()) {
+            $typeHint = $reflectionClass->getName();
+            $classCacheKey = self::CACHE_KEY_CLASSES . '\\' . strtolower($typeHint);
+            $this->storeInCache($classCacheKey, $reflectionClass);
         } else {
             $typeHint = NULL;
         }
         
-        $this->typeHints->attach($reflectionParameter, $typeHint);
+        $this->storeInCache($paramCacheKey, $typeHint);
         
         return $typeHint;
     }

@@ -2,7 +2,8 @@
 
 namespace Auryn;
 
-use ReflectionParameter;
+use ReflectionMethod,
+    ReflectionParameter;
 
 interface ReflectionStorage {
     
@@ -39,7 +40,8 @@ interface ReflectionStorage {
      * the same parameter type-hint or ReflectionClass is needed again we
      * already have it cached.
      * 
-     * @param ReflectionParameter $reflectionParameter
+     * @param ReflectionMethod $method
+     * @param ReflectionParameter $parameter
      */
-    function getTypeHint(ReflectionParameter $reflectionParameter);
+    function getParamTypeHint(ReflectionMethod $method, ReflectionParameter $parameter);
 }
