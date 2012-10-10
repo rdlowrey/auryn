@@ -470,7 +470,7 @@ class Provider implements Injector {
      */
     private function isInstantiable($className) {
         $reflectionInstance = $this->reflectionStorage->getClass($className);
-        return $reflectionInstance ->isInstantiable();
+        return $reflectionInstance->isInstantiable();
     }
     
     /**
