@@ -494,8 +494,7 @@ class Provider implements Injector {
     }
     
     /**
-     * @param ReflectionMethod $reflectedCtor
-     * @param array $reflectedCtorParams[ReflectionParameter]
+     * @param string $className
      * @param array $definition
      * @throws InjectionException
      * @return array
