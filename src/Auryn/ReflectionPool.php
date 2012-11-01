@@ -6,6 +6,13 @@ use ReflectionClass,
     ReflectionMethod,
     ReflectionParameter;
 
+/**
+ * A caching and retrieval layer for reflected classes, constructors and parameters
+ * 
+ * Reflection is a bit more expensive than most code, so we implement a facade to cache the
+ * reflections as they're generated. This minimizes the performance impact of widespread
+ * reflection usage across applications.
+ */
 class ReflectionPool implements ReflectionStorage {
     
     const CACHE_KEY_CLASSES = 'auryn\\refls\\classes';

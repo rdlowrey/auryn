@@ -4,6 +4,13 @@ namespace Auryn;
 
 use RuntimeException;
 
+/**
+ * Adds APC caching/retrieval for reflection instances.
+ * 
+ * Benchmarks show APC caching results ~15-20% speed improvement over the standard reflection
+ * pool implementation in very high-traffic web environments. As always, you should perform
+ * your own benchmarks to determine if the APC version makes sense for your application.
+ */
 class ApcReflectionPool extends ReflectionPool implements CachingReflectionStorage {
     
     /**
