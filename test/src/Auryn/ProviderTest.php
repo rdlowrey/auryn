@@ -20,7 +20,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::isInstantiable
      */
     public function testMakeInjectsSimpleConcreteDependency() {
-    
         $provider = new Provider(new ReflectionPool);
         $this->assertEquals(new TestNeedsDep(new TestDependency),
             $provider->make('TestNeedsDep')
@@ -327,7 +326,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::delegate
      * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::isDelegated
+     * @covers Auryn\Provider::hasDelegate
      */
     public function testMakeDelegate() {
         $provider= new Provider(new ReflectionPool);
@@ -351,7 +350,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::isDelegated
+     * @covers Auryn\Provider::hasDelegate
      */
     public function testMakeWithStringDelegate() {
         $provider= new Provider(new ReflectionPool);
@@ -363,7 +362,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::isDelegated
+     * @covers Auryn\Provider::hasDelegate
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionIfStringDelegateClassHasNoInvokeMethod() {
@@ -375,7 +374,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::isDelegated
+     * @covers Auryn\Provider::hasDelegate
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionIfStringDelegateClassInstantiationFails() {
@@ -678,8 +677,19 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @expectedException BadFunctionCallException
      */
     public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate) {
-        $provider= new Provider(new ReflectionPool);
+        $provider = new Provider(new ReflectionPool);
         $provider->delegate('TestDependency', $badDelegate);
+    }
+    
+    /**
+     * @covers Auryn\Provider::clearDelegate
+     */
+    public function testClearDelegateRemovesAssignedDelegateCallable() {
+        $provider = new Provider(new ReflectionPool);
+        $provider->delegate('TestDependency', function(){});
+        $this->assertTrue($provider->hasDelegate('TestDependency'));
+        $this->assertNull($provider->clearDelegate('TestDependency'));
+        $this->assertFalse($provider->hasDelegate('TestDependency'));
     }
 }
 

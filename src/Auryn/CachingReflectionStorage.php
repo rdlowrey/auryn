@@ -2,6 +2,9 @@
 
 namespace Auryn;
 
+/**
+ * Extends the base ReflectionStorage with additional functionality for cache-based pools
+ */
 interface CachingReflectionStorage extends ReflectionStorage {
     
     /**

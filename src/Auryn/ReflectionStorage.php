@@ -5,6 +5,9 @@ namespace Auryn;
 use ReflectionMethod,
     ReflectionParameter;
 
+/**
+ * An facade providing cached access to reflection instances
+ */
 interface ReflectionStorage {
     
     /**

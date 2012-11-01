@@ -11,6 +11,12 @@ use BadFunctionCallException,
     Traversable,
     StdClass;
 
+/**
+ * A dependency injection container
+ * 
+ * The Provider exposes functionality for defining context-wide instantiation, instance sharing,
+ * implementation and delegation rules for injecting deeply nested class dependencies.
+ */
 class Provider implements Injector {
     
     /**
@@ -62,11 +68,14 @@ class Provider implements Injector {
     public function make($class, array $customDefinition = NULL) {
         $lowClass = strtolower($class);
         
+        // `isset` is used specifically here instead of `isShared` because classes may be marked
+        // as "shared" before an instance is stored. In such cases, the class is shared, but
+        // has a NULL value and must be instantiated by the Provider to create the shared instance.
         if (isset($this->sharedClasses[$lowClass])) {
             return $this->sharedClasses[$lowClass];
         }
         
-        if ($this->isDelegated($lowClass)) {
+        if ($this->hasDelegate($lowClass)) {
             $obj = $this->doDelegation($this->delegatedClasses[$lowClass], $class);
         } else {
             $definition = $this->selectDefinition($lowClass, $customDefinition);
@@ -81,11 +90,25 @@ class Provider implements Injector {
     }
     
     /**
+     * Is a delegate assigned for the specified class?
+     * 
      * @param string $class
      * @return bool
      */
-    private function isDelegated($class) {
-        return array_key_exists($class, $this->delegatedClasses);
+    public function hasDelegate($class) {
+        $lowClass = strtolower($class);
+        return array_key_exists($lowClass, $this->delegatedClasses);
+    }
+    
+    /**
+     * Remove any delegates assigned for the specified class
+     * 
+     * @param string $class
+     * @return void
+     */
+    public function clearDelegate($class) {
+        $lowClass = strtolower($class);
+        unset($this->delegatedClasses[$lowClass]);
     }
     
     /**

@@ -1,7 +1,10 @@
 <?php
 
 namespace Auryn;
- 
+
+/**
+ * An interface for class dependency injection containers
+ */
 interface Injector {
 
     /**
@@ -124,4 +127,18 @@ interface Injector {
      * @throws \BadFunctionCallException
      */
     function delegate($class, $callable);
+    
+    /**
+     * Is a delegate registered for the specified class?
+     * 
+     * @param string $class
+     */
+    function hasDelegate($class);
+    
+    /**
+     * Remove a delegate for the specified class.
+     * 
+     * @param string $class
+     */
+    function clearDelegate($class);
 }
