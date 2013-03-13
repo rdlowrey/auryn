@@ -53,8 +53,8 @@ class Provider implements Injector {
      * @param ReflectionStorage $reflectionStorage
      * @return \Auryn\Provider
      */
-    public function __construct(ReflectionStorage $reflectionStorage) {
-        $this->reflectionStorage = $reflectionStorage;
+    public function __construct(ReflectionStorage $reflectionStorage = NULL) {
+        $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
     
     /**
