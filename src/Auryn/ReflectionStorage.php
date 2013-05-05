@@ -6,7 +6,7 @@ use ReflectionMethod,
     ReflectionParameter;
 
 /**
- * An facade providing cached access to reflection instances
+ * An facade providing access to cached reflection instances
  */
 interface ReflectionStorage {
     
