@@ -44,9 +44,9 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
      */
-    public function testMakeReturnsNonConcreteImplementationIfIsImplemented() {
+    public function testMakeReturnsAliasInstanceOnNonConcreteTypehint() {
         $provider = new Provider(new ReflectionPool);
-        $provider->implement('DepInterface', 'DepImplementation');
+        $provider->alias('DepInterface', 'DepImplementation');
         $this->assertEquals(new DepImplementation, $provider->make('DepInterface'));
     }
     
@@ -57,7 +57,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @expectedException Auryn\InjectionException
      */
-    public function testMakeThrowsExceptionOnNonConcreteParameterWithoutImplementation() {
+    public function testMakeThrowsExceptionOnNonConcreteParameterWithoutAlias() {
         $provider = new Provider(new ReflectionPool);
         $provider->make('DepInterface');
     }
@@ -70,9 +70,9 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::buildImplementation
      * @expectedException Auryn\InjectionException
      */
-    public function testMakeThrowsExceptionOnInvalidImplementationTypeMismatch() {
+    public function testMakeThrowsExceptionOnInvalidAliasTypeMismatch() {
         $provider = new Provider(new ReflectionPool);
-        $provider->implement('DepInterface', 'StdClass');
+        $provider->alias('DepInterface', 'StdClass');
         $provider->make('DepInterface');
     }
     
@@ -98,9 +98,9 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::buildImplementation
      * @covers Auryn\Provider::buildAbstractTypehintParam
      */
-    public function testMakeBuildsNonConcreteCtorParamWithImplementation() {
+    public function testMakeBuildsNonConcreteCtorParamWithAlias() {
         $provider = new Provider(new ReflectionPool);
-        $provider->implement('DepInterface', 'DepImplementation');
+        $provider->alias('DepInterface', 'DepImplementation');
         $obj = $provider->make('RequiresInterface');
         $this->assertInstanceOf('RequiresInterface', $obj);
     }
@@ -115,9 +115,9 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::buildAbstractTypehintParam
      * @expectedException Auryn\InjectionException
      */
-    public function testMakeThrowsExceptionOnNonConcreteCtorParamWithBadImplementation() {
+    public function testMakeThrowsExceptionOnNonConcreteCtorParamWithBadAlias() {
         $provider = new Provider(new ReflectionPool);
-        $provider->implement('DepInterface', 'StdClass');
+        $provider->alias('DepInterface', 'StdClass');
         $provider->make('RequiresInterface');
     }
     
@@ -173,7 +173,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::isInstantiable
      */
     public function testMakeUsesInstanceDefinitionParamIfSpecified() {
-    
         $provider = new Provider(new ReflectionPool);
         $provider->make('TestMultiDepsNeeded', array('TestDependency', new TestDependency2));
     }
@@ -187,7 +186,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::isInstantiable
      */
     public function testMakeUsesCustomDefinitionIfSpecified() {
-    
         $provider = new Provider(new ReflectionPool);
         $provider->define('TestNeedsDep', array('testDep'=>'TestDependency'));
         $injected = $provider->make('TestNeedsDep', array('testDep'=>'TestDependency2'));
@@ -198,11 +196,9 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      */
     public function testMakeStoresShareIfMarkedWithNullInstance() {
-    
         $provider = new Provider(new ReflectionPool);
         $provider->share('TestDependency');
         $provider->make('TestDependency');
-        $this->assertTrue($provider->isShared('TestDependency'));
     }
     
     /**
@@ -213,7 +209,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::isInstantiable
      */
     public function testMakeUsesReflectionForUnknownParamsInMultiBuildWithDeps() {
-    
         $provider  = new Provider(new ReflectionPool);
         $obj = $provider->make('TestMultiDepsWithCtor', array('val1'=>'TestDependency'));
         $this->assertInstanceOf('TestMultiDepsWithCtor', $obj);
@@ -420,7 +415,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::selectDefinition
      */
     public function testDefineAssignsPassedDefinition() {
-        
         $provider = new Provider(new ReflectionPool);
         $definition = array('dep' => 'DepImplementation');
         $provider->define('RequiresInterface', $definition);
@@ -428,119 +422,26 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @covers Auryn\Provider::defineAll
-     * @expectedException InvalidArgumentException
-     */
-    public function testDefineAllThrowsExceptionOnInvalidIterable() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $provider->defineAll(1);
-    }
-    
-    /**
-     * @covers Auryn\Provider::clearAllDefinitions
-     */
-    public function testClearAllDefinitionsRemovesDefinitions() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $this->assertFalse($provider->isDefined('RequiresInterface'));
-        $provider->define('RequiresInterface', array('dep' => 'DepImplementation'));
-        $this->assertTrue($provider->isDefined('RequiresInterface'));
-        $provider->clearAllDefinitions();
-        $this->assertFalse($provider->isDefined('RequiresInterface'));
-    }
-    
-    /**
-     * @covers Auryn\Provider::defineAll
-     */
-    public function testDefineAllAssignsPassedDefinitionsAndReturnsAddedCount() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $depList = array();
-        $depList['RequiresInterface'] = array('dep' => 'DepImplementation');
-        
-        $this->assertEquals(1, $provider->defineAll($depList));
-        $this->assertInstanceOf('RequiresInterface', $provider->make('RequiresInterface'));
-    }
-    
-    /**
-     * @covers Auryn\Provider::clearDefinition
-     */
-    public function testClearDefinitionRemovesDefinitionAndReturnsNull() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $provider->define('RequiresInterface', array('dep' => 'DepImplementation'));
-        $this->assertTrue($provider->isDefined('RequiresInterface'));
-        $this->assertEquals(null, $provider->clearDefinition('RequiresInterface'));
-        $this->assertFalse($provider->isDefined('RequiresInterface'));
-    }
-    
-    /**
-     * @covers Auryn\Provider::clearAllDefinitions
-     */
-    public function testClearAllDefinitionsRemovesDefinitionAndReturnsNull() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $provider->define('RequiresInterface', array('dep' => 'DepImplementation'));
-        $this->assertTrue($provider->isDefined('RequiresInterface'));
-        
-        $return = $provider->clearAllDefinitions();
-        $this->assertEquals(null, $provider->clearAllDefinitions());
-        $this->assertFalse($provider->isDefined('RequiresInterface'));
-    }
-    
-    /**
-     * @covers Auryn\Provider::refreshShare
+     * @covers Auryn\Provider::refresh
      */
     public function testRefreshShareClearsSharedInstanceAndReturnsNull() {
-        
         $provider = new Provider(new ReflectionPool);
         $provider->share('TestDependency');
         $obj = $provider->make('TestDependency');
-        $this->assertTrue($provider->isShared('TestDependency'));
         $obj->testProp = 42;
         
-        $this->assertEquals(null, $provider->refreshShare('TestDependency'));
-        $this->assertTrue($provider->isShared('TestDependency'));
+        $this->assertEquals(null, $provider->refresh('TestDependency'));
         $refreshedObj = $provider->make('TestDependency');
         $this->assertEquals('testVal', $refreshedObj->testProp);
-    }
-    
-    /**
-     * @covers Auryn\Provider::isShared
-     */
-    public function testIsSharedReturnsBooleanStatus() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $provider->share('TestDependency');
-        $this->assertTrue($provider->isShared('TestDependency'));
-        $provider->unshare('TestDependency');
-        $this->assertFalse($provider->isShared('TestDependency'));
     }
     
     /**
      * @covers Auryn\Provider::unshare
      */
     public function testUnshareRemovesSharingAndReturnsNull() { 
-    
         $provider = new Provider(new ReflectionPool);
-        $this->assertFalse($provider->isShared('TestDependency'));
         $provider->share('TestDependency');
-        $this->assertTrue($provider->isShared('TestDependency'));
         $this->assertEquals(null, $provider->unshare('TestDependency'));
-        $this->assertFalse($provider->isShared('TestDependency'));
-    }
-    
-    /**
-     * @covers Auryn\Provider::isDefined
-     */
-    public function testIsDefinedReturnsDefinitionStatus() {
-    
-        $provider = new Provider(new ReflectionPool);
-        $this->assertFalse($provider->isDefined('RequiresInterface'));
-        $provider->define('RequiresInterface', array('dep' => 'DepImplementation'));
-        
-        $this->assertTrue($provider->isDefined('RequiresInterface'));
     }
     
     /**
@@ -557,38 +458,11 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @covers Auryn\Provider::shareAll
-     */
-    public function testShareAllStoresSpecifiedValuesAndReturnsNull() {
-        $reflPool = $this->getMock('Auryn\\ReflectionPool');
-        $provider = $this->getMock('Auryn\\Provider', array('share'), array($reflPool));
-        $provider->expects($this->exactly(3))
-                 ->method('share');
-        
-        $toShare = array('Class1', 'Class2', new StdClass);
-        $this->assertNull($provider->shareAll($toShare));
-    }
-    
-    /**
-     * @covers Auryn\Provider::shareAll
-     * @expectedException InvalidArgumentException
-     */
-    public function testShareAllThrowsExceptionOnInvalidParameter() {
-        $reflPool = $this->getMock('Auryn\\ReflectionPool');
-        $provider = $this->getMock('Auryn\\Provider', array('share'), array($reflPool));
-        
-        $toShare = 'not an array or traversable';
-        $provider->shareAll($toShare);
-    }
-    
-    /**
      * @covers Auryn\Provider::share
      */
     public function testShareMarksClassSharedOnNullObjectParameter() {
-        
         $provider = new Provider(new ReflectionPool);
         $this->assertEquals(null, $provider->share('Atreyu\\Events\\Mediator'));
-        $this->assertTrue($provider->isShared('Atreyu\Events\Mediator'));
     }
     
     /**
@@ -596,70 +470,16 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @expectedException InvalidArgumentException
      */
     public function testShareThrowsExceptionOnInvalidArgument() {
-        
         $provider = new Provider(new ReflectionPool);
         $provider->share(42);
     }
     
     /**
-     * @covers Auryn\Provider::implement
-     * @covers Auryn\Provider::isImplemented
+     * @covers Auryn\Provider::alias
      */
-    public function testImplementAssignsValueAndReturnsNull() {
-        
+    public function testAliasAssignsValueAndReturnsNull() {
         $provider = new Provider(new ReflectionPool);
-        $this->assertEquals(null, $provider->implement('DepInterface', 'DepImplementation'));
-        $this->assertTrue($provider->isImplemented('DepInterface'));
-    }
-    
-    /**
-     * @covers Auryn\Provider::implementAll
-     * @expectedException InvalidArgumentException
-     */
-    public function testImplementAllThrowsExceptionOnNonIterableParameter() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $provider->implementAll('not iterable');
-    }
-    
-    /**
-     * @covers Auryn\Provider::implementAll
-     */
-    public function testImplementAllAssignsPassedImplementationsAndReturnsAddedCount() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $implementations = array(
-            'DepInterface' => 'DepImplementation',
-            'AnotherInterface' => 'AnotherImplementation'
-        );
-        
-        $this->assertEquals(2, $provider->implementAll($implementations));
-        $this->assertInstanceOf('RequiresInterface', $provider->make('RequiresInterface'));
-    }
-    
-    /**
-     * @covers Auryn\Provider::clearAllImplementations
-     */
-    public function testClearAllImplementationsRemovesImplementations() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $provider->implement('DepInterface', 'DepImplementation');
-        $this->assertTrue($provider->isImplemented('DepInterface'));
-        $provider->clearAllImplementations();
-        $this->assertFalse($provider->isImplemented('DepInterface'));
-    }
-    
-    /**
-     * @covers Auryn\Provider::clearImplementation
-     * @covers Auryn\Provider::isImplemented
-     */
-    public function testClearImplementationRemovesAssignedTypeAndReturnsNull() {
-        
-        $provider = new Provider(new ReflectionPool);
-        $provider->implement('DepInterface', 'DepImplementation');
-        $this->assertTrue($provider->isImplemented('DepInterface'));
-        $this->assertEquals(null, $provider->clearImplementation('DepInterface'));
-        $this->assertFalse($provider->isImplemented('DepInterface'));
+        $this->assertEquals(null, $provider->alias('DepInterface', 'DepImplementation'));
     }
 
     public function provideInvalidDelegates() {
@@ -679,17 +499,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate) {
         $provider = new Provider(new ReflectionPool);
         $provider->delegate('TestDependency', $badDelegate);
-    }
-    
-    /**
-     * @covers Auryn\Provider::clearDelegate
-     */
-    public function testClearDelegateRemovesAssignedDelegateCallable() {
-        $provider = new Provider(new ReflectionPool);
-        $provider->delegate('TestDependency', function(){});
-        $this->assertTrue($provider->hasDelegate('TestDependency'));
-        $this->assertNull($provider->clearDelegate('TestDependency'));
-        $this->assertFalse($provider->hasDelegate('TestDependency'));
     }
 }
 
@@ -810,3 +619,4 @@ class StringStdClassDelegateMock {
 }
 
 class StringDelegateWithNoInvokeMethod {}
+

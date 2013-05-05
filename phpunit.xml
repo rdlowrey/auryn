@@ -1,18 +1,12 @@
-<phpunit bootstrap="../autoload.php" colors="true">
+<phpunit bootstrap="./autoload.php" colors="true">
     <testsuites>
         <testsuite name="Unit-Tests">
-            <directory>./src</directory>
+            <directory>./test</directory>
         </testsuite>
     </testsuites>
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">
-            <directory>../src/Auryn</directory>
-            <exclude>
-                <file>../src/Auryn/ReflectionStorage.php</file>
-                <file>../src/Auryn/InjectionException.php</file>
-                <file>../src/Auryn/InvalidImplementationException.php</file>
-                <file>../src/Auryn/Injector.php</file>
-            </exclude>
+            <directory>./src</directory>
         </whitelist>
     </filter>
     
@@ -21,13 +15,13 @@
             type="coverage-text"
             target="php://stdout"
             lowUpperBound="35"
-            highLowerBound="70"
+            highLowerBound="75"
         />
-        <!-- uncomment below to generate HTML code coverage reports -->
+        <!-- uncomment below to generate HTML code coverage reports in /test/coverage -->
         <!--
         <log
             type="coverage-html"
-            target="./coverage"
+            target="./test/coverage"
             charset="UTF-8"
             yui="true"
             lowUpperBound="35"
