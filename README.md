@@ -1,15 +1,13 @@
-### WHAT IS IT?
-
-# Auryn is a PHP Dependency Injection Container
+# Auryn Dependency Injection Container
 
 Use Auryn to bootstrap and wire together S.O.L.I.D., object-oriented PHP applications. For help and
 usage examples, check out the [**Auryn Wiki**](https://github.com/rdlowrey/Auryn/wiki).
 
-### REQUIREMENTS
+#### REQUIREMENTS
 
 Auryn requires PHP5.3+
 
-### INSTALL
+#### INSTALL
 
 You can download the latest version of Auryn from the git repository at any time:
 
