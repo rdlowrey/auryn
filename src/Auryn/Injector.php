@@ -59,4 +59,13 @@ interface Injector {
      * @param string $className
      */
     function refresh($className);
+    
+    /**
+     * Invoke the specified callable or class/method combo, provisioning any needed dependencies along the way.
+     * 
+     * @param mixed $callableOrMethodArr Any valid PHP callable or an array of the form [$className, $methodName]
+     * @param array $invocationArgs An optional array specifying params to invoke the provisioned callable
+     */
+    function execute($callableOrMethodArr, array $invocationArgs = array());
+    
 }

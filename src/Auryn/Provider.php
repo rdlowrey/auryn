@@ -236,6 +236,87 @@ class Provider implements Injector {
         $this->delegatedClasses[$className] = $callable;
     }
     
+    /**
+     * Invoke the specified callable or class/method array, provisioning dependencies along the way.
+     * 
+     * @param mixed $callableOrMethodArr Valid PHP callable or an array of the form [$className, $methodName]
+     * @param array $invocationArgs Optional array specifying params to invoke the provisioned callable
+     */
+    function execute($callableOrMethodArr, array $invocationArgs = []) {
+        list($callableRefl, $invocationObj) = $this->generateCallableReflection($callableOrMethodArr);
+        $args = $this->generateInvocationArgs($callableRefl, $invocationArgs);
+        
+        return ($callableRefl instanceof \ReflectionMethod)
+            ? $callableRefl->invokeArgs($invocationObj, $args)
+            : $callableRefl->invokeArgs($args);
+    }
+    
+    private function generateCallableReflection($callableOrMethodArr) {
+        $isString = is_string($callableOrMethodArr);
+        
+        if ($callableOrMethodArr instanceof \Closure) {
+            $callableRefl = new \ReflectionFunction($callableOrMethodArr);
+            $invocationObj = NULL;
+        } elseif (($isString = is_string($callableOrMethodArr))
+            && function_exists($callableOrMethodArr)
+        ) {
+            $callableRefl = $this->reflectionStorage->getFunction($callableOrMethodArr);
+            $invocationObj = NULL;
+        } elseif ($isString && strpos($callableOrMethodArr, '::') !== FALSE) {
+            list($staticClass, $staticMethod) = explode('::', $callableOrMethodArr, 2);
+            $callableRefl = $this->generateStaticReflectionMethod($staticClass, $staticMethod);
+            $invocationObj = NULL;
+        } elseif (isset($callableOrMethodArr[0], $callableOrMethodArr[1])
+            && is_object($callableOrMethodArr[0])
+        ) {
+            list($invocationObj, $method) = $callableOrMethodArr;
+            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, $method);
+        } elseif (is_callable($callableOrMethodArr)) {
+            list($class, $method) = $callableOrMethodArr;
+            $invocationObj = $this->make($class);
+            $callableRefl = strpos($method, '::')
+                ? $this->generateStaticReflectionMethod($class, $method)
+                : $this->reflectionStorage->getMethod($class, $method);
+        } else {
+            throw new \UnexpectedValueException(
+                'Invalid executable: callable or array of the form [className, methodName] required'
+            );
+        }
+        
+        return array($callableRefl, $invocationObj);
+    }
+    
+    private function generateStaticReflectionMethod($staticClass, $staticMethod) {
+        if (0 === ($methodStartPos = strpos($staticMethod, 'parent::'))) {
+            $childReflection = $this->reflectionStorage->getClass($staticClass);
+            $staticClass = $childReflection->getParentClass()->name;
+            $staticMethod = substr($staticMethod, $methodStartPos + 8);
+        }
+        
+        return $this->reflectionStorage->getMethod($staticClass, $staticMethod);
+    }
+    
+    private function generateInvocationArgs(\ReflectionFunctionAbstract $funcRefl, array $definition) {
+        $funcArgs = array();
+        
+        // @TODO store this in ReflectionStorage
+        $funcReflParamsArr = $funcRefl->getParameters();
+        
+        foreach ($funcReflParamsArr as $funcParam) {
+            $rawParamKey = self::RAW_INJECTION_PREFIX . $funcParam->name;
+            
+            if (isset($definition[$funcParam->name])) {
+                $funcArgs[] = $this->make($definition[$funcParam->name]);
+            } elseif (isset($definition[$rawParamKey])) {
+                $funcArgs[] = $definition[$rawParamKey];
+            } else {
+                $funcArgs[] = $this->buildArgumentFromTypeHint($funcRefl, $funcParam);
+            }
+        }
+        
+        return $funcArgs;
+    }
+    
     protected function getInjectedInstance($className, array $definition) {
         try {
             $ctorParams = $this->reflectionStorage->getConstructorParameters($className);
@@ -248,7 +329,8 @@ class Provider implements Injector {
         }
         
         if ($ctorParams) {
-            $args = $this->buildNewInstanceArgs($className, $definition);
+            $ctorMethod = $this->reflectionStorage->getConstructor($className);
+            $args = $this->generateInvocationArgs($ctorMethod, $definition);
             $reflectionClass = $this->reflectionStorage->getClass($className);
             return $reflectionClass->newInstanceArgs($args);
         } else {
@@ -294,30 +376,6 @@ class Provider implements Injector {
         }
         
         return $implObj;
-    }
-    
-    private function buildNewInstanceArgs($className, array $definition) {
-        $instanceArgs = array();
-        
-        $ctorMethod = $this->reflectionStorage->getConstructor($className);
-        $ctorParams = $this->reflectionStorage->getConstructorParameters($className);
-        
-        foreach ($ctorParams as $ctorParam) {
-            if (isset($definition[$ctorParam->name])) {
-                $instanceArgs[] = $this->make($definition[$ctorParam->name]);
-                continue;
-            }
-            
-            $rawParamKey = self::RAW_INJECTION_PREFIX . $ctorParam->name;
-            if (isset($definition[$rawParamKey])) {
-                $instanceArgs[] = $definition[$rawParamKey];
-                continue;
-            }
-            
-            $instanceArgs[] = $this->buildArgumentFromTypeHint($ctorMethod, $ctorParam);
-        }
-        
-        return $instanceArgs;
     }
     
     private function buildArgumentFromTypeHint(\ReflectionMethod $reflMethod, \ReflectionParameter $reflParam) {

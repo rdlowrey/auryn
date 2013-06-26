@@ -16,7 +16,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::isInstantiable
      */
     public function testMakeInjectsSimpleConcreteDependency() {
@@ -29,7 +28,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildWithoutConstructorParams
      */
     public function testMakeReturnsNewInstanceIfClassHasNoConstructor() {
@@ -40,7 +38,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
      */
@@ -53,7 +50,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @expectedException Auryn\InjectionException
      */
@@ -65,7 +61,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
      * @expectedException Auryn\InjectionException
@@ -92,7 +87,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
@@ -108,7 +102,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
@@ -124,7 +117,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::isInstantiable
      */
@@ -138,7 +130,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::isInstantiable
      */
     public function testMakeReturnsSharedInstanceIfAvailable() {
@@ -157,7 +148,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::isInstantiable
      * @expectedException Auryn\InjectionException
      */
@@ -169,7 +159,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::isInstantiable
      */
     public function testMakeUsesInstanceDefinitionParamIfSpecified() {
@@ -181,7 +170,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::selectDefinition
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::isInstantiable
      */
@@ -204,7 +192,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::isInstantiable
      */
@@ -223,7 +210,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @covers Auryn\Provider::buildArgumentFromTypeHint
      */
     public function testMakeInjectsNullOnUntypehintedParameterWithoutDefinitionOrDefault() {
@@ -235,7 +221,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionOnUninstantiableTypehintWithoutDefinition() {
@@ -247,7 +232,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::validateInjectionDefinition
      * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildNewInstanceArgs
      */
     public function testMakeInjectsRawParametersDirectlyWhenDefinedWithParameterNamePrefix() {
     
@@ -500,6 +484,106 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider(new ReflectionPool);
         $provider->delegate('TestDependency', $badDelegate);
     }
+    
+    /**
+     * @dataProvider provideExecutionExpectations
+     * @covers Auryn\Provider::execute
+     * @covers Auryn\Provider::generateCallableReflection
+     * @covers Auryn\Provider::generateStaticReflectionMethod
+     * @covers Auryn\Provider::generateInvocationArgs
+     * @covers Auryn\Provider::isDefined
+     * @covers Auryn\Provider::isShared
+     */
+    public function testExecutions($callable, $definition, $expectedResult) {
+        $provider = new Provider;
+        $this->assertEquals($expectedResult, $provider->execute($callable, $definition));
+    }
+    
+    public function provideExecutionExpectations() {
+        $return = array();
+        
+        // 0 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array('ExecuteClassNoDeps', 'execute');
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 1 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array(new ExecuteClassNoDeps, 'execute');
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 2 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array('ExecuteClassDeps', 'execute');
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 3 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array(new ExecuteClassDeps(new TestDependency), 'execute');
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 4 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array('ExecuteClassDepsWithMethodDeps', 'execute');
+        $args = array(':arg' => 9382);
+        $expectedResult = 9382;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 5 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array('ExecuteClassStaticMethod', 'execute');
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 6 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array(new ExecuteClassStaticMethod, 'execute');
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 7 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = 'ExecuteClassStaticMethod::execute';
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 8 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array('ExecuteClassRelativeStaticMethod', 'parent::execute');
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 9 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = 'testExecuteFunction';
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 10 ------------------------------------------------------------------------------------->
+        
+        $toInvoke = function() { return 42; };
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // x -------------------------------------------------------------------------------------->
+        
+        return $return;
+    }
+    
 }
 
 class TestNoConstructor {}
@@ -619,4 +703,42 @@ class StringStdClassDelegateMock {
 }
 
 class StringDelegateWithNoInvokeMethod {}
+
+// -------------------------------------------------------------------------------------------------
+
+class ExecuteClassNoDeps {
+    function execute() {
+        return 42;
+    }
+}
+
+class ExecuteClassDeps {
+    function __construct(TestDependency $testDep) {}
+    function execute() {
+        return 42;
+    }
+}
+
+class ExecuteClassDepsWithMethodDeps {
+    function __construct(TestDependency $testDep) {}
+    function execute(TestDependency $dep, $arg = NULL) {
+        return isset($arg) ? $arg : 42;
+    }
+}
+
+class ExecuteClassStaticMethod {
+    static function execute() {
+        return 42;
+    }
+}
+
+class ExecuteClassRelativeStaticMethod extends ExecuteClassStaticMethod {
+    static function execute() {
+        return 'this should NEVER be seen since we are testing against parent::execute()';
+    }
+}
+
+function testExecuteFunction() {
+    return 42;
+}
 
