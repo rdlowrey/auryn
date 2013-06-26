@@ -262,10 +262,16 @@ class Provider implements Injector {
         ) {
             $callableRefl = $this->reflectionStorage->getFunction($callableOrMethodArr);
             $invocationObj = NULL;
+        } elseif ($isString && method_exists($callableOrMethodArr, '__invoke')) {
+            $invocationObj = $this->make($callableOrMethodArr);
+            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
         } elseif ($isString && strpos($callableOrMethodArr, '::') !== FALSE) {
             list($staticClass, $staticMethod) = explode('::', $callableOrMethodArr, 2);
             $callableRefl = $this->generateStaticReflectionMethod($staticClass, $staticMethod);
             $invocationObj = NULL;
+        } elseif (is_object($callableOrMethodArr) && is_callable($callableOrMethodArr)) {
+            $invocationObj = $callableOrMethodArr;
+            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
         } elseif (isset($callableOrMethodArr[0], $callableOrMethodArr[1])
             && is_object($callableOrMethodArr[0])
         ) {

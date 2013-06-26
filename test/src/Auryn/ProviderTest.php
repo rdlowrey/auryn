@@ -579,6 +579,20 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
         
+        // 11 ------------------------------------------------------------------------------------->
+        
+        $toInvoke = new ExecuteClassInvokable;
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
+        // 12 ------------------------------------------------------------------------------------->
+        
+        $toInvoke = 'ExecuteClassInvokable';
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
         // x -------------------------------------------------------------------------------------->
         
         return $return;
@@ -735,6 +749,12 @@ class ExecuteClassStaticMethod {
 class ExecuteClassRelativeStaticMethod extends ExecuteClassStaticMethod {
     static function execute() {
         return 'this should NEVER be seen since we are testing against parent::execute()';
+    }
+}
+
+class ExecuteClassInvokable {
+    function __invoke() {
+        return 42;
     }
 }
 
