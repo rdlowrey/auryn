@@ -9,7 +9,7 @@ namespace Auryn;
  * pool implementation in very high-traffic web environments. As always, you should perform
  * your own benchmarks to determine if the APC version makes sense for your application.
  */
-class ApcReflectionPool extends ReflectionPool implements CachingReflectionStorage {
+class ApcReflectionPool extends ReflectionPool {
     
     private $timeToLive = 120;
     
@@ -39,4 +39,6 @@ class ApcReflectionPool extends ReflectionPool implements CachingReflectionStora
     protected function doApcStore($key, $data, $ttl) {
         apc_store($key, $data, $ttl);
     }
+    
 }
+

@@ -47,4 +47,22 @@ interface ReflectionStorage {
      * @param ReflectionParameter $parameter
      */
     function getParamTypeHint(ReflectionMethod $method, ReflectionParameter $parameter);
+    
+    /**
+     * Retrieves and caches a reflection for the specified function
+     * 
+     * @param string $functionName
+     * @return \ReflectionFunction
+     */
+    function getFunction($functionName);
+    
+    /**
+     * Retrieves and caches a reflection for the specified class method
+     * 
+     * @param mixed $classNameOrInstance
+     * @param string $methodName
+     * @return \ReflectionMethod
+     */
+    function getMethod($classNameOrInstance, $methodName);
+    
 }

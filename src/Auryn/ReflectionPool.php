@@ -18,6 +18,8 @@ class ReflectionPool implements ReflectionStorage {
     const CACHE_KEY_CLASSES = 'auryn\\refls\\classes';
     const CACHE_KEY_CTORS = 'auryn\\refls\\ctors';
     const CACHE_KEY_CTOR_PARAMS = 'auryn\\refls\\ctor-params';
+    const CACHE_KEY_FUNCS = 'auryn\\refls\\funcs';
+    const CACHE_KEY_METHODS = 'auryn\\refls\\methods';
     
     /**
      * @var array
@@ -35,8 +37,7 @@ class ReflectionPool implements ReflectionStorage {
         $lowClass = strtolower($class);
         $cacheKey = self::CACHE_KEY_CLASSES . '\\' . $lowClass;
         
-        $reflectionClass = $this->fetchFromCache($cacheKey);
-        if (!$reflectionClass) {
+        if (!$reflectionClass = $this->fetchFromCache($cacheKey)) {
             $reflectionClass = new ReflectionClass($class);
             $this->storeInCache($cacheKey, $reflectionClass);
         }
@@ -133,5 +134,49 @@ class ReflectionPool implements ReflectionStorage {
         $this->storeInCache($paramCacheKey, $typeHint);
         
         return $typeHint;
+    }
+    
+    /**
+     * Retrieves and caches a reflection for the specified function
+     * 
+     * @param string $functionName
+     * @return \ReflectionFunction
+     */
+    public function getFunction($functionName) {
+        $lowFunc = strtolower($functionName);
+        $cacheKey = self::CACHE_KEY_FUNCS . '\\' . $lowFunc;
+        
+        $reflectedFunc = $this->fetchFromCache($cacheKey);
+        
+        if (false === $reflectedFunc) {
+            $reflectedFunc = new \ReflectionFunction($functionName);
+            $this->storeInCache($cacheKey, $reflectedFunc);
+        }
+        
+        return $reflectedFunc;
+    }
+    
+    /**
+     * Retrieves and caches a reflection for the specified class method
+     * 
+     * @param mixed $classNameOrInstance
+     * @param string $methodName
+     * @return \ReflectionMethod
+     */
+    public function getMethod($classNameOrInstance, $methodName) {
+        $className = is_string($classNameOrInstance)
+            ? $classNameOrInstance
+            : get_class($classNameOrInstance);
+        
+        $lowClass = strtolower($className);
+        $lowMethod = strtolower($methodName);
+        $cacheKey = self::CACHE_KEY_METHODS . '\\' . $lowClass . '\\' . $lowMethod;
+        
+        if (!$reflectedMethod = $this->fetchFromCache($cacheKey)) {
+            $reflectedMethod = new \ReflectionMethod($className, $methodName);
+            $this->storeInCache($cacheKey, $reflectedMethod);
+        }
+        
+        return $reflectedMethod;
     }
 }
