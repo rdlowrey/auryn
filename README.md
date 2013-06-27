@@ -1,29 +1,35 @@
-# Auryn Dependency Injection Container
+# Auryn
 
-Use Auryn to bootstrap and wire together S.O.L.I.D., object-oriented PHP applications. For help and
-usage examples, check out the [**Auryn Wiki**](https://github.com/rdlowrey/Auryn/wiki).
+Auryn is a PHP dependency injection container (DIC). Use Auryn to bootstrap and wire together
+S.O.L.I.D., object-oriented PHP applications. For help and usage examples, check out the
+[**Auryn Wiki**](https://github.com/rdlowrey/Auryn/wiki).
 
 #### REQUIREMENTS
 
-Auryn requires PHP5.3+
+- PHP 5.3+
 
 #### INSTALL
 
-You can download the latest version of Auryn from the git repository at any time:
+##### Git:
 
 ```bash
 $ git clone git://github.com/rdlowrey/Auryn.git
 ```
 
-Additionally, archived tagged release versions are available for manual download on the Github project's
-[Tags](https://github.com/rdlowrey/Auryn/tags) page.
+##### Manual Download:
 
-You may also use composer to include Auryn as a dependency in your projects. The relevant package is:
+[Tagged Releases](https://github.com/rdlowrey/Auryn/tags) page.
 
-*rdlowrey/auryn*
+##### Composer:
+
+```bash
+$ composer.phar rdlowrey/auryn
+```
+
+#### AUTOLOADING
 
 If you aren't using composer to manage dependencies, Auryn ships with an autoloader to simplify 
-usage of the included libraries. Simply include this file to get started:
+usage of the included libraries. Simply include the autoloader script to get started:
 
 ```php
 <?php
