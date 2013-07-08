@@ -289,7 +289,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $callable->expects($this->once())
             ->method('__invoke')
-            ->with('TestDependency')
             ->will($this->throwException(new Auryn\InjectionException()));
 
         $provider->make('TestDependency');
@@ -311,7 +310,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $callable->expects($this->once())
             ->method('__invoke')
-            ->with('TestDependency')
             ->will($this->returnValue(new Auryn\InjectionException()));
 
         $provider->make('TestDependency');
@@ -323,7 +321,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::delegate
      * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::hasDelegate
      */
     public function testMakeDelegate() {
         $provider= new Provider(new ReflectionPool);
@@ -334,7 +331,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         );
         $callable->expects($this->once())
             ->method('__invoke')
-            ->with('TestDependency')
             ->will($this->returnValue(new TestDependency()));
 
         $provider->delegate('TestDependency', $callable);
@@ -347,7 +343,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::hasDelegate
      */
     public function testMakeWithStringDelegate() {
         $provider= new Provider(new ReflectionPool);
@@ -359,8 +354,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::hasDelegate
-     * @expectedException Auryn\InjectionException
+     * @expectedException Auryn\BadArgumentException
      */
     public function testMakeThrowsExceptionIfStringDelegateClassHasNoInvokeMethod() {
         $provider= new Provider(new ReflectionPool);
@@ -371,8 +365,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::hasDelegate
-     * @expectedException Auryn\InjectionException
+     * @expectedException Auryn\BadArgumentException
      */
     public function testMakeThrowsExceptionIfStringDelegateClassInstantiationFails() {
         $provider= new Provider(new ReflectionPool);
@@ -486,7 +479,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @covers Auryn\Provider::share
-     * @expectedException InvalidArgumentException
+     * @expectedException Auryn\BadArgumentException
      */
     public function testShareThrowsExceptionOnInvalidArgument() {
         $provider = new Provider(new ReflectionPool);
@@ -513,17 +506,29 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @dataProvider provideInvalidDelegates
      * @covers Auryn\Provider::delegate
      * @covers Auryn\Provider::make
-     * @expectedException BadFunctionCallException
+     * @expectedException Auryn\BadArgumentException
      */
     public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate) {
         $provider = new Provider(new ReflectionPool);
         $provider->delegate('TestDependency', $badDelegate);
     }
     
+    public function testDelegateInstantiatesCallableClassString() {
+        $provider = new Provider;
+        $provider->delegate('MadeByDelegate', 'CallableDelegateClassTest');
+        $this->assertInstanceof('MadeByDelegate', $provider->make('MadeByDelegate'));
+    }
+    
+    public function testDelegateInstantiatesCallableClassArray() {
+        $provider = new Provider;
+        $provider->delegate('MadeByDelegate', ['CallableDelegateClassTest', '__invoke']);
+        $this->assertInstanceof('MadeByDelegate', $provider->make('MadeByDelegate'));
+    }
+    
     /**
      * @dataProvider provideExecutionExpectations
      * @covers Auryn\Provider::execute
-     * @covers Auryn\Provider::generateCallableReflection
+     * @covers Auryn\Provider::generateExecutableReflection
      * @covers Auryn\Provider::generateStaticReflectionMethod
      * @covers Auryn\Provider::generateInvocationArgs
      * @covers Auryn\Provider::isDefined
@@ -633,183 +638,5 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         return $return;
     }
     
-}
-
-class TestNoConstructor {}
-
-class TestDependency {
-    public $testProp = 'testVal';
-}
-
-class TestDependency2 extends TestDependency {
-    public $testProp = 'testVal2';
-}
-
-class SpecdTestDependency extends TestDependency {
-    public $testProp = 'testVal';
-}
-
-class TestNeedsDep {
-    public function __construct(TestDependency $testDep) {
-        $this->testDep = $testDep;
-    }
-}
-
-class TestClassWithNoCtorTypehints {
-    public function __construct($val = 42) {
-        $this->test = $val;
-    }
-}
-
-class TestMultiDepsNeeded {
-    public function __construct(TestDependency $val1, TestDependency2 $val2) {
-        $this->testDep = $val1;
-        $this->testDep = $val2;
-    }
-}
-
-
-class TestMultiDepsWithCtor {
-    public function __construct(TestDependency $val1, TestNeedsDep $val2) {
-        $this->testDep = $val1;
-        $this->testDep = $val2;
-    }
-}
-
-class NoTypehintNullDefaultConstructorClass {
-    public $testParam = 1;
-    public function __construct(TestDependency $val1, $arg=42) {
-        $this->testParam = $arg;
-    }
-}
-
-class NoTypehintNoDefaultConstructorClass {
-    public $testParam = 1;
-    public function __construct(TestDependency $val1, $arg = NULL) {
-        $this->testParam = $arg;
-    }
-}
-
-interface DepInterface {}
-
-class DepImplementation implements DepInterface {
-    public $testProp = 'something';
-}
-
-class RequiresInterface {
-    public $dep;
-    public function __construct(DepInterface $dep) {
-        $this->testDep = $dep;
-    }
-}
-
-class ProvTestNoDefinitionNullDefaultClass {
-    public function __construct($arg = NULL) {
-        $this->arg = $arg;
-    }
-}
-
-class ProviderTestCtorParamWithNoTypehintOrDefault {
-    public $val = 42;
-    public function __construct($val) {
-        $this->val = $val;
-    }
-}
-
-class ProviderTestRawCtorParams {
-    public $string;
-    public $obj;
-    public $int;
-    public $array;
-    public $float;
-    public $bool;
-    
-    public function __construct($string, $obj, $int, $array, $float, $bool) {
-        $this->string = $string;
-        $this->obj = $obj;
-        $this->int = $int;
-        $this->array = $array;
-        $this->float = $float;
-        $this->bool = $bool;
-    }
-}
-
-class ProviderTestParentClass
-{
-    public function __construct($arg1) {
-        $this->arg1 = $arg1;
-    }
-}
-
-class ProviderTestChildClass extends ProviderTestParentClass
-{
-    public function __construct($arg1, $arg2) {
-        parent::__construct($arg1);
-        $this->arg2 = $arg2;
-    }
-
-}
-
-class CallableMock {
-    function __invoke() {
-
-    }
-}
-
-class StringStdClassDelegateMock {
-    function __invoke() {
-        return $this->make();
-    }
-    private function make() {
-        $obj = new StdClass;
-        $obj->test = 42;
-        return $obj;
-    }
-}
-
-class StringDelegateWithNoInvokeMethod {}
-
-// -------------------------------------------------------------------------------------------------
-
-class ExecuteClassNoDeps {
-    function execute() {
-        return 42;
-    }
-}
-
-class ExecuteClassDeps {
-    function __construct(TestDependency $testDep) {}
-    function execute() {
-        return 42;
-    }
-}
-
-class ExecuteClassDepsWithMethodDeps {
-    function __construct(TestDependency $testDep) {}
-    function execute(TestDependency $dep, $arg = NULL) {
-        return isset($arg) ? $arg : 42;
-    }
-}
-
-class ExecuteClassStaticMethod {
-    static function execute() {
-        return 42;
-    }
-}
-
-class ExecuteClassRelativeStaticMethod extends ExecuteClassStaticMethod {
-    static function execute() {
-        return 'this should NEVER be seen since we are testing against parent::execute()';
-    }
-}
-
-class ExecuteClassInvokable {
-    function __invoke() {
-        return 42;
-    }
-}
-
-function testExecuteFunction() {
-    return 42;
 }
 

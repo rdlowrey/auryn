@@ -3,6 +3,6 @@
 namespace Auryn;
 
 /**
- * A catch-all exception for DIC class instantiation errors
+ * A catch-all exception for DIC instantiation errors
  */
-class InjectionException extends \RuntimeException {}
+class InjectionException extends Exception {}
