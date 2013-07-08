@@ -30,7 +30,7 @@ class Provider implements Injector {
      * @throws InjectionException
      * @return mixed A dependency-injected object
      */
-    function make($className, array $customDefinition = NULL) {
+    function make($className, array $customDefinition = array()) {
         $lowClass = strtolower($className);
         
         // `isset` is used specifically here instead of `isShared` because classes may be marked
@@ -100,10 +100,32 @@ class Provider implements Injector {
     }
     
     private function selectDefinition($className, $customDefinition) {
-        if (!is_null($customDefinition)) {
-            return $customDefinition;
-        } elseif ($this->isDefined($className)) {
-            return $this->injectionDefinitions[$className];
+        $definitions = $this->selectParentDefinitions($className, $this->getDefinition($className));
+        return array_merge($definitions, $customDefinition);
+    }
+
+    private function selectParentDefinitions($className, $childDefinition) {
+        try {
+            $classReflector = $this->reflectionStorage->getClass($className);
+            $parent = $classReflector->getParentClass();
+            if ($parent) {
+                return $this->selectParentDefinitions($parent->getName(), $childDefinition);
+            } else {
+                return array_merge($this->getDefinition($className), $childDefinition);
+            }
+        } catch (\ReflectionException $e) {
+            throw new InjectionException(
+                "Provider instantiation failure: $className doesn't exist".
+                ' and could not be found by any registered autoloaders.',
+                0, $e
+            );
+        }
+    }
+
+    private function getDefinition($className) {
+        $lowClass = strtolower($className);
+        if ($this->isDefined($lowClass)) {
+            return $this->injectionDefinitions[$lowClass];
         } else {
             return array();
         }
