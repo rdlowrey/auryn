@@ -242,7 +242,7 @@ class Provider implements Injector {
      * @param mixed $callableOrMethodArr Valid PHP callable or an array of the form [$className, $methodName]
      * @param array $invocationArgs Optional array specifying params to invoke the provisioned callable
      */
-    function execute($callableOrMethodArr, array $invocationArgs = []) {
+    function execute($callableOrMethodArr, array $invocationArgs = array()) {
         list($callableRefl, $invocationObj) = $this->generateCallableReflection($callableOrMethodArr);
         $args = $this->generateInvocationArgs($callableRefl, $invocationArgs);
         
