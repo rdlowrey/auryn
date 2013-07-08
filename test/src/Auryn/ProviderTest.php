@@ -149,6 +149,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::isInstantiable
+     * @covers Auryn\Provider::selectParentDefinitions
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionOnClassLoadFailure() {
@@ -170,6 +171,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::selectDefinition
+     * @covers Auryn\Provider::getDefinition
      * @covers Auryn\Provider::buildArgumentFromTypeHint
      * @covers Auryn\Provider::isInstantiable
      */
@@ -178,6 +180,22 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->define('TestNeedsDep', array('testDep'=>'TestDependency'));
         $injected = $provider->make('TestNeedsDep', array('testDep'=>'TestDependency2'));
         $this->assertEquals('testVal2', $injected->testDep->testProp);
+    }
+
+    /**
+     * @covers Auryn\Provider::make
+     * @covers Auryn\Provider::getInjectedInstance
+     * @covers Auryn\Provider::selectDefinition
+     * @covers Auryn\Provider::getDefinition
+     * @covers Auryn\Provider::buildArgumentFromTypeHint
+     * @covers Auryn\Provider::isInstantiable
+     */
+    public function testMakeCustomDefinitionOverridesExistingDefinitions() {
+        $provider = new Provider(new ReflectionPool);
+        $provider->define('ProviderTestChildClass', array(':arg1'=>'First argument', ':arg2'=>'Second argument'));
+        $injected = $provider->make('ProviderTestChildClass', array(':arg1'=>'Override'));
+        $this->assertEquals('Override', $injected->arg1);
+        $this->assertEquals('Second argument', $injected->arg2);
     }
     
     /**
@@ -393,10 +411,27 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider(new ReflectionPool);
         $obj = $provider->make('RequiresInterface');
     }
+
+    /**
+     * @covers Auryn\Provider::make
+     * @covers Auryn\Provider::selectParentDefinitions
+     * @covers Auryn\Provider::getDefinition
+     */
+    public function testMakeInheritsParentClassDefinitionsForInstantiation()
+    {
+        $provider = new Provider(new ReflectionPool);
+        $provider->define('ProviderTestParentClass', array(':arg1' => 'First argument'));
+
+        $provider->define('ProviderTestChildClass', array(':arg2' => 'Second argument'));
+        $obj = $provider->make('ProviderTestChildClass');
+        $this->assertEquals('First argument', $obj->arg1);
+        $this->assertEquals('Second argument', $obj->arg2);
+    }
     
     /**
      * @covers Auryn\Provider::define
      * @covers Auryn\Provider::selectDefinition
+     * @covers Auryn\Provider::getDefinition
      */
     public function testDefineAssignsPassedDefinition() {
         $provider = new Provider(new ReflectionPool);
@@ -697,6 +732,22 @@ class ProviderTestRawCtorParams {
         $this->float = $float;
         $this->bool = $bool;
     }
+}
+
+class ProviderTestParentClass
+{
+    public function __construct($arg1) {
+        $this->arg1 = $arg1;
+    }
+}
+
+class ProviderTestChildClass extends ProviderTestParentClass
+{
+    public function __construct($arg1, $arg2) {
+        parent::__construct($arg1);
+        $this->arg2 = $arg2;
+    }
+
 }
 
 class CallableMock {
