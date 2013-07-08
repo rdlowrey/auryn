@@ -1,3 +1,10 @@
+v0.6.0
+================================================================================
+- Parent definitions are now inherited by child classes (unless overridden)
+courtesy of @ascii-soup
+- Fixed incompatibility with PHP5.3 -- credit: @ascii-soup
+
+
 v0.5.0
 ================================================================================
 - Added Injector::execute() method for recursively provisioning method
