@@ -318,6 +318,14 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
 
     /**
+     * @covers Auryn\Provider::make
+     */
+    public function testMakeHandlesNamespacedClasses() {
+        $provider = new Provider(new ReflectionPool);
+        $provider->make('SomeNamespace\\SomeClassName');
+    }
+
+    /**
      * @covers Auryn\Provider::delegate
      * @covers Auryn\Provider::doDelegation
      * @covers Auryn\Provider::make
@@ -521,7 +529,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     
     public function testDelegateInstantiatesCallableClassArray() {
         $provider = new Provider;
-        $provider->delegate('MadeByDelegate', ['CallableDelegateClassTest', '__invoke']);
+        $provider->delegate('MadeByDelegate', array('CallableDelegateClassTest', '__invoke'));
         $this->assertInstanceof('MadeByDelegate', $provider->make('MadeByDelegate'));
     }
     
