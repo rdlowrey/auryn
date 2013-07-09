@@ -1,0 +1,3 @@
+
+// this file should hold parsable JSON but it doesn't so
+// the parsing will fail and generate a BuilderException

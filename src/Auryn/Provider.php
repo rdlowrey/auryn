@@ -130,7 +130,7 @@ class Provider implements Injector {
      * 
      * @param string $className
      * @param array $injectionDefinition An associative array matching constructor params to values
-     * @throws InjectionException
+     * @throws BadArgumentException On missing raw injection prefix
      * @return void
      */
     function define($className, array $injectionDefinition) {
@@ -141,8 +141,8 @@ class Provider implements Injector {
     
     private function validateInjectionDefinition(array $injectionDefinition) {
         foreach ($injectionDefinition as $paramName => $value) {
-            if (0 !== strpos($paramName, self::RAW_INJECTION_PREFIX) && !is_string($value)) {
-                throw new InjectionException(
+            if ($paramName[0] !== self::RAW_INJECTION_PREFIX && !is_string($value)) {
+                throw new BadArgumentException(
                     "Invalid injection definition for parameter {$paramName}; raw parameter " .
                     "names must be prefixed with `:` (:{$paramName}) to differentiate them " .
                     'from provisionable type-hints.'
@@ -156,11 +156,18 @@ class Provider implements Injector {
      * 
      * @param string $typehintToReplace
      * @param string $alias
+     * @throws BadArgumentException On non-empty string argument
      * @return void
      */
     function alias($typehintToReplace, $alias) {
-        $typehintToReplace = strtolower($typehintToReplace);
-        $this->aliases[$typehintToReplace] = $alias;
+        if ($typehintToReplace && $alias && is_string($typehintToReplace) && is_string($alias)) {
+            $typehintToReplace = strtolower($typehintToReplace);
+            $this->aliases[$typehintToReplace] = $alias;
+        } else {
+            throw new BadArgumentException(
+                'Invalid alias: non-empty string required at both Argument 1 and Argument 2'
+            );
+        }
     }
     
     /**
@@ -218,8 +225,7 @@ class Provider implements Injector {
         }
     }
     /**
-     * Delegates the creation of $class to $callable.  Passes $class to $callable as the only
-     * argument
+     * Delegates the creation of $class to $callable. Passes $class to $callable as the only argument
      *
      * @param string $className
      * @param callable $callable

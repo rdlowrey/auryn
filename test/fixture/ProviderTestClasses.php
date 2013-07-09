@@ -1,5 +1,7 @@
 <?php
 
+class ClassWithoutMagicInvoke {}
+
 class TestNoConstructor {}
 
 class TestDependency {
@@ -56,6 +58,8 @@ class NoTypehintNoDefaultConstructorClass {
 }
 
 interface DepInterface {}
+interface SomeInterface {}
+class SomeImplementation implements SomeInterface {}
 
 class DepImplementation implements DepInterface {
     public $testProp = 'something';

@@ -387,7 +387,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @dataProvider provideInvalidRawDefinitions
      * @covers Auryn\Provider::make
      * @covers Auryn\Provider::validateInjectionDefinition
-     * @expectedException Auryn\InjectionException
+     * @expectedException Auryn\BadArgumentException
      */
     public function testDefineThrowsExceptionOnRawParamDefinitionMissingRawParameterPrefix($def) {
         $provider = new Provider(new ReflectionPool);

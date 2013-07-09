@@ -1,0 +1,20 @@
+{
+    "definitions": {
+        "RequiresInterface": {
+            "dep":"DepImplementation"
+        }
+    },
+    
+    "shares": [
+        "RequiresInterface",
+        "DepImplementation"
+    ],
+    
+    "aliases": {
+        "SomeInterface": "SomeImplementation"
+    },
+    
+    "delegates": {
+        "MadeByDelegate": "CallableDelegateClassTest"
+    }
+}

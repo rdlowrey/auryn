@@ -11,16 +11,22 @@ namespace Auryn;
  */
 class ApcReflectionPool extends ReflectionPool {
     
-    private $timeToLive = 120;
+    /**
+     * @var int
+     */
+    private $timeToLive = 15;
     
     /**
-     * Set the cache TTL -- the time in seconds until a cache entry becomes stale (120 by default)
+     * Set the cache TTL -- the time in seconds until a cache entry becomes stale (15 by default)
      * 
-     * @param seconds
-     * @return void
+     * @param int $seconds How long to cache reflection instances
+     * @return ApcReflectionPool Returns the current object instance
      */
     function setTimeToLive($seconds) {
-        $this->timeToLive = (int) $seconds;
+        $seconds = (int) $seconds;
+        $this->timeToLive = ($seconds > 0) ? $seconds : $this->timeToLive;
+        
+        return $this;
     }
     
     protected function fetchFromCache($key) {
@@ -28,7 +34,7 @@ class ApcReflectionPool extends ReflectionPool {
     }
     
     protected function doApcFetch($key) {
-        return apc_exists($key) ? apc_fetch($key) : false;
+        return apc_exists($key) ? apc_fetch($key) : FALSE;
     }
     
     protected function storeInCache($key, $data) {
@@ -41,4 +47,3 @@ class ApcReflectionPool extends ReflectionPool {
     }
     
 }
-

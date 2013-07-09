@@ -15,11 +15,11 @@ use ReflectionClass,
  */
 class ReflectionPool implements ReflectionStorage {
     
-    const CACHE_KEY_CLASSES = 'auryn\\refls\\classes';
-    const CACHE_KEY_CTORS = 'auryn\\refls\\ctors';
-    const CACHE_KEY_CTOR_PARAMS = 'auryn\\refls\\ctor-params';
-    const CACHE_KEY_FUNCS = 'auryn\\refls\\funcs';
-    const CACHE_KEY_METHODS = 'auryn\\refls\\methods';
+    const CACHE_KEY_CLASSES = 'auryn.refls.classes';
+    const CACHE_KEY_CTORS = 'auryn.refls.ctors';
+    const CACHE_KEY_CTOR_PARAMS = 'auryn.refls.ctor-params';
+    const CACHE_KEY_FUNCS = 'auryn.refls.funcs';
+    const CACHE_KEY_METHODS = 'auryn.refls.methods';
     
     /**
      * @var array
@@ -35,7 +35,7 @@ class ReflectionPool implements ReflectionStorage {
      */
     public function getClass($class) {
         $lowClass = strtolower($class);
-        $cacheKey = self::CACHE_KEY_CLASSES . '\\' . $lowClass;
+        $cacheKey = self::CACHE_KEY_CLASSES . '.' . $lowClass;
         
         if (!$reflectionClass = $this->fetchFromCache($cacheKey)) {
             $reflectionClass = new ReflectionClass($class);
@@ -61,7 +61,7 @@ class ReflectionPool implements ReflectionStorage {
      */
     public function getConstructor($class) {
         $lowClass = strtolower($class);
-        $cacheKey = self::CACHE_KEY_CTORS . '\\' . $lowClass;
+        $cacheKey = self::CACHE_KEY_CTORS . '.' . $lowClass;
         
         $reflectedCtor = $this->fetchFromCache($cacheKey);
         
@@ -82,7 +82,7 @@ class ReflectionPool implements ReflectionStorage {
      */
     public function getConstructorParameters($class) {
         $lowClass = strtolower($class);
-        $cacheKey = self::CACHE_KEY_CTOR_PARAMS . '\\' . $lowClass;
+        $cacheKey = self::CACHE_KEY_CTOR_PARAMS . '.' . $lowClass;
         
         $reflectedCtorParams = $this->fetchFromCache($cacheKey);
         
@@ -116,7 +116,7 @@ class ReflectionPool implements ReflectionStorage {
         $lowMethod = strtolower($method->name);
         $lowParam = strtolower($param->name);
         
-        $paramCacheKey = self::CACHE_KEY_CLASSES . "\\$lowMethod\\param-$lowParam";
+        $paramCacheKey = self::CACHE_KEY_CLASSES . ".$lowMethod.param-$lowParam";
         $typeHint = $this->fetchFromCache($paramCacheKey);
         
         if (false !== $typeHint) {
@@ -125,7 +125,7 @@ class ReflectionPool implements ReflectionStorage {
         
         if ($reflectionClass = $param->getClass()) {
             $typeHint = $reflectionClass->getName();
-            $classCacheKey = self::CACHE_KEY_CLASSES . '\\' . strtolower($typeHint);
+            $classCacheKey = self::CACHE_KEY_CLASSES . '.' . strtolower($typeHint);
             $this->storeInCache($classCacheKey, $reflectionClass);
         } else {
             $typeHint = NULL;
@@ -144,7 +144,7 @@ class ReflectionPool implements ReflectionStorage {
      */
     public function getFunction($functionName) {
         $lowFunc = strtolower($functionName);
-        $cacheKey = self::CACHE_KEY_FUNCS . '\\' . $lowFunc;
+        $cacheKey = self::CACHE_KEY_FUNCS . '.' . $lowFunc;
         
         $reflectedFunc = $this->fetchFromCache($cacheKey);
         
@@ -170,7 +170,7 @@ class ReflectionPool implements ReflectionStorage {
         
         $lowClass = strtolower($className);
         $lowMethod = strtolower($methodName);
-        $cacheKey = self::CACHE_KEY_METHODS . '\\' . $lowClass . '\\' . $lowMethod;
+        $cacheKey = self::CACHE_KEY_METHODS . '.' . $lowClass . '.' . $lowMethod;
         
         if (!$reflectedMethod = $this->fetchFromCache($cacheKey)) {
             $reflectedMethod = new \ReflectionMethod($className, $methodName);
@@ -179,4 +179,5 @@ class ReflectionPool implements ReflectionStorage {
         
         return $reflectedMethod;
     }
+    
 }

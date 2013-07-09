@@ -5,4 +5,4 @@ namespace Auryn;
 /**
  * Thrown on bad arguments passed to injector calls
  */
-class BadArgumentException extends Exception {}
+class BadArgumentException extends \InvalidArgumentException {}
