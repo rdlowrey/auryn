@@ -44,7 +44,7 @@ class Provider implements Injector {
             $delegate = $this->delegatedClasses[$lowClass];
             $provisionedObject = $this->doDelegation($delegate, $className);
         } else {
-            $injectionDefinition = $this->selectDefinition($lowClass, $customDefinition);
+            $injectionDefinition = $this->selectDefinition($className, $customDefinition);
             $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
         }
         
