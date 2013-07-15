@@ -56,7 +56,7 @@ class Provider implements Injector {
     }
     
     private function delegateExists($class) {
-        return array_key_exists($class, $this->delegatedClasses);
+        return array_key_exists(strtolower($class), $this->delegatedClasses);
     }
     
     private function doDelegation($callable, $class) {
@@ -418,7 +418,7 @@ class Provider implements Injector {
     private function buildArgumentFromTypeHint(\ReflectionMethod $reflMethod, \ReflectionParameter $reflParam) {
         $typeHint = $this->reflectionStorage->getParamTypeHint($reflMethod, $reflParam);
           
-        if ($typeHint && $this->isInstantiable($typeHint)) {
+        if ($typeHint && ($this->isInstantiable($typeHint) || $this->delegateExists($typeHint))) {
             return $this->make($typeHint);
         } elseif ($typeHint) {
             return $this->buildAbstractTypehintParam($typeHint, $reflParam->name);
