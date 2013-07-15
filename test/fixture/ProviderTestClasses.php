@@ -188,3 +188,28 @@ class CallableDelegateClassTest {
     }
 }
 
+interface DelegatableInterface {
+    function foo();
+}
+
+class ImplementsInterface implements DelegatableInterface{
+    function foo(){
+    }
+}
+
+class ImplementsInterfaceFactory{
+    public function __invoke() {
+        return new ImplementsInterface();
+    }
+}
+
+class RequiresDelegatedInterface {
+    private $interface;
+
+    public function __construct(DelegatableInterface $interface) {
+        $this->interface = $interface;
+    }
+    public function foo() {
+        $this->interface->foo();
+    }
+}

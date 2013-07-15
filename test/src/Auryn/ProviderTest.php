@@ -645,6 +645,12 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         
         return $return;
     }
-    
+
+    public function testInterfaceFactoryDelegation() {
+        $injector = new Auryn\Provider(new Auryn\ReflectionPool);
+        $injector->delegate('DelegatableInterface', 'ImplementsInterfaceFactory');
+        $requiresDelegatedInterface = $injector->make('RequiresDelegatedInterface');
+        $requiresDelegatedInterface->foo();
+    }
 }
 
