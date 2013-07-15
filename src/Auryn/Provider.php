@@ -37,10 +37,8 @@ class Provider implements Injector {
         // as "shared" before an instance is stored. In such cases, the class is shared, but
         // has a NULL value and must be instantiated by the Provider to create the shared instance.
         if (isset($this->sharedClasses[$lowClass])) {
-            return $this->sharedClasses[$lowClass];
-        }
-        
-        if ($this->delegateExists($lowClass)) {
+            $provisionedObject = $this->sharedClasses[$lowClass];
+        } elseif ($this->delegateExists($lowClass)) {
             $delegate = $this->delegatedClasses[$lowClass];
             $provisionedObject = $this->doDelegation($delegate, $className);
         } else {
@@ -56,7 +54,7 @@ class Provider implements Injector {
     }
     
     private function delegateExists($class) {
-        return array_key_exists(strtolower($class), $this->delegatedClasses);
+        return isset($this->delegatedClasses[strtolower($class)]);
     }
     
     private function doDelegation($callable, $class) {
@@ -415,8 +413,8 @@ class Provider implements Injector {
         return $implObj;
     }
     
-    private function buildArgumentFromTypeHint(\ReflectionMethod $reflMethod, \ReflectionParameter $reflParam) {
-        $typeHint = $this->reflectionStorage->getParamTypeHint($reflMethod, $reflParam);
+    private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam) {
+        $typeHint = $this->reflectionStorage->getParamTypeHint($reflFunc, $reflParam);
           
         if ($typeHint && ($this->isInstantiable($typeHint) || $this->delegateExists($typeHint))) {
             return $this->make($typeHint);

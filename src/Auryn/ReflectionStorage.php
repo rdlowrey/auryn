@@ -2,9 +2,6 @@
 
 namespace Auryn;
 
-use ReflectionMethod,
-    ReflectionParameter;
-
 /**
  * An facade providing access to cached reflection instances
  */
@@ -30,7 +27,7 @@ interface ReflectionStorage {
      * Retrieves and caches an array of constructor parameters for the given class
      * 
      * @param string $class
-     * @return array[ReflectionParameter]
+     * @return array[\ReflectionParameter]
      */
     function getConstructorParameters($class);
     
@@ -43,10 +40,10 @@ interface ReflectionStorage {
      * the same parameter type-hint or ReflectionClass is needed again we
      * already have it cached.
      * 
-     * @param ReflectionMethod $method
-     * @param ReflectionParameter $parameter
+     * @param \ReflectionFunctionAbstract $function
+     * @param \ReflectionParameter $parameter
      */
-    function getParamTypeHint(ReflectionMethod $method, ReflectionParameter $parameter);
+    function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $parameter);
     
     /**
      * Retrieves and caches a reflection for the specified function
