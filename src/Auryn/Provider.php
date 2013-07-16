@@ -21,10 +21,10 @@ class Provider implements Injector {
     function __construct(ReflectionStorage $reflectionStorage = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
-    
+
     /**
      * Instantiate a class according to a predefined or call-time injection definition
-     * 
+     *
      * @param string $className Class name
      * @param array  $customDefinition An optional array of custom instantiation parameters
      * @throws InjectionException
@@ -32,24 +32,29 @@ class Provider implements Injector {
      */
     function make($className, array $customDefinition = array()) {
         $lowClass = strtolower($className);
-        
-        // `isset` is used specifically here instead of `isShared` because classes may be marked
-        // as "shared" before an instance is stored. In such cases, the class is shared, but
-        // has a NULL value and must be instantiated by the Provider to create the shared instance.
-        if (isset($this->sharedClasses[$lowClass])) {
-            $provisionedObject = $this->sharedClasses[$lowClass];
-        } elseif ($this->delegateExists($lowClass)) {
-            $delegate = $this->delegatedClasses[$lowClass];
-            $provisionedObject = $this->doDelegation($delegate, $className);
-        } else {
-            $injectionDefinition = $this->selectDefinition($className, $customDefinition);
-            $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
+
+        try{
+            // `isset` is used specifically here instead of `isShared` because classes may be marked
+            // as "shared" before an instance is stored. In such cases, the class is shared, but
+            // has a NULL value and must be instantiated by the Provider to create the shared instance.
+            if (isset($this->sharedClasses[$lowClass])) {
+                $provisionedObject = $this->sharedClasses[$lowClass];
+            } elseif ($this->delegateExists($lowClass)) {
+                $delegate = $this->delegatedClasses[$lowClass];
+                $provisionedObject = $this->doDelegation($delegate, $className);
+            } else {
+                $injectionDefinition = $this->selectDefinition($className, $customDefinition);
+                $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
+            }
         }
-        
+        catch(\ReflectionException $e){
+            throw new InjectionException("Could not make $className: ".$e->getMessage(), $e->getCode(), $e);
+        }
+
         if ($this->isShared($lowClass)) {
             $this->sharedClasses[$lowClass] = $provisionedObject;
         }
-        
+
         return $provisionedObject;
     }
     

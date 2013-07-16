@@ -652,5 +652,14 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $requiresDelegatedInterface = $injector->make('RequiresDelegatedInterface');
         $requiresDelegatedInterface->foo();
     }
+
+    /**
+     * @expectedException Auryn\InjectionException
+     */
+    public function testMissingAlias() {
+        $injector = new Auryn\Provider(new Auryn\ReflectionPool);
+        $testClass = $injector->make('TestMissingDependency');
+    }
+    
 }
 

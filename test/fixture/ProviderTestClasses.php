@@ -213,3 +213,9 @@ class RequiresDelegatedInterface {
         $this->interface->foo();
     }
 }
+
+class TestMissingDependency {
+ 
+    function __construct(TypoInTypehint $class) {        
+    }
+}
