@@ -39,17 +39,21 @@ class Provider implements Injector {
         if (isset($this->sharedClasses[$lowClass])) {
             return $this->sharedClasses[$lowClass];
         }
-        
-        if ($this->delegateExists($lowClass)) {
-            $delegate = $this->delegatedClasses[$lowClass];
-            $provisionedObject = $this->doDelegation($delegate, $className);
-        } else {
-            $injectionDefinition = $this->selectDefinition($className, $customDefinition);
-            $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
+
+        try{
+            if ($this->delegateExists($lowClass)) {
+                $delegate = $this->delegatedClasses[$lowClass];
+                $provisionedObject = $this->doDelegation($delegate, $className);
+            } else {
+                $injectionDefinition = $this->selectDefinition($className, $customDefinition);
+                $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
+            }
+            if ($this->isShared($lowClass)) {
+                $this->sharedClasses[$lowClass] = $provisionedObject;
+            }
         }
-        
-        if ($this->isShared($lowClass)) {
-            $this->sharedClasses[$lowClass] = $provisionedObject;
+        catch(\ReflectionException $re){
+            throw new InjectionException("Could not make $className: ".$e->getMessage(), $e->getCode(), $e);
         }
         
         return $provisionedObject;
