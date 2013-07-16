@@ -658,7 +658,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      */
     public function testMissingAlias() {
         $injector = new Auryn\Provider(new Auryn\ReflectionPool);
-//        $injector->alias('TestInterface', 'CorrectlySpelledImplementation');
         $testClass = $injector->make('TestMissingDependency');
     }
     
