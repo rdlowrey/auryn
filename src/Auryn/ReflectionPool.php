@@ -104,22 +104,30 @@ class ReflectionPool implements ReflectionStorage {
      * 
      * There is no way to retrieve the string type-hint value directly from a ReflectionParameter
      * instance -- a new ReflectionClass must be generated from the type-hint and its name returned.
-     * We require the ReflectionMethod parameter so that a unique cache key can be generated for
+     * We require the reflection function so that a unique cache key can be generated for
      * future type-hint retrieval.
      * 
-     * @param ReflectionFunctionAbstract $function
-     * @param ReflectionParameter $param
+     * @param \ReflectionFunctionAbstract $function
+     * @param \ReflectionParameter $param
      * @return string The type-hint of the specified parameter or NULL if none exists
      */
-    public function getParamTypeHint(ReflectionMethod $method, ReflectionParameter $param) {
-        $lowClass = strtolower($method->class);
-        $lowMethod = strtolower($method->name);
+    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param) {
         $lowParam = strtolower($param->name);
         
-        $paramCacheKey = self::CACHE_KEY_CLASSES . ".$lowMethod.param-$lowParam";
-        $typeHint = $this->fetchFromCache($paramCacheKey);
+        if ($function instanceof \ReflectionMethod) {
+            $lowClass = strtolower($function->class);
+            $lowMethod = strtolower($function->name);
+            $paramCacheKey = self::CACHE_KEY_CLASSES . ".{$lowMethod}.param-{$lowParam}";
+        } else {
+            $lowFunc = strtolower($function->name);
+            $paramCacheKey = ($lowFunc !== '{closure}')
+                ? self::CACHE_KEY_FUNCS . ".{$lowFunc}.param-{$lowParam}"
+                : NULL;
+        }
         
-        if (false !== $typeHint) {
+        $typeHint = ($paramCacheKey === NULL) ? FALSE : $this->fetchFromCache($paramCacheKey);
+        
+        if (FALSE !== $typeHint) {
             return $typeHint;
         }
         

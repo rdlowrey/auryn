@@ -21,10 +21,10 @@ class Provider implements Injector {
     function __construct(ReflectionStorage $reflectionStorage = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
-    
+
     /**
      * Instantiate a class according to a predefined or call-time injection definition
-     * 
+     *
      * @param string $className Class name
      * @param array  $customDefinition An optional array of custom instantiation parameters
      * @throws InjectionException
@@ -32,16 +32,14 @@ class Provider implements Injector {
      */
     function make($className, array $customDefinition = array()) {
         $lowClass = strtolower($className);
-        
-        // `isset` is used specifically here instead of `isShared` because classes may be marked
-        // as "shared" before an instance is stored. In such cases, the class is shared, but
-        // has a NULL value and must be instantiated by the Provider to create the shared instance.
-        if (isset($this->sharedClasses[$lowClass])) {
-            return $this->sharedClasses[$lowClass];
-        }
 
         try{
-            if ($this->delegateExists($lowClass)) {
+            // `isset` is used specifically here instead of `isShared` because classes may be marked
+            // as "shared" before an instance is stored. In such cases, the class is shared, but
+            // has a NULL value and must be instantiated by the Provider to create the shared instance.
+            if (isset($this->sharedClasses[$lowClass])) {
+                $provisionedObject = $this->sharedClasses[$lowClass];
+            } elseif ($this->delegateExists($lowClass)) {
                 $delegate = $this->delegatedClasses[$lowClass];
                 $provisionedObject = $this->doDelegation($delegate, $className);
             } else {
@@ -61,7 +59,7 @@ class Provider implements Injector {
     }
     
     private function delegateExists($class) {
-        return array_key_exists(strtolower($class), $this->delegatedClasses);
+        return isset($this->delegatedClasses[strtolower($class)]);
     }
     
     private function doDelegation($callable, $class) {
@@ -420,8 +418,8 @@ class Provider implements Injector {
         return $implObj;
     }
     
-    private function buildArgumentFromTypeHint(\ReflectionMethod $reflMethod, \ReflectionParameter $reflParam) {
-        $typeHint = $this->reflectionStorage->getParamTypeHint($reflMethod, $reflParam);
+    private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam) {
+        $typeHint = $this->reflectionStorage->getParamTypeHint($reflFunc, $reflParam);
           
         if ($typeHint && ($this->isInstantiable($typeHint) || $this->delegateExists($typeHint))) {
             return $this->make($typeHint);
