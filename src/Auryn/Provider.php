@@ -48,14 +48,15 @@ class Provider implements Injector {
                 $injectionDefinition = $this->selectDefinition($className, $customDefinition);
                 $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
             }
-            if ($this->isShared($lowClass)) {
-                $this->sharedClasses[$lowClass] = $provisionedObject;
-            }
         }
         catch(\ReflectionException $e){
             throw new InjectionException("Could not make $className: ".$e->getMessage(), $e->getCode(), $e);
         }
-        
+
+        if ($this->isShared($lowClass)) {
+            $this->sharedClasses[$lowClass] = $provisionedObject;
+        }
+
         return $provisionedObject;
     }
     
