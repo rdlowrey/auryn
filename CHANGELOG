@@ -1,3 +1,13 @@
+v0.7.0
+================================================================================
+- Delegates are now automatically provisioned 
+- New ProviderBuilder allows for populating injectors from an array, PHP or
+  JSON file (@ascii-soup + @rdlowrey)
+- Interfaces and abstract classes may now be delegated directly without the
+  need for aliasing (@Danack)
+- Exceptions thrown by the library have been streamlined
+
+
 v0.6.0
 ================================================================================
 - Parent definitions are now inherited by child classes (unless overridden)
