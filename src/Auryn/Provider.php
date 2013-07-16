@@ -52,7 +52,7 @@ class Provider implements Injector {
                 $this->sharedClasses[$lowClass] = $provisionedObject;
             }
         }
-        catch(\ReflectionException $re){
+        catch(\ReflectionException $e){
             throw new InjectionException("Could not make $className: ".$e->getMessage(), $e->getCode(), $e);
         }
         
