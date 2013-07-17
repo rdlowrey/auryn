@@ -660,6 +660,11 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $injector = new Auryn\Provider(new Auryn\ReflectionPool);
         $testClass = $injector->make('TestMissingDependency');
     }
-    
-}
 
+    function testAliasingConcreteClasses(){
+        $provider = new Auryn\Provider();
+        $provider->alias('ConcreteClass1', 'ConcreteClass2');
+        $class = $provider->make('ConcreteClass1');
+        $this->assertEquals('Class2', get_class($class));
+    }
+}

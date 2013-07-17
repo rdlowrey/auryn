@@ -219,3 +219,7 @@ class TestMissingDependency {
     function __construct(TypoInTypehint $class) {        
     }
 }
+
+class ConcreteClass1{}
+
+class ConcreteClass2{}
