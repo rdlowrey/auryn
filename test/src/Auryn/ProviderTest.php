@@ -665,6 +665,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Auryn\Provider();
         $provider->alias('ConcreteClass1', 'ConcreteClass2');
         $class = $provider->make('ConcreteClass1');
-        $this->assertEquals('Class2', get_class($class));
+        $this->assertEquals('ConcreteClass2', get_class($class));
     }
 }
