@@ -652,11 +652,28 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::alias
      * @covers Auryn\Provider::make
      */
-    public function testAliasingConcreteClasses(){
+    public function testAliasingConcreteClasses() {
         $provider = new Auryn\Provider();
         $provider->alias('ConcreteClass1', 'ConcreteClass2');
         $obj = $provider->make('ConcreteClass1');
         $this->assertInstanceOf('ConcreteClass2', $obj);
     }
-    
+
+    public function testSharedByAliasedInterfaceName() {
+        $provider = new Auryn\Provider();
+        $provider->alias('SharedAliasedInterface', 'SharedClass');
+        $provider->share('SharedAliasedInterface');
+        $sharedClass = $provider->make('SharedAliasedInterface');
+        $childClass = $provider->make('ClassWithAliasAsParameter');
+        $this->assertSame($sharedClass, $childClass->getSharedClass());
+    }
+
+    public function testSharedByAliasedInstance() {
+        $provider = new Auryn\Provider();
+        $provider->alias('SharedAliasedInterface', 'SharedClass');
+        $sharedClass = $provider->make('SharedAliasedInterface');
+        $provider->share($sharedClass);
+        $childClass = $provider->make('ClassWithAliasAsParameter');
+        $this->assertSame($sharedClass, $childClass->getSharedClass());
+    }
 }

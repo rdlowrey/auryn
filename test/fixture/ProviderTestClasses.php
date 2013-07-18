@@ -6,6 +6,28 @@ class ConcreteClass2 {}
 
 class ClassWithoutMagicInvoke {}
 
+interface SharedAliasedInterface {
+    function foo();
+}
+
+class SharedClass implements SharedAliasedInterface {    
+    function foo(){}
+}
+
+class ClassWithAliasAsParameter {
+    
+    private $sharedClass;
+    
+    function    __construct(SharedClass $sharedClass) {
+        $this->sharedClass = $sharedClass;
+    }
+    
+    function getSharedClass() {
+        return $this->sharedClass;
+    }
+}
+
+
 class TestNoConstructor {}
 
 class TestDependency {
