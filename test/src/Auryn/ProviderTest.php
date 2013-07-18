@@ -444,13 +444,13 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::refresh
      */
-    public function testRefreshShareClearsSharedInstanceAndReturnsNull() {
+    public function testRefreshShareClearsSharedInstanceAndReturnsCurrentInstance() {
         $provider = new Provider(new ReflectionPool);
         $provider->share('TestDependency');
         $obj = $provider->make('TestDependency');
         $obj->testProp = 42;
         
-        $this->assertEquals(null, $provider->refresh('TestDependency'));
+        $this->assertInstanceOf('Auryn\Provider', $provider->refresh('TestDependency'));
         $refreshedObj = $provider->make('TestDependency');
         $this->assertEquals('testVal', $refreshedObj->testProp);
     }
@@ -458,21 +458,21 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::unshare
      */
-    public function testUnshareRemovesSharingAndReturnsNull() { 
+    public function testUnshareRemovesSharingAndReturnsCurrentInstance() { 
         $provider = new Provider(new ReflectionPool);
         $provider->share('TestDependency');
-        $this->assertEquals(null, $provider->unshare('TestDependency'));
+        $this->assertInstanceOf('Auryn\Provider', $provider->unshare('TestDependency'));
     }
     
     /**
      * @covers Auryn\Provider::share
      */
-    public function testShareStoresSharedInstanceAndReturnsNull() {
+    public function testShareStoresSharedInstanceAndReturnsCurrentInstance() {
         $provider = new Provider(new ReflectionPool);
         $testShare = new StdClass;
         $testShare->test = 42;
         
-        $this->assertEquals(null, $provider->share($testShare));
+        $this->assertInstanceOf('Auryn\Provider', $provider->share($testShare));
         $testShare->test = 'test';
         $this->assertEquals('test', $provider->make('stdclass')->test);
     }
@@ -482,7 +482,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      */
     public function testShareMarksClassSharedOnNullObjectParameter() {
         $provider = new Provider(new ReflectionPool);
-        $this->assertEquals(null, $provider->share('Atreyu\\Events\\Mediator'));
+        $this->assertInstanceOf('Auryn\Provider', $provider->share('SomeClass'));
     }
     
     /**
@@ -497,9 +497,9 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\Provider::alias
      */
-    public function testAliasAssignsValueAndReturnsNull() {
+    public function testAliasAssignsValueAndReturnsCurrentInstance() {
         $provider = new Provider(new ReflectionPool);
-        $this->assertEquals(null, $provider->alias('DepInterface', 'DepImplementation'));
+        $this->assertInstanceOf('Auryn\Provider', $provider->alias('DepInterface', 'DepImplementation'));
     }
 
     public function provideInvalidDelegates() {
@@ -660,6 +660,4 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $injector = new Auryn\Provider(new Auryn\ReflectionPool);
         $testClass = $injector->make('TestMissingDependency');
     }
-    
 }
-
