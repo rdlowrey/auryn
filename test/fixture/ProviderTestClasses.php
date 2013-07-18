@@ -1,5 +1,9 @@
 <?php
 
+class ConcreteClass1 {}
+
+class ConcreteClass2 {}
+
 class ClassWithoutMagicInvoke {}
 
 class TestNoConstructor {}

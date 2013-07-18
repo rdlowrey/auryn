@@ -32,8 +32,13 @@ class Provider implements Injector {
      */
     function make($className, array $customDefinition = array()) {
         $lowClass = strtolower($className);
-
-        try{
+        
+        if (isset($this->aliases[$lowClass])) {
+            $className = $this->aliases[$lowClass];
+            $lowClass = strtolower($className);
+        }
+        
+        try {
             // `isset` is used specifically here instead of `isShared` because classes may be marked
             // as "shared" before an instance is stored. In such cases, the class is shared, but
             // has a NULL value and must be instantiated by the Provider to create the shared instance.
@@ -46,8 +51,7 @@ class Provider implements Injector {
                 $injectionDefinition = $this->selectDefinition($className, $customDefinition);
                 $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
             }
-        }
-        catch(\ReflectionException $e){
+        } catch(\ReflectionException $e){
             throw new InjectionException("Could not make $className: ".$e->getMessage(), $e->getCode(), $e);
         }
 

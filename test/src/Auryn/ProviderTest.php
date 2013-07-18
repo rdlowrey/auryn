@@ -63,19 +63,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      * @covers Auryn\Provider::getInjectedInstance
      * @covers Auryn\Provider::buildWithoutConstructorParams
      * @covers Auryn\Provider::buildImplementation
-     * @expectedException Auryn\InjectionException
-     */
-    public function testMakeThrowsExceptionOnInvalidAliasTypeMismatch() {
-        $provider = new Provider(new ReflectionPool);
-        $provider->alias('DepInterface', 'StdClass');
-        $provider->make('DepInterface');
-    }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildWithoutConstructorParams
-     * @covers Auryn\Provider::buildImplementation
      * @covers Auryn\Provider::buildAbstractTypehintParam
      * @expectedException Auryn\InjectionException
      */
@@ -660,4 +647,16 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $injector = new Auryn\Provider(new Auryn\ReflectionPool);
         $testClass = $injector->make('TestMissingDependency');
     }
+    
+    /**
+     * @covers Auryn\Provider::alias
+     * @covers Auryn\Provider::make
+     */
+    public function testAliasingConcreteClasses(){
+        $provider = new Auryn\Provider();
+        $provider->alias('ConcreteClass1', 'ConcreteClass2');
+        $obj = $provider->make('ConcreteClass1');
+        $this->assertInstanceOf('ConcreteClass2', $obj);
+    }
+    
 }
