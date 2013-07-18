@@ -1,20 +1,20 @@
 <?php
 
-use \Auryn\ProviderBuilder;
+use \Auryn\InjectorBuilder;
 
-class ProviderBuilderTest extends PHPUnit_Framework_TestCase
+class InjectorBuilderTest extends PHPUnit_Framework_TestCase
 {
     /**
-     * @var \Auryn\ProviderBuilder
+     * @var \Auryn\InjectorBuilder
      */
     private $builder;
 
     protected function setUp() {
-        $this->builder = new ProviderBuilder;
+        $this->builder = new InjectorBuilder;
     }
 
     /**
-     * @covers \Auryn\ProviderBuilder::fromArray
+     * @covers \Auryn\InjectorBuilder::fromArray
      * @expectedException \Auryn\BuilderException
      */
     public function testFromArrayThrowsExceptionIfInvalidKeyFound() {
@@ -22,8 +22,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers \Auryn\ProviderBuilder::fromArray
-     * @covers \Auryn\ProviderBuilder::addAliases
+     * @covers \Auryn\InjectorBuilder::fromArray
+     * @covers \Auryn\InjectorBuilder::addAliases
      */
     public function testFromArrayWithAliasSpecifiedCallsAliasMethodOnProvider() {
         $provider = $this->getMock('\Auryn\Provider', array('alias'));
@@ -40,8 +40,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::fromArray
-     * @covers \Auryn\ProviderBuilder::addAliases
+     * @covers \Auryn\InjectorBuilder::fromArray
+     * @covers \Auryn\InjectorBuilder::addAliases
      * @expectedException \Auryn\BuilderException
      * @dataProvider provideBadAliases
      */
@@ -61,8 +61,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers \Auryn\ProviderBuilder::fromArray
-     * @covers \Auryn\ProviderBuilder::addDefinitions
+     * @covers \Auryn\InjectorBuilder::fromArray
+     * @covers \Auryn\InjectorBuilder::addDefinitions
      */
     public function testFromArrayWithDefinitionSpecifiedCallsDefineMethodOnProvider() {
         $provider = $this->getMock('\Auryn\Provider', array('define'));
@@ -82,8 +82,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::fromArray
-     * @covers \Auryn\ProviderBuilder::addDefinitions
+     * @covers \Auryn\InjectorBuilder::fromArray
+     * @covers \Auryn\InjectorBuilder::addDefinitions
      * @expectedException \Auryn\BuilderException
      */
     public function testFromArrayThrowsExceptionOnBadDefinition() {
@@ -95,8 +95,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers \Auryn\ProviderBuilder::fromArray
-     * @covers \Auryn\ProviderBuilder::addShares
+     * @covers \Auryn\InjectorBuilder::fromArray
+     * @covers \Auryn\InjectorBuilder::addShares
      */
     public function testFromArrayWithSharedDependencySpecifiedCallsShareMethodOnProvider() {
         $provider = $this->getMock('\Auryn\Provider', array('share'));
@@ -110,8 +110,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::fromArray
-     * @covers \Auryn\ProviderBuilder::addShares
+     * @covers \Auryn\InjectorBuilder::fromArray
+     * @covers \Auryn\InjectorBuilder::addShares
      * @expectedException \Auryn\BuilderException
      * @dataProvider provideBadShares
      */
@@ -129,8 +129,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @covers \Auryn\ProviderBuilder::fromArray
-     * @covers \Auryn\ProviderBuilder::addDelegates
+     * @covers \Auryn\InjectorBuilder::fromArray
+     * @covers \Auryn\InjectorBuilder::addDelegates
      */
     public function testFromArrayWithDelegateSpecifiedCallsDelegateMethodOnProvider() {
         $provider = $this->getMock('\Auryn\Provider', array('delegate'));
@@ -147,8 +147,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::fromArray
-     * @covers \Auryn\ProviderBuilder::addDelegates
+     * @covers \Auryn\InjectorBuilder::fromArray
+     * @covers \Auryn\InjectorBuilder::addDelegates
      * @expectedException \Auryn\BuilderException
      * @dataProvider provideBadDelegates
      */
@@ -174,8 +174,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::fromFile
-     * @covers \Auryn\ProviderBuilder::loadFromPhpFile
+     * @covers \Auryn\InjectorBuilder::fromFile
+     * @covers \Auryn\InjectorBuilder::loadFromPhpFile
      */
     public function testFromFilePopulatesProviderFromPhpConfig() {
         $file = FIXTURE_DIR . '/valid_config.php';
@@ -184,7 +184,7 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::loadFromPhpFile
+     * @covers \Auryn\InjectorBuilder::loadFromPhpFile
      * @expectedException Auryn\BuilderException
      */
     public function testFromFileThrowsOnUnreadablePhpFile() {
@@ -193,7 +193,7 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::fromFile
+     * @covers \Auryn\InjectorBuilder::fromFile
      * @expectedException Auryn\BuilderException
      */
     public function testFromFileThrowsOnUnknownFileType() {
@@ -202,7 +202,7 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::loadFromPhpFile
+     * @covers \Auryn\InjectorBuilder::loadFromPhpFile
      * @expectedException Auryn\BuilderException
      */
     public function testFromFileThrowsOnMissingPhpConfigArray() {
@@ -211,8 +211,8 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::fromFile
-     * @covers \Auryn\ProviderBuilder::loadFromJsonFile
+     * @covers \Auryn\InjectorBuilder::fromFile
+     * @covers \Auryn\InjectorBuilder::loadFromJsonFile
      */
     public function testFromFilePopulatesProviderFromJsonConfig() {
         $file = FIXTURE_DIR . '/valid_config.json';
@@ -221,7 +221,7 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::loadFromJsonFile
+     * @covers \Auryn\InjectorBuilder::loadFromJsonFile
      * @expectedException Auryn\BuilderException
      */
     public function testFromFileThrowsOnUnreadableJsonFile() {
@@ -230,7 +230,7 @@ class ProviderBuilderTest extends PHPUnit_Framework_TestCase
     }
     
     /**
-     * @covers \Auryn\ProviderBuilder::loadFromJsonFile
+     * @covers \Auryn\InjectorBuilder::loadFromJsonFile
      * @expectedException Auryn\BuilderException
      */
     public function testFromFileThrowsOnUnparsableJsonFile() {
