@@ -2,7 +2,7 @@
 
 namespace Auryn;
 
-class ProviderBuilder {
+class InjectorBuilder {
     
     /**
      * @var array

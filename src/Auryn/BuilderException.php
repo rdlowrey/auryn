@@ -3,6 +3,6 @@
 namespace Auryn;
 
 /**
- * A catch-all exception for ProviderBuilder-related errors
+ * A catch-all exception for InjectorBuilder-related errors
  */
 class BuilderException extends \RuntimeException {}

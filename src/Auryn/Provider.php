@@ -27,13 +27,18 @@ class Provider implements Injector {
      *
      * @param string $className Class name
      * @param array  $customDefinition An optional array of custom instantiation parameters
-     * @throws InjectionException
+     * @throws \Auryn\InjectionException
      * @return mixed A dependency-injected object
      */
     function make($className, array $customDefinition = array()) {
         $lowClass = strtolower($className);
-
-        try{
+        
+        if (isset($this->aliases[$lowClass])) {
+            $className = $this->aliases[$lowClass];
+            $lowClass = strtolower($className);
+        }
+        
+        try {
             // `isset` is used specifically here instead of `isShared` because classes may be marked
             // as "shared" before an instance is stored. In such cases, the class is shared, but
             // has a NULL value and must be instantiated by the Provider to create the shared instance.
@@ -46,8 +51,7 @@ class Provider implements Injector {
                 $injectionDefinition = $this->selectDefinition($className, $customDefinition);
                 $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
             }
-        }
-        catch(\ReflectionException $e){
+        } catch(\ReflectionException $e){
             throw new InjectionException("Could not make $className: ".$e->getMessage(), $e->getCode(), $e);
         }
 
@@ -133,13 +137,15 @@ class Provider implements Injector {
      * 
      * @param string $className
      * @param array $injectionDefinition An associative array matching constructor params to values
-     * @throws BadArgumentException On missing raw injection prefix
-     * @return void
+     * @throws \Auryn\BadArgumentException On missing raw injection prefix
+     * @return \Auryn\Provider Returns the current instance
      */
     function define($className, array $injectionDefinition) {
         $this->validateInjectionDefinition($injectionDefinition);
         $lowClass = strtolower($className);
         $this->injectionDefinitions[$lowClass] = $injectionDefinition;
+        
+        return $this;
     }
     
     private function validateInjectionDefinition(array $injectionDefinition) {
@@ -159,8 +165,8 @@ class Provider implements Injector {
      * 
      * @param string $typehintToReplace
      * @param string $alias
-     * @throws BadArgumentException On non-empty string argument
-     * @return void
+     * @throws \Auryn\BadArgumentException On non-empty string argument
+     * @return \Auryn\Provider Returns the current instance
      */
     function alias($typehintToReplace, $alias) {
         if ($typehintToReplace && $alias && is_string($typehintToReplace) && is_string($alias)) {
@@ -171,6 +177,8 @@ class Provider implements Injector {
                 'Invalid alias: non-empty string required at both Argument 1 and Argument 2'
             );
         }
+        
+        return $this;
     }
     
     /**
@@ -185,8 +193,8 @@ class Provider implements Injector {
      * class it's instance will be stored and shared.
      * 
      * @param mixed $classNameOrInstance
-     * @return void
-     * @throws BadArgumentException
+     * @throws \Auryn\BadArgumentException
+     * @return \Auryn\Provider Returns the current instance
      */
     function share($classNameOrInstance) {
         if (is_string($classNameOrInstance)) {
@@ -202,38 +210,44 @@ class Provider implements Injector {
                 'Argument 1; ' . gettype($classNameOrInstance) . ' specified'
             );
         }
+        
+        return $this;
     }
     
     /**
      * Unshares the specified class
      * 
      * @param string $class Class name
-     * @return void
+     * @return \Auryn\Provider Returns the current instance
      */
     function unshare($className) {
         $className = strtolower($className);
         unset($this->sharedClasses[$className]);
+        
+        return $this;
     }
     
     /**
      * Forces re-instantiation of a shared class the next time it's requested
      * 
      * @param string $class Class name
-     * @return void
+     * @return \Auryn\Provider Returns the current instance
      */
     function refresh($className) {
         $className = strtolower($className);
         if (isset($this->sharedClasses[$className])) {
             $this->sharedClasses[$className] = NULL;
         }
+        
+        return $this;
     }
     /**
      * Delegates the creation of $class to $callable. Passes $class to $callable as the only argument
      *
      * @param string $className
      * @param callable $callable
-     * @throws BadArgumentException
-     * @return void
+     * @throws \Auryn\BadArgumentException
+     * @return \Auryn\Provider Returns the current instance
      */
     function delegate($className, $callable) {
         if (is_callable($callable)
@@ -250,6 +264,8 @@ class Provider implements Injector {
         
         $lowClass = strtolower($className);
         $this->delegatedClasses[$lowClass] = $delegate;
+        
+        return $this;
     }
     
     /**
@@ -257,6 +273,9 @@ class Provider implements Injector {
      * 
      * @param mixed $callableOrMethodArr Valid PHP callable or an array of the form [$className, $methodName]
      * @param array $invocationArgs Optional array specifying params to invoke the provisioned callable
+     * @throws \Auryn\BadArgumentException
+     * @throws \Auryn\InjectionException
+     * @return mixed Returns result from the specified invocation
      */
     function execute($callableOrMethodArr, array $invocationArgs = array()) {
         $executableReflectionArr = $this->generateExecutableReflection($callableOrMethodArr);
@@ -264,7 +283,7 @@ class Provider implements Injector {
         if (!$executableReflectionArr) {
             throw new BadArgumentException(
                 'Invalid executable: callable, invokable class name or an array in the form ' .
-                '[className, methodName] is required at Argument 1'
+                '[className, methodName] required at Argument 1'
             );
         }
         

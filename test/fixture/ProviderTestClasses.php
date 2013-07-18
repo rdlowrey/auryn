@@ -1,5 +1,9 @@
 <?php
 
+class ConcreteClass1 {}
+
+class ConcreteClass2 {}
+
 class ClassWithoutMagicInvoke {}
 
 class TestNoConstructor {}
@@ -219,7 +223,3 @@ class TestMissingDependency {
     function __construct(TypoInTypehint $class) {        
     }
 }
-
-class ConcreteClass1{}
-
-class ConcreteClass2{}
