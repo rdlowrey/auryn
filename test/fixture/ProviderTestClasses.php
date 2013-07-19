@@ -1,5 +1,26 @@
 <?php
 
+interface SharedAliasedInterface {
+    function foo();
+}
+
+class SharedClass implements SharedAliasedInterface {    
+    function foo(){}
+}
+
+class ClassWithAliasAsParameter {
+
+    private $sharedClass;
+
+    function    __construct(SharedClass $sharedClass) {
+        $this->sharedClass = $sharedClass;
+    }
+
+    function getSharedClass() {
+        return $this->sharedClass;
+    }
+}
+
 class ConcreteClass1 {}
 
 class ConcreteClass2 {}

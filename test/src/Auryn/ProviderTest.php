@@ -659,4 +659,41 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('ConcreteClass2', $obj);
     }
     
+    public function testSharedByAliasedInterfaceName() {
+        $provider = new Auryn\Provider();
+        $provider->alias('SharedAliasedInterface', 'SharedClass');
+        $provider->share('SharedAliasedInterface');
+        $class = $provider->make('SharedAliasedInterface');
+        $class2 = $provider->make('SharedAliasedInterface');
+        $this->assertSame($class, $class2);
+    }
+    
+    public function testSharedByAliasedInterfaceNameWithParameter() {
+        $provider = new Auryn\Provider();
+        $provider->alias('SharedAliasedInterface', 'SharedClass');
+        $provider->share('SharedAliasedInterface');
+        $sharedClass = $provider->make('SharedAliasedInterface');
+        $childClass = $provider->make('ClassWithAliasAsParameter');
+        $this->assertSame($sharedClass, $childClass->getSharedClass());
+    }
+    
+    public function testSharedByAliasedInstance() {
+        $provider = new Auryn\Provider();
+        $provider->alias('SharedAliasedInterface', 'SharedClass');
+        $sharedClass = $provider->make('SharedAliasedInterface');
+        $provider->share($sharedClass);
+        $childClass = $provider->make('ClassWithAliasAsParameter');
+        $this->assertSame($sharedClass, $childClass->getSharedClass());
+    }
+
+
+    public function testMultipleShareCallsDontOverrideTheOriginalSharedInstance() {
+        $provider = new Auryn\Provider();
+        $provider->share('StdClass');
+        $stdClass1 = $provider->make('StdClass');
+        $provider->share('StdClass');
+        $stdClass2 = $provider->make('StdClass');
+        $this->assertSame($stdClass1, $stdClass2);
+    }
+    
 }

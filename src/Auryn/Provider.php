@@ -199,7 +199,13 @@ class Provider implements Injector {
     function share($classNameOrInstance) {
         if (is_string($classNameOrInstance)) {
             $lowClass = strtolower($classNameOrInstance);
-            $this->sharedClasses[$lowClass] = NULL;
+            $lowClass = isset($this->aliases[$lowClass])
+                ? strtolower($this->aliases[$lowClass])
+                : $lowClass;
+            
+            $this->sharedClasses[$lowClass] = isset($this->sharedClasses[$lowClass])
+                ? $this->sharedClasses[$lowClass]
+                : NULL;
         } elseif (is_object($classNameOrInstance)) {
             $lowClass = strtolower(get_class($classNameOrInstance));
             $this->sharedClasses[$lowClass] = $classNameOrInstance;
