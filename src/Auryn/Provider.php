@@ -66,9 +66,9 @@ class Provider implements Injector {
         return isset($this->delegatedClasses[strtolower($class)]);
     }
     
-    private function doDelegation($callable, $class) {
+    private function doDelegation(array $callable, $class) {
         try {
-            $provisionedObject = $this->execute($callable);
+            $provisionedObject = $this->execute($callable[0], $callable[1]);
         } catch (\Exception $e) {
             throw new InjectionException(
                 "Delegation failed while attempting to provision {$class}",
@@ -255,12 +255,12 @@ class Provider implements Injector {
      * @throws \Auryn\BadArgumentException
      * @return \Auryn\Provider Returns the current instance
      */
-    function delegate($className, $callable) {
+    function delegate($className, $callable, array $args = []) {
         if (is_callable($callable)
             || (is_string($callable) && method_exists($callable, '__invoke'))
             || (is_array($callable) && isset($callable[0], $callable[1]) && method_exists($callable[0], $callable[1]))
         ) {
-            $delegate = $callable;
+            $delegate = [$callable, $args];
         } else {
             throw new BadArgumentException(
                 get_class($this) . '::delegate expects a valid callable or provisionable executable ' .
@@ -369,7 +369,7 @@ class Provider implements Injector {
         
         foreach ($funcReflParamsArr as $funcParam) {
             $rawParamKey = self::RAW_INJECTION_PREFIX . $funcParam->name;
-            
+
             if (isset($definition[$funcParam->name])) {
                 $funcArgs[] = $this->make($definition[$funcParam->name]);
             } elseif (isset($definition[$rawParamKey])) {

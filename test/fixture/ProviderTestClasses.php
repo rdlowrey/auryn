@@ -150,6 +150,12 @@ class CallableMock {
     }
 }
 
+class CallableMockWithArgs {
+    function __invoke($arg1, $arg2) {
+
+    }
+}
+
 class StringStdClassDelegateMock {
     function __invoke() {
         return $this->make();
