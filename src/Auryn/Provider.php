@@ -172,6 +172,13 @@ class Provider implements Injector {
         if ($typehintToReplace && $alias && is_string($typehintToReplace) && is_string($alias)) {
             $typehintToReplace = strtolower($typehintToReplace);
             $this->aliases[$typehintToReplace] = $alias;
+
+            //If the class has already been shared by name, replace that sharing entry
+            //with one pointing to the aliased class name. 
+            if (array_key_exists($typehintToReplace, $this->sharedClasses) == true) {
+                $this->sharedClasses[strtolower($alias)] = $this->sharedClasses[$typehintToReplace];
+                unset($this->sharedClasses[$typehintToReplace]);
+            }
         } else {
             throw new BadArgumentException(
                 'Invalid alias: non-empty string required at both Argument 1 and Argument 2'

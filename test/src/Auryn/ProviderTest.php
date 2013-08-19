@@ -667,6 +667,15 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $class2 = $provider->make('SharedAliasedInterface');
         $this->assertSame($class, $class2);
     }
+
+    public function testSharedByAliasedInterfaceName2() {
+        $provider = new Auryn\Provider();
+        $provider->share('SharedAliasedInterface');
+        $provider->alias('SharedAliasedInterface', 'SharedClass');
+        $class = $provider->make('SharedAliasedInterface');
+        $class2 = $provider->make('SharedAliasedInterface');
+        $this->assertSame($class, $class2);
+    }
     
     public function testSharedByAliasedInterfaceNameWithParameter() {
         $provider = new Auryn\Provider();
