@@ -262,12 +262,12 @@ class Provider implements Injector {
      * @throws \Auryn\BadArgumentException
      * @return \Auryn\Provider Returns the current instance
      */
-    function delegate($className, $callable, array $args = []) {
+    function delegate($className, $callable, array $args = array()) {
         if (is_callable($callable)
             || (is_string($callable) && method_exists($callable, '__invoke'))
             || (is_array($callable) && isset($callable[0], $callable[1]) && method_exists($callable[0], $callable[1]))
         ) {
-            $delegate = [$callable, $args];
+            $delegate = array($callable, $args);
         } else {
             throw new BadArgumentException(
                 get_class($this) . '::delegate expects a valid callable or provisionable executable ' .

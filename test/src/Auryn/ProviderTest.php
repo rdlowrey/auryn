@@ -769,28 +769,4 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         return $return;
     }
     
-    /*
-    public function testProviderThrowsOnRecursivelyNestedDependencies() {
-        
-    }
-    */
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
