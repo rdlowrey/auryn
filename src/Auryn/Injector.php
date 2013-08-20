@@ -36,8 +36,10 @@ interface Injector {
      *
      * @param string $className
      * @param callable $callable
+     * @param array $args
+     * @return
      */
-    function delegate($className, $callable);
+    function delegate($className, $callable, array $args = []);
     
     /**
      * Shares the specified class across the Injector context
