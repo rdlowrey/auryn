@@ -32,12 +32,13 @@ interface Injector {
     function alias($originalTypehint, $aliasClassName);
 
     /**
-     * Delegates the creation of $className instances to $callable.
+     * Delegates the creation of $className instances to $callable
      *
      * @param string $className
      * @param callable $callable
+     * @param array $args
      */
-    function delegate($className, $callable);
+    function delegate($className, $callable, array $args = array());
     
     /**
      * Shares the specified class across the Injector context
