@@ -1,3 +1,11 @@
+#### master
+
+- `Injector::unshare()` now accepts object instances in addition to string
+  class names. The class of the passed object is used as the class name to be
+  unshared.
+- Fixed PHP 5.3 short array syntax incompatibility (@morrisonlevi)
+
+
 v0.9.0
 ================================================================================
 - Added `Injector::getExecutable()` for generating callables from any valid

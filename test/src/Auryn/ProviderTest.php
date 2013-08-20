@@ -769,4 +769,15 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         return $return;
     }
 
+    function testUnshareRemovesClassFromObjectParameter() {
+        $provider = new Auryn\Provider();
+        $sharedObj = new \StdClass;
+        $provider->share($sharedObj);
+        
+        $this->assertSame($sharedObj, $provider->make('StdClass'));
+        $provider->unshare($sharedObj);
+        
+        $this->assertFalse($sharedObj === $provider->make('StdClass'));
+    }
+
 }

@@ -48,11 +48,11 @@ interface Injector {
     function share($classNameOrInstance);
     
     /**
-     * Unshares the specified class
+     * Unshares the specified class or the class of the specified instance
      * 
-     * @param string $className
+     * @param string $classNameOrInstance
      */
-    function unshare($className);
+    function unshare($classNameOrInstance);
     
     /**
      * Forces re-instantiation of a shared class the next time it is requested
