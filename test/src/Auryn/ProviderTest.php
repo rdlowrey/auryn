@@ -299,7 +299,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             ->method('__invoke')
             ->will($this->returnValue(new Auryn\InjectionException()));
 
-        $provider->make('TestDependency');
+        $obj = $provider->make('TestDependency');
 
         $this->assertInstanceOf('TestDependency', $obj);
     }
@@ -352,7 +352,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             ->with(1, 2)
             ->will($this->returnValue(new TestDependency()));
 
-        $provider->delegate('TestDependency', $callable, [':arg1' => 1, ':arg2' => 2]);
+        $provider->delegate('TestDependency', $callable, array(':arg1' => 1, ':arg2' => 2));
 
         $obj = $provider->make('TestDependency');
 
