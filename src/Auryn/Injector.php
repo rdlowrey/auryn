@@ -65,7 +65,16 @@ interface Injector {
      * 
      * @param mixed $callableOrMethodArr Any valid PHP callable or an array of the form [$className, $methodName]
      * @param array $invocationArgs An optional array specifying params to invoke the provisioned callable
+     * @param bool $makeAccessible If TRUE, protected/private methods will execute successfully
      */
-    function execute($callableOrMethodArr, array $invocationArgs = array());
-    
+    function execute($callableOrMethodArr, array $invocationArgs = array(), $makeAccessible = FALSE);
+
+    /**
+     * Generate and provision an executable from any PHP callable or class/method string array
+     * 
+     * @param mixed $callableOrMethodArr Any valid PHP callable or an array of the form [$className, $methodName]
+     * @param bool $makeAccessible If TRUE, protected/private methods will execute successfully
+     */
+    function getExecutable($callableOrMethodArr, $makeAccessible = FALSE);
+
 }

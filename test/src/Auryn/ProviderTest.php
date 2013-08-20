@@ -695,7 +695,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertSame($sharedClass, $childClass->getSharedClass());
     }
 
-
     public function testMultipleShareCallsDontOverrideTheOriginalSharedInstance() {
         $provider = new Auryn\Provider();
         $provider->share('StdClass');
@@ -705,4 +704,45 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertSame($stdClass1, $stdClass2);
     }
     
+    /**
+     * @dataProvider provideInaccessibleExecutables
+     */
+    public function testGetExecutableMakesMethodsAccessible($toInvoke, $expectedResult) {
+        $provider = new Auryn\Provider();
+        $executable = $provider->getExecutable($toInvoke, $setAccessible = TRUE);
+        $this->assertSame($expectedResult, $executable());
+    }
+    
+    public function provideInaccessibleExecutables() {
+        $return = array();
+        
+        // 0 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array('InaccessibleExecutableClassMethod', 'doSomethingPrivate');
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $expectedResult);
+        
+        // 1 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = 'InaccessibleStaticExecutableClassMethod::doSomethingPrivate';
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $expectedResult);
+        
+        // 2 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = array('InaccessibleExecutableClassMethod', 'doSomethingProtected');
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $expectedResult);
+        
+        // 3 -------------------------------------------------------------------------------------->
+        
+        $toInvoke = 'InaccessibleStaticExecutableClassMethod::doSomethingProtected';
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $expectedResult);
+        
+        // x -------------------------------------------------------------------------------------->
+        
+        return $return;
+    }
+
 }
