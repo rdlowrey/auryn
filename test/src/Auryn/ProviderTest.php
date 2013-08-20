@@ -334,6 +334,30 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $this->assertInstanceOf('TestDependency', $obj);
     }
+
+    /**
+     * @covers Auryn\Provider::delegate
+     * @covers Auryn\Provider::doDelegation
+     * @covers Auryn\Provider::make
+     */
+    public function testMakeDelegateWithArgs() {
+        $provider= new Provider(new ReflectionPool);
+
+        $callable = $this->getMock(
+            'CallableMockWithArgs',
+            array('__invoke')
+        );
+        $callable->expects($this->once())
+            ->method('__invoke')
+            ->with(1, 2)
+            ->will($this->returnValue(new TestDependency()));
+
+        $provider->delegate('TestDependency', $callable, [':arg1' => 1, ':arg2' => 2]);
+
+        $obj = $provider->make('TestDependency');
+
+        $this->assertInstanceOf('TestDependency', $obj);
+    }
     
     /**
      * @covers Auryn\Provider::doDelegation
