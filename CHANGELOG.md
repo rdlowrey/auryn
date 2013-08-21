@@ -1,5 +1,8 @@
 #### master
 
+
+#### v0.9.1
+
 - Fixed a bug in ReflectionPool where it would retrieve the incorrect cache
   in some cases (@morrisonlevi)
 - Now detects cyclic dependencies and throws an exception before you run out
