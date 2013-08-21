@@ -18,6 +18,8 @@ class Provider implements Injector {
     private $delegatedClasses = array();
     private $reflectionStorage;
 
+    private $beingProvisioned = array();
+
     const E_MAKE_FAILURE_CODE = 0;
     const E_MAKE_FAILURE_MESSAGE = "Could not make %s: %s";
 
@@ -57,6 +59,9 @@ class Provider implements Injector {
     const E_NEEDS_DEFINITION_CODE = 12;
     const E_NEEDS_DEFINITION_MESSAGE = 'Injection definition/implementation required for non-concrete parameter $%s of type %s';
 
+    const E_CYCLIC_DEPENDENCY_CODE = 13;
+    const E_CYCLIC_DEPENDENCY_MESSAGE = 'Detected a cyclic dependency while provisioning %s';
+
     function __construct(ReflectionStorage $reflectionStorage = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
@@ -71,6 +76,15 @@ class Provider implements Injector {
      */
     function make($className, array $customDefinition = array()) {
         $lowClass = strtolower($className);
+        $lowClassBackup = $lowClass;
+
+        if (isset($this->beingProvisioned[$lowClass])) {
+            throw new InjectionException(
+                sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
+                self::E_CYCLIC_DEPENDENCY_CODE
+            );
+        }
+        $this->beingProvisioned[$lowClass] = TRUE;
         
         if (isset($this->aliases[$lowClass])) {
             $className = $this->aliases[$lowClass];
@@ -91,6 +105,7 @@ class Provider implements Injector {
                 $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
             }
         } catch(\ReflectionException $e){
+            unset($this->beingProvisioned[$lowClass]);
             throw new InjectionException(
                 sprintf(self::E_MAKE_FAILURE_MESSAGE, $className, $e->getMessage()),
                 self::E_MAKE_FAILURE_CODE,
@@ -101,7 +116,7 @@ class Provider implements Injector {
         if ($this->isShared($lowClass)) {
             $this->sharedClasses[$lowClass] = $provisionedObject;
         }
-
+        unset($this->beingProvisioned[$lowClassBackup]);
         return $provisionedObject;
     }
     

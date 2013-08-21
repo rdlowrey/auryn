@@ -619,4 +619,28 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertFalse($sharedObj === $provider->make('StdClass'));
     }
 
+    function provideCyclicDependencies() {
+        return array(
+            'RecursiveClassA' => array('RecursiveClassA'),
+            'RecursiveClassB' => array('RecursiveClassB'),
+            'RecursiveClassC' => array('RecursiveClassC'),
+            'RecursiveClass1' => array('RecursiveClass1'),
+            'RecursiveClass2' => array('RecursiveClass2'),
+        );
+    }
+
+    /**
+     * @dataProvider provideCyclicDependencies
+     */
+    function testCyclicDependencies($class) {
+        $this->setExpectedException(
+            'Auryn\\InjectionException',
+            sprintf(Provider::E_CYCLIC_DEPENDENCY_MESSAGE, $class),
+            Provider::E_CYCLIC_DEPENDENCY_CODE
+        );
+
+        $provider = new Provider;
+        $provider->make($class);
+    }
+
 }

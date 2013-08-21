@@ -26,6 +26,18 @@ class RecursiveClass2 {
     function __construct(RecursiveClass1 $dep) {}
 }
 
+class RecursiveClassA {
+    function __construct(RecursiveClassB $b) {}
+}
+
+class RecursiveClassB {
+    function __construct(RecursiveClassC $c) {}
+}
+
+class RecursiveClassC {
+    function __construct(RecursiveClassA $a) {}
+}
+
 interface SharedAliasedInterface {
     function foo();
 }
