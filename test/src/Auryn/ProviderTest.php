@@ -615,8 +615,8 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         
         $this->assertSame($sharedObj, $provider->make('StdClass'));
         $provider->unshare($sharedObj);
-        
-        $this->assertFalse($sharedObj === $provider->make('StdClass'));
+
+        $this->assertNotSame($sharedObj, $provider->make('StdClass'));
     }
 
     function provideCyclicDependencies() {
