@@ -18,6 +18,45 @@ class Provider implements Injector {
     private $delegatedClasses = array();
     private $reflectionStorage;
 
+    const E_MAKE_FAILURE_CODE = 0;
+    const E_MAKE_FAILURE_MESSAGE = "Could not make %s: %s";
+
+    const E_DELEGATION_FAILURE_CODE = 1;
+    const E_DELEGATION_FAILURE_MESSAGE = 'Delegation failed while attempting to provision %s';
+
+    const E_INVALID_CLASS_CODE = 2;
+    const E_INVALID_CLASS_MESSAGE = 'Delegate callable must return an instance of %s; %s returned';
+
+    const E_CLASS_NOT_FOUND_CODE = 3;
+    const E_CLASS_NOT_FOUND_MESSAGE = 'Provider instantiation failure: %s doesn\'t exist and could not be found by any registered autoloaders';
+
+    const E_PREFIX_CODE = 4;
+    const E_PREFIX_MESSAGE = 'Invalid injection definition for parameter %s; raw parameter names must be prefixed with `:` (:$s) to differentiate them from provisionable type-hints.';
+
+    const E_NON_EMPTY_STRING_ALIAS_CODE = 5;
+    const E_NON_EMPTY_STRING_ALIAS_MESSAGE = 'Invalid alias: non-empty string required at both Argument 1 and Argument 2';
+
+    const E_SHARE_ARGUMENT_CODE = 6;
+    const E_SHARE_ARGUMENT_MESSAGE = '%s::share() requires a string class name or object instance at Argument 1; %s specified';
+
+    const E_DELEGATE_ARGUMENT_CODE = 7;
+    const E_DELEGATE_ARGUMENT_MESSAGE = '%s::delegate expects a valid callable or provisionable executable class or method reference at Argument 2';
+
+    const E_CALLABLE_CODE = 8;
+    const E_CALLABLE_MESSAGE = 'Invalid executable: callable, invokable class name or array in the form [className, methodName] required';
+
+    const E_MISSING_IMPLEMENTATION_CODE = 9;
+    const E_MISSING_IMPLEMENTATION_MESSAGE = 'Cannot instantiate %s %s without an injection definition or implementation';
+
+    const E_BAD_IMPLEMENTATION_CODE = 10;
+    const E_BAD_IMPLEMENTATION_MESSAGE = 'Bad implementation: %s does not implement %s';
+
+    const E_BAD_PARAM_IMPLEMENTATION_CODE = 11;
+    const E_BAD_PARAM_IMPLEMENTATION_MESSAGE = 'Bad implementation definition encountered while attempting to provision non-concrete parameter \$$paramName of type $typehint';
+
+    const E_NEEDS_DEFINITION_CODE = 12;
+    const E_NEEDS_DEFINITION_MESSAGE = 'Injection definition/implementation required for non-concrete parameter $%s of type %s';
+
     function __construct(ReflectionStorage $reflectionStorage = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
@@ -52,7 +91,11 @@ class Provider implements Injector {
                 $provisionedObject = $this->getInjectedInstance($className, $injectionDefinition);
             }
         } catch(\ReflectionException $e){
-            throw new InjectionException("Could not make $className: ".$e->getMessage(), $e->getCode(), $e);
+            throw new InjectionException(
+                sprintf(self::E_MAKE_FAILURE_MESSAGE, $className, $e->getMessage()),
+                self::E_MAKE_FAILURE_CODE,
+                $e
+            );
         }
 
         if ($this->isShared($lowClass)) {
@@ -71,15 +114,16 @@ class Provider implements Injector {
             $provisionedObject = $this->execute($callable[0], $callable[1]);
         } catch (\Exception $e) {
             throw new InjectionException(
-                "Delegation failed while attempting to provision {$class}",
-                0, $e
+                sprintf(self::E_DELEGATION_FAILURE_MESSAGE, $class),
+                self::E_DELEGATION_FAILURE_CODE,
+                $e
             );
         }
         
         if (!($provisionedObject instanceof $class)) {
             throw new InjectionException(
-                "Delegate callable must return an instance of {$class}; " .
-                get_class($provisionedObject) . ' returned'
+                sprintf(self::E_INVALID_CLASS_MESSAGE, $class, get_class($provisionedObject)),
+                self::E_INVALID_CLASS_CODE
             );
         }
         
@@ -103,9 +147,9 @@ class Provider implements Injector {
             }
         } catch (\ReflectionException $e) {
             throw new InjectionException(
-                "Provider instantiation failure: $className doesn't exist".
-                ' and could not be found by any registered autoloaders.',
-                0, $e
+                sprintf(self::E_CLASS_NOT_FOUND_MESSAGE, $className),
+                self::E_CLASS_NOT_FOUND_CODE,
+                $e
             );
         }
     }
@@ -152,9 +196,8 @@ class Provider implements Injector {
         foreach ($injectionDefinition as $paramName => $value) {
             if ($paramName[0] !== self::RAW_INJECTION_PREFIX && !is_string($value)) {
                 throw new BadArgumentException(
-                    "Invalid injection definition for parameter {$paramName}; raw parameter " .
-                    "names must be prefixed with `:` (:{$paramName}) to differentiate them " .
-                    'from provisionable type-hints.'
+                    sprintf(self::E_PREFIX_MESSAGE, $paramName, $paramName),
+                    self::E_PREFIX_CODE
                 );
             }
         }
@@ -181,7 +224,8 @@ class Provider implements Injector {
             }
         } else {
             throw new BadArgumentException(
-                'Invalid alias: non-empty string required at both Argument 1 and Argument 2'
+                self::E_NON_EMPTY_STRING_ALIAS_MESSAGE,
+                self::E_NON_EMPTY_STRING_ALIAS_CODE
             );
         }
         
@@ -217,10 +261,9 @@ class Provider implements Injector {
             $lowClass = strtolower(get_class($classNameOrInstance));
             $this->sharedClasses[$lowClass] = $classNameOrInstance;
         } else {
-            $parameterType = gettype($classNameOrInstance);
             throw new BadArgumentException(
-                get_class($this).'::share() requires a string class name or object instance at ' .
-                'Argument 1; ' . gettype($classNameOrInstance) . ' specified'
+                sprintf(self::E_SHARE_ARGUMENT_MESSAGE, __CLASS__, gettype($classNameOrInstance)),
+                self::E_SHARE_ARGUMENT_CODE
             );
         }
         
@@ -273,8 +316,8 @@ class Provider implements Injector {
             $delegate = array($callable, $args);
         } else {
             throw new BadArgumentException(
-                get_class($this) . '::delegate expects a valid callable or provisionable executable ' .
-                'class or method reference at Argument 2'
+                sprintf(self::E_DELEGATE_ARGUMENT_MESSAGE, __CLASS__),
+                self::E_DELEGATE_ARGUMENT_CODE
             );
         }
         
@@ -370,8 +413,8 @@ class Provider implements Injector {
             $executableArr = array($callableRefl, $invocationObj);
         } else {
             throw new BadArgumentException(
-                'Invalid executable: callable, invokable class name or array in the form ' .
-                '[className, methodName] required'
+                self::E_CALLABLE_MESSAGE,
+                self::E_CALLABLE_CODE
             );
         }
         
@@ -414,9 +457,9 @@ class Provider implements Injector {
             $ctorParams = $this->reflectionStorage->getConstructorParameters($className);
         } catch (\ReflectionException $e) {
             throw new InjectionException(
-                "Provider instantiation failure: $className doesn't exist".
-                ' and could not be found by any registered autoloaders.',
-                0, $e
+                sprintf(self::E_CLASS_NOT_FOUND_MESSAGE, $className),
+                self::E_CLASS_NOT_FOUND_CODE,
+                $e
             );
         }
         
@@ -439,8 +482,8 @@ class Provider implements Injector {
             $reflectionClass = $this->reflectionStorage->getClass($className);
             $type = $reflectionClass->isInterface() ? 'interface' : 'abstract';
             throw new InjectionException(
-                "Cannot instantiate $type $className without an injection definition or " .
-                "implementation"
+                sprintf(self::E_MISSING_IMPLEMENTATION_MESSAGE, $type, $className),
+                self::E_MISSING_IMPLEMENTATION_CODE
             );
         }
     }
@@ -463,7 +506,8 @@ class Provider implements Injector {
         
         if (!$implRefl->isSubclassOf($interfaceOrAbstractName)) {
             throw new InjectionException(
-                "Bad implementation: {$implRefl->name} does not implement $interfaceOrAbstractName"
+                sprintf(self::E_BAD_IMPLEMENTATION_MESSAGE, $implRefl->name, $interfaceOrAbstractName),
+                self::E_BAD_IMPLEMENTATION_CODE
             );
         }
         
@@ -490,17 +534,16 @@ class Provider implements Injector {
                 return $this->buildImplementation($typehint);
             } catch (InjectionException $e) {
                 throw new InjectionException(
-                    'Bad implementation definition encountered while attempting to provision ' .
-                    "non-concrete parameter \$$paramName of type $typehint",
-                    0,
+                    sprintf(self::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, $paramName, $typehint),
+                    self::E_BAD_PARAM_IMPLEMENTATION_CODE,
                     $e
                 );
             }
         }
         
         throw new InjectionException(
-            'Injection definition/implementation required for non-concrete parameter '.
-            "\$$paramName of type $typehint"
+            sprintf(self::E_NEEDS_DEFINITION_MESSAGE, $paramName, $typehint),
+            self::E_NEEDS_DEFINITION_CODE
         );
     }
 }

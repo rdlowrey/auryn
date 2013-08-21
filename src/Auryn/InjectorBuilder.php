@@ -3,17 +3,31 @@
 namespace Auryn;
 
 class InjectorBuilder {
-    
-    /**
-     * @var array
-     */
-    private static $configKeys = array(
-        'aliases' => 1,
-        'definitions' => 1,
-        'shares' => 1,
-        'delegates' => 1
-    );
-    
+
+    const E_INVALID_CONFIG_OPTION_CODE = 0;
+    const E_INVALID_CONFIG_OPTION_MESSAGE = 'Unknown configuration option: %s';
+
+    const E_INVALID_ALIAS_CODE = 1;
+    const E_INVALID_ALIAS_MESSAGE = 'Invalid alias specified in configuration array';
+
+    const E_INVALID_DEFINE_CODE = 2;
+    const E_INVALID_DEFINE_MESSAGE = 'Invalid definition specified in configuration array';
+
+    const E_INVALID_SHARE_CODE = 3;
+    const E_INVALID_SHARE_MESSAGE = 'Invalid share specified in configuration array';
+
+    const E_INVALID_DELEGATE_CODE = 4;
+    const E_INVALID_DELEGATE_MESSAGE = 'Invalid delegate specified in configuration array';
+
+    const E_UNKNOWN_FILE_TYPE_CODE = 5;
+    const E_UNKNOWN_FILE_TYPE_MESSAGE = 'Unknown configuration file type; must end in .php, .json or specify the file type using the optional $fileType parameter at Argument 3';
+
+    const E_FAILED_INCLUDE_CODE = 6;
+    const E_FAILED_INCLUDE_MESSAGE = 'Failed including the specified % configuration file: %';
+
+    const E_FAILED_PARSING_CODE = 7;
+    const E_FAILED_PARSING_MESSAGE = 'Failed parsing %s configuration from the specified file: %s';
+
     /**
      * Populate a Provider instance using the specified configuration file
      * 
@@ -37,8 +51,8 @@ class InjectorBuilder {
                 break;
             default:
                 throw new BuilderException(
-                    'Unknown configuration file type; must end in .php, .json or specify the file type ' .
-                    'using the optional $fileType parameter at Argument 3'
+                    self::E_UNKNOWN_FILE_TYPE_MESSAGE,
+                    self::E_UNKNOWN_FILE_TYPE_CODE
                 );
         }
         
@@ -48,11 +62,14 @@ class InjectorBuilder {
     private function loadFromPhpFile(Provider $provider, $filePath) {
         if (!@include $filePath) {
             throw new BuilderException(
-                "Failed including the specified PHP configuration file: {$filePath}"
+                sprintf(self::E_FAILED_INCLUDE_MESSAGE, 'PHP', $filePath),
+                self::E_FAILED_INCLUDE_CODE
             );
         } elseif (!(isset($aurynConfig) && is_array($aurynConfig))) {
+            $message ='must specify an array named $aurynConfig';
             throw new BuilderException(
-                'PHP configuration file must specify an array named $aurynConfig'
+                sprintf(self::E_FAILED_PARSING_MESSAGE, 'PHP', $message),
+                self::E_FAILED_PARSING_CODE
             );
         } else {
             $this->fromArray($aurynConfig, $provider);
@@ -64,7 +81,8 @@ class InjectorBuilder {
         
         if ($rawJson === FALSE) {
             throw new BuilderException(
-                "Failed reading the specified JSON configuration file: {$filePath}"
+                sprintf(self::E_FAILED_INCLUDE_MESSAGE, 'JSON', $filePath),
+                self::E_FAILED_INCLUDE_CODE
             );
         }
         
@@ -74,33 +92,44 @@ class InjectorBuilder {
             $this->fromArray($jsonConfigurationArray, $provider);
         } else {
             throw new BuilderException(
-                "Failed parsing JSON configuration from the specified file: {$filePath}"
+                sprintf(self::E_FAILED_PARSING_MESSAGE, 'JSON', $filePath),
+                self::E_FAILED_PARSING_CODE
             );
         }
     }
-    
+
     /**
      * Populate a Provider instance using the specified configuration array
-     * 
+     *
      * @param array $configuration An array describing how to populate the Provider instance
      * @param Provider $provider An optional Provider instance; if not specified one will be created
-     * @throws BuilderException On bad configuration value(s)
+     * @throws BuilderException
+     * @throws BadArgumentException
      * @return Provider Returns the populated Provider instance
      */
     public function fromArray(array $configuration, Provider $provider = NULL) {
-        $invalidKeys = array_diff_key($configuration, self::$configKeys);
-        
-        if ($invalidKeys) {
-            throw new BuilderException(
-                'Invalid configuration keys: ['. implode(', ', array_keys($invalidKeys)) .
-                '] -- did you forget to add a new configuration type handler to fromArray()?'
-            );
-        } else {
-            $provider = $provider ?: new Provider;
-            
-            foreach ($configuration as $configurationType => $configurationValues) {
-                $assignmentMethod = 'add' . ucfirst($configurationType);
-                $this->$assignmentMethod($provider, $configurationValues);
+        $provider = $provider ?: new Provider;
+
+        foreach ($configuration as $configurationType => $configurationValues) {
+            switch ($configurationType) {
+                case 'aliases':
+                    $this->addAliases($provider, $configurationValues);
+                    break;
+                case 'definitions':
+                    $this->addDefinitions($provider, $configurationValues);
+                    break;
+                case 'shares':
+                    $this->addShares($provider, $configurationValues);
+                    break;
+                case 'delegates':
+                    $this->addDelegates($provider, $configurationValues);
+                    break;
+
+                default:
+                    throw new BuilderException(
+                        sprintf(self::E_INVALID_CONFIG_OPTION_MESSAGE, $configurationType),
+                        self::E_INVALID_CONFIG_OPTION_CODE
+                    );
             }
         }
         
@@ -114,8 +143,9 @@ class InjectorBuilder {
             }
         } catch (BadArgumentException $error) {
             throw new BuilderException(
-                'Invalid alias specified in configuration array',
-                0, $error
+                self::E_INVALID_ALIAS_MESSAGE,
+                self::E_INVALID_ALIAS_CODE,
+                $error
             );
         }
     }
@@ -127,8 +157,9 @@ class InjectorBuilder {
             }
         } catch (BadArgumentException $error) {
             throw new BuilderException(
-                'Invalid definition specified in configuration array',
-                0, $error
+                self::E_INVALID_DEFINE_MESSAGE,
+                self::E_INVALID_DEFINE_CODE,
+                $error
             );
         }
     }
@@ -140,8 +171,9 @@ class InjectorBuilder {
             }
         } catch (BadArgumentException $error) {
             throw new BuilderException(
-                'Invalid share specified in configuration array',
-                0, $error
+                self::E_INVALID_SHARE_MESSAGE,
+                self::E_INVALID_SHARE_CODE,
+                $error
             );
         }
     }
@@ -153,8 +185,9 @@ class InjectorBuilder {
             }
         } catch (BadArgumentException $error) {
             throw new BuilderException(
-                'Invalid delegate specified in configuration array',
-                0, $error
+                self::E_INVALID_DELEGATE_MESSAGE,
+                self::E_INVALID_DELEGATE_CODE,
+                $error
             );
         }
     }

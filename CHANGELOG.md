@@ -1,5 +1,8 @@
 #### master
 
+- Cleaned up error messages in InjectionBuilder and Provider. (@morrisonlevi)
+- Simplified some behavior in InjectorBuilder, partly for better tooling
+  support (@morrisonlevi)
 - `Injector::unshare()` now accepts object instances in addition to string
   class names. The class of the passed object is used as the class name to be
   unshared.
