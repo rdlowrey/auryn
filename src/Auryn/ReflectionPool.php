@@ -117,7 +117,7 @@ class ReflectionPool implements ReflectionStorage {
         if ($function instanceof \ReflectionMethod) {
             $lowClass = strtolower($function->class);
             $lowMethod = strtolower($function->name);
-            $paramCacheKey = self::CACHE_KEY_CLASSES . ".{$lowMethod}.param-{$lowParam}";
+            $paramCacheKey = self::CACHE_KEY_CLASSES . "{$lowClass}.{$lowMethod}.param-{$lowParam}";
         } else {
             $lowFunc = strtolower($function->name);
             $paramCacheKey = ($lowFunc !== '{closure}')

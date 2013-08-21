@@ -619,6 +619,11 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertNotSame($sharedObj, $provider->make('StdClass'));
     }
 
+    function testBugMorrisonLeviFound() {
+        $provider = new Provider;
+        $provider->make('ClassOuter');
+    }
+
     function provideCyclicDependencies() {
         return array(
             'RecursiveClassA' => array('RecursiveClassA'),
@@ -626,6 +631,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             'RecursiveClassC' => array('RecursiveClassC'),
             'RecursiveClass1' => array('RecursiveClass1'),
             'RecursiveClass2' => array('RecursiveClass2'),
+            'DependsOnCyclic' => array('DependsOnCyclic'),
         );
     }
 

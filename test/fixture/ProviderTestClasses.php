@@ -38,6 +38,10 @@ class RecursiveClassC {
     function __construct(RecursiveClassA $a) {}
 }
 
+class DependsOnCyclic {
+    function __construct(RecursiveClassA $a) {}
+}
+
 interface SharedAliasedInterface {
     function foo();
 }
@@ -133,6 +137,16 @@ class RequiresInterface {
     public function __construct(DepInterface $dep) {
         $this->testDep = $dep;
     }
+}
+
+class ClassInnerA {
+    function __construct(ClassInnerB $dep) {}
+}
+class ClassInnerB {
+    function __construct() {}
+}
+class ClassOuter {
+    function __construct(ClassInnerA $dep) {}
 }
 
 class ProvTestNoDefinitionNullDefaultClass {

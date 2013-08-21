@@ -111,6 +111,19 @@ class Provider implements Injector {
                 self::E_MAKE_FAILURE_CODE,
                 $e
             );
+        } catch(InjectionException $e) {
+            unset($this->beingProvisioned[$lowClass]);
+            if ($e->getCode() === self::E_CYCLIC_DEPENDENCY_CODE) {
+                $sameCyclicClass = sprintf(self::E_DELEGATION_FAILURE_MESSAGE, $className) === $e->getMessage();
+                if (!$sameCyclicClass) {
+                    throw new InjectionException(
+                        sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
+                        self::E_CYCLIC_DEPENDENCY_CODE,
+                        $e
+                    );
+                }
+            }
+            throw $e;
         }
 
         if ($this->isShared($lowClass)) {

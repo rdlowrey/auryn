@@ -1,6 +1,10 @@
 #### master
 
-- Cleaned up error messages in InjectionBuilder and Provider. (@morrisonlevi)
+- Fixed a bug in ReflectionPool where it would retrieve the incorrect cache
+  in some cases (@morrisonlevi)
+- Now detects cyclic dependencies and throws an exception before you run out
+  of stack or memory (@morrisonlevi)
+- Cleaned up error messages in InjectionBuilder and Provider (@morrisonlevi)
 - Simplified some behavior in InjectorBuilder, partly for better tooling
   support (@morrisonlevi)
 - `Injector::unshare()` now accepts object instances in addition to string
