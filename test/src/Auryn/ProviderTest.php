@@ -5,120 +5,72 @@ use Auryn\Provider,
 
 class ProviderTest extends PHPUnit_Framework_TestCase {
 
-    /**
-     * @covers Auryn\Provider::__construct
-     */
-    public function testBeginsEmpty() {
-        $provider = new Provider(new ReflectionPool);
-        $this->assertInstanceOf('Auryn\\Provider', $provider);
-    }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::isInstantiable
-     */
     public function testMakeInjectsSimpleConcreteDependency() {
         $provider = new Provider(new ReflectionPool);
         $this->assertEquals(new TestNeedsDep(new TestDependency),
             $provider->make('TestNeedsDep')
         );
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildWithoutConstructorParams
-     */
+
     public function testMakeReturnsNewInstanceIfClassHasNoConstructor() {
         $provider = new Provider(new ReflectionPool);
         $this->assertEquals(new TestNoConstructor, $provider->make('TestNoConstructor'));
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildWithoutConstructorParams
-     * @covers Auryn\Provider::buildImplementation
-     */
+
     public function testMakeReturnsAliasInstanceOnNonConcreteTypehint() {
         $provider = new Provider(new ReflectionPool);
         $provider->alias('DepInterface', 'DepImplementation');
         $this->assertEquals(new DepImplementation, $provider->make('DepInterface'));
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildWithoutConstructorParams
-     * @expectedException Auryn\InjectionException
-     */
+
     public function testMakeThrowsExceptionOnNonConcreteParameterWithoutAlias() {
+        $this->setExpectedException(
+            'Auryn\\InjectionException',
+            sprintf(Provider::E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_MESSAGE, 'interface', 'DepInterface'),
+            Provider::E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_CODE
+        );
+
         $provider = new Provider(new ReflectionPool);
         $provider->make('DepInterface');
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildWithoutConstructorParams
-     * @covers Auryn\Provider::buildImplementation
-     * @covers Auryn\Provider::buildAbstractTypehintParam
-     * @expectedException Auryn\InjectionException
-     */
+
     public function testMakeThrowsExceptionOnNonConcreteCtorParamWithoutImplementation() {
+        $this->setExpectedException(
+            'Auryn\\InjectionException',
+            sprintf(Provider::E_NEEDS_DEFINITION_MESSAGE, 'dep', 'DepInterface'),
+            Provider::E_NEEDS_DEFINITION_CODE
+        );
+
         $provider = new Provider(new ReflectionPool);
         $provider->make('RequiresInterface');
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildArgumentFromTypeHint
-     * @covers Auryn\Provider::buildWithoutConstructorParams
-     * @covers Auryn\Provider::buildImplementation
-     * @covers Auryn\Provider::buildAbstractTypehintParam
-     */
+
     public function testMakeBuildsNonConcreteCtorParamWithAlias() {
         $provider = new Provider(new ReflectionPool);
         $provider->alias('DepInterface', 'DepImplementation');
         $obj = $provider->make('RequiresInterface');
         $this->assertInstanceOf('RequiresInterface', $obj);
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildArgumentFromTypeHint
-     * @covers Auryn\Provider::buildWithoutConstructorParams
-     * @covers Auryn\Provider::buildImplementation
-     * @covers Auryn\Provider::buildAbstractTypehintParam
-     * @expectedException Auryn\InjectionException
-     */
+
     public function testMakeThrowsExceptionOnNonConcreteCtorParamWithBadAlias() {
+        $this->setExpectedException(
+            'Auryn\\InjectionException',
+            sprintf(Provider::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, 'interface', 'DepInterface'),
+            Provider::E_BAD_PARAM_IMPLEMENTATION_CODE
+        );
+
         $provider = new Provider(new ReflectionPool);
         $provider->alias('DepInterface', 'StdClass');
         $provider->make('RequiresInterface');
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildArgumentFromTypeHint
-     * @covers Auryn\Provider::isInstantiable
-     */
+
     public function testMakePassesNullCtorParameterIfNoTypehintOrDefaultCanBeDetermined() {
         $provider = new Provider(new ReflectionPool);
         $nullCtorParamObj = $provider->make('ProvTestNoDefinitionNullDefaultClass');
         $this->assertEquals(new ProvTestNoDefinitionNullDefaultClass, $nullCtorParamObj);
         $this->assertEquals(NULL, $nullCtorParamObj->arg);
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::isInstantiable
-     */
+
     public function testMakeReturnsSharedInstanceIfAvailable() {
         $provider = new Provider(new ReflectionPool);
         $provider->define('RequiresInterface', array('dep' => 'DepImplementation'));
@@ -133,35 +85,18 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::isInstantiable
-     * @covers Auryn\Provider::selectParentDefinitions
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionOnClassLoadFailure() {
         $provider = new Provider(new ReflectionPool);
         $provider->make('ClassThatDoesntExist');
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::isInstantiable
-     */
+
     public function testMakeUsesInstanceDefinitionParamIfSpecified() {
         $provider = new Provider(new ReflectionPool);
         $provider->make('TestMultiDepsNeeded', array('TestDependency', new TestDependency2));
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::selectDefinition
-     * @covers Auryn\Provider::getDefinition
-     * @covers Auryn\Provider::buildArgumentFromTypeHint
-     * @covers Auryn\Provider::isInstantiable
-     */
+
     public function testMakeUsesCustomDefinitionIfSpecified() {
         $provider = new Provider(new ReflectionPool);
         $provider->define('TestNeedsDep', array('testDep'=>'TestDependency'));
@@ -169,14 +104,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals('testVal2', $injected->testDep->testProp);
     }
 
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::selectDefinition
-     * @covers Auryn\Provider::getDefinition
-     * @covers Auryn\Provider::buildArgumentFromTypeHint
-     * @covers Auryn\Provider::isInstantiable
-     */
     public function testMakeCustomDefinitionOverridesExistingDefinitions() {
         $provider = new Provider(new ReflectionPool);
         $provider->define('ProviderTestChildClass', array(':arg1'=>'First argument', ':arg2'=>'Second argument'));
@@ -184,22 +111,13 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals('Override', $injected->arg1);
         $this->assertEquals('Second argument', $injected->arg2);
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     */
+
     public function testMakeStoresShareIfMarkedWithNullInstance() {
         $provider = new Provider(new ReflectionPool);
         $provider->share('TestDependency');
         $provider->make('TestDependency');
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildArgumentFromTypeHint
-     * @covers Auryn\Provider::isInstantiable
-     */
+
     public function testMakeUsesReflectionForUnknownParamsInMultiBuildWithDeps() {
         $provider  = new Provider(new ReflectionPool);
         $obj = $provider->make('TestMultiDepsWithCtor', array('val1'=>'TestDependency'));
@@ -211,12 +129,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('NoTypehintNoDefaultConstructorClass', $obj);
         $this->assertEquals(NULL, $obj->testParam);
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
-     * @covers Auryn\Provider::buildArgumentFromTypeHint
-     */
+
     public function testMakeInjectsNullOnUntypehintedParameterWithoutDefinitionOrDefault() {
         $provider  = new Provider(new ReflectionPool);
         $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefault');
@@ -224,20 +137,13 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionOnUninstantiableTypehintWithoutDefinition() {
         $provider  = new Provider(new ReflectionPool);
         $obj = $provider->make('RequiresInterface');
     }
-    
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::validateInjectionDefinition
-     * @covers Auryn\Provider::getInjectedInstance
-     */
+
     public function testMakeInjectsRawParametersDirectlyWhenDefinedWithParameterNamePrefix() {
     
         $provider = new Provider(new ReflectionPool);
@@ -260,8 +166,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::doDelegation
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionWhenDelegateDoes() {
@@ -281,8 +185,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->make('TestDependency');
     }
     /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::doDelegation
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionWhenDelegateFailsToCreateObject() {
@@ -304,19 +206,11 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('TestDependency', $obj);
     }
 
-    /**
-     * @covers Auryn\Provider::make
-     */
     public function testMakeHandlesNamespacedClasses() {
         $provider = new Provider(new ReflectionPool);
         $provider->make('SomeNamespace\\SomeClassName');
     }
 
-    /**
-     * @covers Auryn\Provider::delegate
-     * @covers Auryn\Provider::doDelegation
-     * @covers Auryn\Provider::make
-     */
     public function testMakeDelegate() {
         $provider= new Provider(new ReflectionPool);
 
@@ -335,11 +229,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('TestDependency', $obj);
     }
 
-    /**
-     * @covers Auryn\Provider::delegate
-     * @covers Auryn\Provider::doDelegation
-     * @covers Auryn\Provider::make
-     */
     public function testMakeDelegateWithArgs() {
         $provider= new Provider(new ReflectionPool);
 
@@ -358,11 +247,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $this->assertInstanceOf('TestDependency', $obj);
     }
-    
-    /**
-     * @covers Auryn\Provider::doDelegation
-     * @covers Auryn\Provider::make
-     */
+
     public function testMakeWithStringDelegate() {
         $provider= new Provider(new ReflectionPool);
         $provider->delegate('StdClass', 'StringStdClassDelegateMock');
@@ -371,8 +256,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @covers Auryn\Provider::doDelegation
-     * @covers Auryn\Provider::make
      * @expectedException Auryn\BadArgumentException
      */
     public function testMakeThrowsExceptionIfStringDelegateClassHasNoInvokeMethod() {
@@ -382,8 +265,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @covers Auryn\Provider::doDelegation
-     * @covers Auryn\Provider::make
      * @expectedException Auryn\BadArgumentException
      */
     public function testMakeThrowsExceptionIfStringDelegateClassInstantiationFails() {
@@ -404,8 +285,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @dataProvider provideInvalidRawDefinitions
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::validateInjectionDefinition
      * @expectedException Auryn\BadArgumentException
      */
     public function testDefineThrowsExceptionOnRawParamDefinitionMissingRawParameterPrefix($def) {
@@ -414,8 +293,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::getInjectedInstance    
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionOnUntypehintedParameterWithNoDefinition() {
@@ -424,11 +301,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $obj = $provider->make('RequiresInterface');
     }
 
-    /**
-     * @covers Auryn\Provider::make
-     * @covers Auryn\Provider::selectParentDefinitions
-     * @covers Auryn\Provider::getDefinition
-     */
     public function testMakeInheritsParentClassDefinitionsForInstantiation()
     {
         $provider = new Provider(new ReflectionPool);
@@ -439,22 +311,14 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals('First argument', $obj->arg1);
         $this->assertEquals('Second argument', $obj->arg2);
     }
-    
-    /**
-     * @covers Auryn\Provider::define
-     * @covers Auryn\Provider::selectDefinition
-     * @covers Auryn\Provider::getDefinition
-     */
+
     public function testDefineAssignsPassedDefinition() {
         $provider = new Provider(new ReflectionPool);
         $definition = array('dep' => 'DepImplementation');
         $provider->define('RequiresInterface', $definition);
         $this->assertInstanceOf('RequiresInterface', $provider->make('RequiresInterface'));
     }
-    
-    /**
-     * @covers Auryn\Provider::refresh
-     */
+
     public function testRefreshShareClearsSharedInstanceAndReturnsCurrentInstance() {
         $provider = new Provider(new ReflectionPool);
         $provider->share('TestDependency');
@@ -465,19 +329,13 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $refreshedObj = $provider->make('TestDependency');
         $this->assertEquals('testVal', $refreshedObj->testProp);
     }
-    
-    /**
-     * @covers Auryn\Provider::unshare
-     */
+
     public function testUnshareRemovesSharingAndReturnsCurrentInstance() { 
         $provider = new Provider(new ReflectionPool);
         $provider->share('TestDependency');
         $this->assertInstanceOf('Auryn\Provider', $provider->unshare('TestDependency'));
     }
-    
-    /**
-     * @covers Auryn\Provider::share
-     */
+
     public function testShareStoresSharedInstanceAndReturnsCurrentInstance() {
         $provider = new Provider(new ReflectionPool);
         $testShare = new StdClass;
@@ -487,27 +345,20 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $testShare->test = 'test';
         $this->assertEquals('test', $provider->make('stdclass')->test);
     }
-    
-    /**
-     * @covers Auryn\Provider::share
-     */
+
     public function testShareMarksClassSharedOnNullObjectParameter() {
         $provider = new Provider(new ReflectionPool);
         $this->assertInstanceOf('Auryn\Provider', $provider->share('SomeClass'));
     }
     
     /**
-     * @covers Auryn\Provider::share
      * @expectedException Auryn\BadArgumentException
      */
     public function testShareThrowsExceptionOnInvalidArgument() {
         $provider = new Provider(new ReflectionPool);
         $provider->share(42);
     }
-    
-    /**
-     * @covers Auryn\Provider::alias
-     */
+
     public function testAliasAssignsValueAndReturnsCurrentInstance() {
         $provider = new Provider(new ReflectionPool);
         $this->assertInstanceOf('Auryn\Provider', $provider->alias('DepInterface', 'DepImplementation'));
@@ -523,8 +374,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @dataProvider provideInvalidDelegates
-     * @covers Auryn\Provider::delegate
-     * @covers Auryn\Provider::make
      * @expectedException Auryn\BadArgumentException
      */
     public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate) {
@@ -546,12 +395,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     
     /**
      * @dataProvider provideExecutionExpectations
-     * @covers Auryn\Provider::execute
-     * @covers Auryn\Provider::generateExecutableReflection
-     * @covers Auryn\Provider::generateStaticReflectionMethod
-     * @covers Auryn\Provider::generateInvocationArgs
-     * @covers Auryn\Provider::isDefined
-     * @covers Auryn\Provider::isShared
      */
     public function testExecutions($callable, $definition, $expectedResult) {
         $provider = new Provider;
@@ -671,11 +514,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $injector = new Auryn\Provider(new Auryn\ReflectionPool);
         $testClass = $injector->make('TestMissingDependency');
     }
-    
-    /**
-     * @covers Auryn\Provider::alias
-     * @covers Auryn\Provider::make
-     */
+
     public function testAliasingConcreteClasses(){
         $provider = new Auryn\Provider();
         $provider->alias('ConcreteClass1', 'ConcreteClass2');

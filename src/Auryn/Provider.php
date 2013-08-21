@@ -45,8 +45,8 @@ class Provider implements Injector {
     const E_CALLABLE_CODE = 8;
     const E_CALLABLE_MESSAGE = 'Invalid executable: callable, invokable class name or array in the form [className, methodName] required';
 
-    const E_MISSING_IMPLEMENTATION_CODE = 9;
-    const E_MISSING_IMPLEMENTATION_MESSAGE = 'Cannot instantiate %s %s without an injection definition or implementation';
+    const E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_CODE = 9;
+    const E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_MESSAGE = 'Cannot instantiate %s %s without an injection definition or implementation';
 
     const E_BAD_IMPLEMENTATION_CODE = 10;
     const E_BAD_IMPLEMENTATION_MESSAGE = 'Bad implementation: %s does not implement %s';
@@ -482,8 +482,8 @@ class Provider implements Injector {
             $reflectionClass = $this->reflectionStorage->getClass($className);
             $type = $reflectionClass->isInterface() ? 'interface' : 'abstract';
             throw new InjectionException(
-                sprintf(self::E_MISSING_IMPLEMENTATION_MESSAGE, $type, $className),
-                self::E_MISSING_IMPLEMENTATION_CODE
+                sprintf(self::E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_MESSAGE, $type, $className),
+                self::E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_CODE
             );
         }
     }
