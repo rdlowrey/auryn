@@ -1,5 +1,15 @@
 #### master
 
+- `Provider::execute()` and `Provider::getExecutable()` now accept string
+  arguments for both instance and static class methods e.g.:
+
+```
+MyClass::myMethod
+MyClass::myStaticMethod
+ChildOfMyClass::parent::myStaticMethod
+MyClassWithConstructorDependencies::myMethod
+```
+
 
 #### v0.9.1
 

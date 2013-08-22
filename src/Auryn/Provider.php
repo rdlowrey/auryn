@@ -397,48 +397,21 @@ class Provider implements Injector {
         return new Executable($reflectionFunction, $invocationObject);
     }
     
-    private function generateExecutableReflection($callableOrMethodArr) {
-        $isString = is_string($callableOrMethodArr);
-        
-        if ($callableOrMethodArr instanceof \Closure) {
-            $callableRefl = new \ReflectionFunction($callableOrMethodArr);
+    private function generateExecutableReflection($exeCallable) {
+        if (is_string($exeCallable)) {
+            $executableArr = $this->generateExecutableFromString($exeCallable);
+        } elseif ($exeCallable instanceof \Closure) {
+            $callableRefl = new \ReflectionFunction($exeCallable);
             $executableArr = array($callableRefl, NULL);
-        } elseif ($isString && function_exists($callableOrMethodArr)) {
-            $callableRefl = $this->reflectionStorage->getFunction($callableOrMethodArr);
-            $executableArr = array($callableRefl, NULL);
-        } elseif ($isString && method_exists($callableOrMethodArr, '__invoke')) {
-            $invocationObj = $this->make($callableOrMethodArr);
+        } elseif (is_object($exeCallable) && is_callable($exeCallable)) {
+            $invocationObj = $exeCallable;
             $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
             $executableArr = array($callableRefl, $invocationObj);
-        } elseif ($isString && strpos($callableOrMethodArr, '::') !== FALSE) {
-            list($staticClass, $staticMethod) = explode('::', $callableOrMethodArr, 2);
-            $callableRefl = $this->generateStaticReflectionMethod($staticClass, $staticMethod);
-            $executableArr = array($callableRefl, NULL);
-        } elseif (is_object($callableOrMethodArr) && is_callable($callableOrMethodArr)) {
-            $invocationObj = $callableOrMethodArr;
-            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
-            $executableArr = array($callableRefl, $invocationObj);
-        } elseif (isset($callableOrMethodArr[0], $callableOrMethodArr[1])
-            && is_object($callableOrMethodArr[0])
+        } elseif (is_array($exeCallable)
+            && isset($exeCallable[0], $exeCallable[1])
+            && count($exeCallable) === 2
         ) {
-            list($invocationObj, $method) = $callableOrMethodArr;
-            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, $method);
-            $executableArr = array($callableRefl, $invocationObj);
-        } elseif (is_callable($callableOrMethodArr)) {
-            list($class, $method) = $callableOrMethodArr;
-            $invocationObj = $this->make($class);
-            $callableRefl = strpos($method, '::')
-                ? $this->generateStaticReflectionMethod($class, $method)
-                : $this->reflectionStorage->getMethod($class, $method);
-            $executableArr = array($callableRefl, $invocationObj);
-        } elseif (is_array($callableOrMethodArr)
-            && isset($callableOrMethodArr[0], $callableOrMethodArr[1])
-            && method_exists($callableOrMethodArr[0], $callableOrMethodArr[1])
-        ) {
-            list($class, $method) = $callableOrMethodArr;
-            $invocationObj = $this->make($class);
-            $callableRefl = $this->reflectionStorage->getMethod($class, $method);
-            $executableArr = array($callableRefl, $invocationObj);
+            $executableArr = $this->generateExecutableFromArray($exeCallable);
         } else {
             throw new BadArgumentException(
                 self::E_CALLABLE_MESSAGE,
@@ -449,14 +422,61 @@ class Provider implements Injector {
         return $executableArr;
     }
     
-    private function generateStaticReflectionMethod($staticClass, $staticMethod) {
-        if (0 === ($methodStartPos = strpos($staticMethod, 'parent::'))) {
-            $childReflection = $this->reflectionStorage->getClass($staticClass);
-            $staticClass = $childReflection->getParentClass()->name;
-            $staticMethod = substr($staticMethod, $methodStartPos + 8);
+    private function generateExecutableFromArray($arrayExecutable) {
+        list($classOrObj, $method) = $arrayExecutable;
+        
+        if (is_object($classOrObj) && method_exists($classOrObj, $method)) {
+            $callableRefl = $this->reflectionStorage->getMethod($classOrObj, $method);
+            $executableArr = array($callableRefl, $classOrObj);
+        } elseif (is_string($classOrObj)) {
+            $executableArr = $this->generateStringClassMethodCallable($classOrObj, $method);
+        } else {
+            // @TODO maybe add new code/msg?
+            throw new BadArgumentException(
+                self::E_CALLABLE_MESSAGE,
+                self::E_CALLABLE_CODE
+            );
         }
         
-        return $this->reflectionStorage->getMethod($staticClass, $staticMethod);
+        return $executableArr;
+    }
+    
+    private function generateExecutableFromString($stringExecutable) {
+        if (function_exists($stringExecutable)) {
+            $callableRefl = $this->reflectionStorage->getFunction($stringExecutable);
+            $executableArr = array($callableRefl, NULL);
+        } elseif (method_exists($stringExecutable, '__invoke')) {
+            $invocationObj = $this->make($stringExecutable);
+            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
+            $executableArr = array($callableRefl, $invocationObj);
+        } elseif (strpos($stringExecutable, '::') !== FALSE) {
+            list($class, $method) = explode('::', $stringExecutable, 2);
+            $executableArr = $this->generateStringClassMethodCallable($class, $method);
+        } else {
+            // @TODO maybe add new code/msg?
+            throw new BadArgumentException(
+                self::E_CALLABLE_MESSAGE,
+                self::E_CALLABLE_CODE
+            );
+        }
+        
+        return $executableArr;
+    }
+    
+    private function generateStringClassMethodCallable($class, $method) {
+        $relativeStaticMethodStartPos = strpos($method, 'parent::');
+        
+        if ($relativeStaticMethodStartPos === 0) {
+            $childReflection = $this->reflectionStorage->getClass($class);
+            $class = $childReflection->getParentClass()->name;
+            $method = substr($method, $relativeStaticMethodStartPos + 8);
+        }
+        
+        $reflectionMethod = $this->reflectionStorage->getMethod($class, $method);
+        
+        return $reflectionMethod->isStatic()
+            ? array($reflectionMethod, NULL)
+            : array($reflectionMethod, $this->make($class));
     }
     
     private function generateInvocationArgs(\ReflectionFunctionAbstract $funcRefl, array $definition) {

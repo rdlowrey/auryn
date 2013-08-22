@@ -76,14 +76,14 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->define('RequiresInterface', array('dep' => 'DepImplementation'));
         $provider->share('RequiresInterface');
         $injected = $provider->make('RequiresInterface');
-        
+
         $this->assertEquals('something', $injected->testDep->testProp);
         $injected->testDep->testProp = 'something else';
-        
+
         $injected2 = $provider->make('RequiresInterface');
         $this->assertEquals('something else', $injected2->testDep->testProp);
     }
-    
+
     /**
      * @expectedException Auryn\InjectionException
      */
@@ -122,7 +122,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider  = new Provider(new ReflectionPool);
         $obj = $provider->make('TestMultiDepsWithCtor', array('val1'=>'TestDependency'));
         $this->assertInstanceOf('TestMultiDepsWithCtor', $obj);
-        
+
         $obj = $provider->make('NoTypehintNoDefaultConstructorClass',
             array('val1'=>'TestDependency')
         );
@@ -135,7 +135,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefault');
         $this->assertNull($obj->val);
     }
-    
+
     /**
      * @expectedException Auryn\InjectionException
      */
@@ -145,7 +145,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testMakeInjectsRawParametersDirectlyWhenDefinedWithParameterNamePrefix() {
-    
+
         $provider = new Provider(new ReflectionPool);
         $provider->define('ProviderTestRawCtorParams', array(
             ':string' => 'string',
@@ -155,7 +155,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             ':float' => 9.3,
             ':bool' => true,
         ));
-        
+
         $obj = $provider->make('ProviderTestRawCtorParams');
         $this->assertInternalType('string', $obj->string);
         $this->assertInstanceOf('StdClass', $obj->obj);
@@ -254,7 +254,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $obj = $provider->make('StdClass');
         $this->assertEquals(42, $obj->test);
     }
-    
+
     /**
      * @expectedException Auryn\BadArgumentException
      */
@@ -263,7 +263,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->delegate('StdClass', 'StringDelegateWithNoInvokeMethod');
         $obj = $provider->make('StdClass');
     }
-    
+
     /**
      * @expectedException Auryn\BadArgumentException
      */
@@ -272,7 +272,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->delegate('StdClass', 'SomeClassThatDefinitelyDoesNotExistForReal');
         $obj = $provider->make('StdClass');
     }
-    
+
     public function provideInvalidRawDefinitions() {
         return array(
             array(array('obj' => new StdClass)),
@@ -282,7 +282,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             array(array('bool' => true)),
         );
     }
-    
+
     /**
      * @dataProvider provideInvalidRawDefinitions
      * @expectedException Auryn\BadArgumentException
@@ -291,12 +291,12 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider(new ReflectionPool);
         $provider->define('TestClass', $def);
     }
-    
+
     /**
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionOnUntypehintedParameterWithNoDefinition() {
-    
+
         $provider = new Provider(new ReflectionPool);
         $obj = $provider->make('RequiresInterface');
     }
@@ -324,13 +324,13 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->share('TestDependency');
         $obj = $provider->make('TestDependency');
         $obj->testProp = 42;
-        
+
         $this->assertInstanceOf('Auryn\Provider', $provider->refresh('TestDependency'));
         $refreshedObj = $provider->make('TestDependency');
         $this->assertEquals('testVal', $refreshedObj->testProp);
     }
 
-    public function testUnshareRemovesSharingAndReturnsCurrentInstance() { 
+    public function testUnshareRemovesSharingAndReturnsCurrentInstance() {
         $provider = new Provider(new ReflectionPool);
         $provider->share('TestDependency');
         $this->assertInstanceOf('Auryn\Provider', $provider->unshare('TestDependency'));
@@ -340,7 +340,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider(new ReflectionPool);
         $testShare = new StdClass;
         $testShare->test = 42;
-        
+
         $this->assertInstanceOf('Auryn\Provider', $provider->share($testShare));
         $testShare->test = 'test';
         $this->assertEquals('test', $provider->make('stdclass')->test);
@@ -350,7 +350,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider(new ReflectionPool);
         $this->assertInstanceOf('Auryn\Provider', $provider->share('SomeClass'));
     }
-    
+
     /**
      * @expectedException Auryn\BadArgumentException
      */
@@ -371,7 +371,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             array(true)
         );
     }
-    
+
     /**
      * @dataProvider provideInvalidDelegates
      * @expectedException Auryn\BadArgumentException
@@ -380,19 +380,19 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider(new ReflectionPool);
         $provider->delegate('TestDependency', $badDelegate);
     }
-    
+
     public function testDelegateInstantiatesCallableClassString() {
         $provider = new Provider;
         $provider->delegate('MadeByDelegate', 'CallableDelegateClassTest');
         $this->assertInstanceof('MadeByDelegate', $provider->make('MadeByDelegate'));
     }
-    
+
     public function testDelegateInstantiatesCallableClassArray() {
         $provider = new Provider;
         $provider->delegate('MadeByDelegate', array('CallableDelegateClassTest', '__invoke'));
         $this->assertInstanceof('MadeByDelegate', $provider->make('MadeByDelegate'));
     }
-    
+
     /**
      * @dataProvider provideExecutionExpectations
      */
@@ -400,103 +400,131 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider;
         $this->assertEquals($expectedResult, $provider->execute($callable, $definition));
     }
-    
+
     public function provideExecutionExpectations() {
         $return = array();
-        
+
         // 0 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = array('ExecuteClassNoDeps', 'execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 1 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = array(new ExecuteClassNoDeps, 'execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 2 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = array('ExecuteClassDeps', 'execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 3 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = array(new ExecuteClassDeps(new TestDependency), 'execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 4 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = array('ExecuteClassDepsWithMethodDeps', 'execute');
         $args = array(':arg' => 9382);
         $expectedResult = 9382;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 5 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = array('ExecuteClassStaticMethod', 'execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 6 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = array(new ExecuteClassStaticMethod, 'execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 7 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = 'ExecuteClassStaticMethod::execute';
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 8 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = array('ExecuteClassRelativeStaticMethod', 'parent::execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 9 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = 'testExecuteFunction';
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 10 ------------------------------------------------------------------------------------->
-        
+
         $toInvoke = function() { return 42; };
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 11 ------------------------------------------------------------------------------------->
-        
+
         $toInvoke = new ExecuteClassInvokable;
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // 12 ------------------------------------------------------------------------------------->
-        
+
         $toInvoke = 'ExecuteClassInvokable';
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
+        // 13 ------------------------------------------------------------------------------------->
+
+        $toInvoke = 'ExecuteClassNoDeps::execute';
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+
+        // 14 ------------------------------------------------------------------------------------->
+
+        $toInvoke = 'ExecuteClassDeps::execute';
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+
+        // 15 ------------------------------------------------------------------------------------->
+
+        $toInvoke = 'ExecuteClassStaticMethod::execute';
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+
+        // 16 ------------------------------------------------------------------------------------->
+
+        $toInvoke = 'ExecuteClassRelativeStaticMethod::parent::execute';
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+
         // x -------------------------------------------------------------------------------------->
-        
+
         return $return;
     }
 
@@ -521,7 +549,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $obj = $provider->make('ConcreteClass1');
         $this->assertInstanceOf('ConcreteClass2', $obj);
     }
-    
+
     public function testSharedByAliasedInterfaceName() {
         $provider = new Auryn\Provider();
         $provider->alias('SharedAliasedInterface', 'SharedClass');
@@ -539,7 +567,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $class2 = $provider->make('SharedAliasedInterface');
         $this->assertSame($class, $class2);
     }
-    
+
     public function testSharedByAliasedInterfaceNameWithParameter() {
         $provider = new Auryn\Provider();
         $provider->alias('SharedAliasedInterface', 'SharedClass');
@@ -548,7 +576,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $childClass = $provider->make('ClassWithAliasAsParameter');
         $this->assertSame($sharedClass, $childClass->getSharedClass());
     }
-    
+
     public function testSharedByAliasedInstance() {
         $provider = new Auryn\Provider();
         $provider->alias('SharedAliasedInterface', 'SharedClass');
@@ -566,7 +594,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $stdClass2 = $provider->make('StdClass');
         $this->assertSame($stdClass1, $stdClass2);
     }
-    
+
     /**
      * @dataProvider provideInaccessibleExecutables
      */
@@ -575,36 +603,48 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $executable = $provider->getExecutable($toInvoke, $setAccessible = TRUE);
         $this->assertSame($expectedResult, $executable());
     }
-    
+
     public function provideInaccessibleExecutables() {
         $return = array();
-        
+
         // 0 -------------------------------------------------------------------------------------->
-        
+
         $toInvoke = array('InaccessibleExecutableClassMethod', 'doSomethingPrivate');
         $expectedResult = 42;
         $return[] = array($toInvoke, $expectedResult);
         
         // 1 -------------------------------------------------------------------------------------->
-        
+
+        $toInvoke = 'InaccessibleExecutableClassMethod::doSomethingPrivate';
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $expectedResult);
+
+        // 2 -------------------------------------------------------------------------------------->
+
         $toInvoke = 'InaccessibleStaticExecutableClassMethod::doSomethingPrivate';
         $expectedResult = 42;
         $return[] = array($toInvoke, $expectedResult);
-        
-        // 2 -------------------------------------------------------------------------------------->
-        
+
+        // 3 -------------------------------------------------------------------------------------->
+
         $toInvoke = array('InaccessibleExecutableClassMethod', 'doSomethingProtected');
         $expectedResult = 42;
         $return[] = array($toInvoke, $expectedResult);
         
-        // 3 -------------------------------------------------------------------------------------->
-        
+        // 4 -------------------------------------------------------------------------------------->
+
+        $toInvoke = 'InaccessibleExecutableClassMethod::doSomethingProtected';
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $expectedResult);
+
+        // 5 -------------------------------------------------------------------------------------->
+
         $toInvoke = 'InaccessibleStaticExecutableClassMethod::doSomethingProtected';
         $expectedResult = 42;
         $return[] = array($toInvoke, $expectedResult);
-        
+
         // x -------------------------------------------------------------------------------------->
-        
+
         return $return;
     }
 
@@ -612,7 +652,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Auryn\Provider();
         $sharedObj = new \StdClass;
         $provider->share($sharedObj);
-        
+
         $this->assertSame($sharedObj, $provider->make('StdClass'));
         $provider->unshare($sharedObj);
 
