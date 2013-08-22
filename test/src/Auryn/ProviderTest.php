@@ -666,9 +666,12 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertNotSame($sharedObj, $provider->make('StdClass'));
     }
 
-    function testBugMorrisonLeviFound() {
+    function testBugWithReflectionPoolIncorrectlyReturningBadInfo() {
         $provider = new Provider;
-        $provider->make('ClassOuter');
+        $obj = $provider->make('ClassOuter');
+        $this->assertInstanceOf('ClassOuter', $obj);
+        $this->assertInstanceOf('ClassInnerA', $obj->dep);
+        $this->assertInstanceOf('ClassInnerB', $obj->dep->dep);
     }
 
     function provideCyclicDependencies() {

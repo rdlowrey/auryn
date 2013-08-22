@@ -146,13 +146,15 @@ class RequiresInterface {
 }
 
 class ClassInnerA {
-    function __construct(ClassInnerB $dep) {}
+    public $dep;
+    function __construct(ClassInnerB $dep) {$this->dep = $dep;}
 }
 class ClassInnerB {
     function __construct() {}
 }
 class ClassOuter {
-    function __construct(ClassInnerA $dep) {}
+    public $dep;
+    function __construct(ClassInnerA $dep) {$this->dep = $dep;}
 }
 
 class ProvTestNoDefinitionNullDefaultClass {
