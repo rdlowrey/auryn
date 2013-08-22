@@ -18,6 +18,12 @@ class InaccessibleStaticExecutableClassMethod {
     }
 }
 
+class ClassWithStaticMethodThatTakesArg {
+    static function doSomething($arg) {
+        return 1 + $arg;
+    }
+}
+
 class RecursiveClass1 {
     function __construct(RecursiveClass2 $dep) {}
 }

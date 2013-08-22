@@ -528,6 +528,13 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         return $return;
     }
 
+    public function testStaticStringExecutableWithArgument() {
+        $provider = new Auryn\Provider;
+        $exe = $provider->getExecutable('ClassWithStaticMethodThatTakesArg::doSomething');
+        $this->assertEquals(42, $exe(41));
+        
+    }
+
     public function testInterfaceFactoryDelegation() {
         $injector = new Auryn\Provider(new Auryn\ReflectionPool);
         $injector->delegate('DelegatableInterface', 'ImplementsInterfaceFactory');

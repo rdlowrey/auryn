@@ -6,11 +6,14 @@ class Executable {
 
     private $callableReflection;
     private $methodInvocationObject;
+    private $isMethod;
 
     function __construct(\ReflectionFunctionAbstract $reflection, $invocationObject = NULL) {
         if ($reflection instanceof \ReflectionMethod) {
+            $this->isMethod = TRUE;
             $this->setMethodCallable($reflection, $invocationObject);
         } else {
+            $this->isMethod = FALSE;
             $this->callableReflection = $reflection;
         }
     }
@@ -39,7 +42,7 @@ class Executable {
     function __invoke() {
         $args = func_get_args();
 
-        return $this->methodInvocationObject
+        return $this->isMethod
             ? $this->callableReflection->invokeArgs($this->methodInvocationObject, $args)
             : $this->callableReflection->invoke($args);
     }
