@@ -310,3 +310,10 @@ class TestMissingDependency {
     function __construct(TypoInTypehint $class) {        
     }
 }
+
+class NonConcreteDependencyWithDefaultValue {
+    public $interface;
+    function __construct(DelegatableInterface $i = NULL) {
+        $this->interface = $i;
+    }
+}

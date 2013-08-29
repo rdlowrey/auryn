@@ -699,4 +699,11 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->make($class);
     }
 
+    function testNonConcreteDependencyWithDefaultValue() {
+        $provider = new Provider;
+        $class = $provider->make('NonConcreteDependencyWithDefaultValue');
+        $this->assertInstanceOf('NonConcreteDependencyWithDefaultValue', $class);
+        $this->assertNull($class->interface);
+    }
+
 }

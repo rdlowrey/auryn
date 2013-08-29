@@ -568,7 +568,7 @@ class Provider implements Injector {
         if ($typeHint && ($this->isInstantiable($typeHint) || $this->delegateExists($typeHint))) {
             return $this->make($typeHint);
         } elseif ($typeHint) {
-            return $this->buildAbstractTypehintParam($typeHint, $reflParam->name);
+            return $this->buildAbstractTypehintParam($typeHint, $reflParam);
         } elseif ($reflParam->isDefaultValueAvailable()) {
             return $reflParam->getDefaultValue();
         } else {
@@ -576,21 +576,23 @@ class Provider implements Injector {
         }
     }
     
-    private function buildAbstractTypehintParam($typehint, $paramName) {
+    private function buildAbstractTypehintParam($typehint, \ReflectionParameter $reflParam) {
         if ($this->isImplemented($typehint)) {
             try {
                 return $this->buildImplementation($typehint);
             } catch (InjectionException $e) {
                 throw new InjectionException(
-                    sprintf(self::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, $paramName, $typehint),
+                    sprintf(self::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, $reflParam, $typehint),
                     self::E_BAD_PARAM_IMPLEMENTATION_CODE,
                     $e
                 );
             }
+        } elseif ($reflParam->isDefaultValueAvailable()) {
+            return $reflParam->getDefaultValue();
         }
         
         throw new InjectionException(
-            sprintf(self::E_NEEDS_DEFINITION_MESSAGE, $paramName, $typehint),
+            sprintf(self::E_NEEDS_DEFINITION_MESSAGE, $reflParam->getName(), $typehint),
             self::E_NEEDS_DEFINITION_CODE
         );
     }
