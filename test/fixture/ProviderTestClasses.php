@@ -177,14 +177,16 @@ class ProviderTestRawCtorParams {
     public $array;
     public $float;
     public $bool;
+    public $null;
     
-    public function __construct($string, $obj, $int, $array, $float, $bool) {
+    public function __construct($string, $obj, $int, $array, $float, $bool, $null) {
         $this->string = $string;
         $this->obj = $obj;
         $this->int = $int;
         $this->array = $array;
         $this->float = $float;
         $this->bool = $bool;
+        $this->null = $null;
     }
 }
 

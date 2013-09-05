@@ -157,6 +157,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             ':array' => array(),
             ':float' => 9.3,
             ':bool' => true,
+            ':null' => null,
         ));
 
         $obj = $provider->make('ProviderTestRawCtorParams');
@@ -166,6 +167,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInternalType('array', $obj->array);
         $this->assertInternalType('float', $obj->float);
         $this->assertInternalType('bool', $obj->bool);
+        $this->assertNull($obj->null);
     }
 
     /**
