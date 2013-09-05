@@ -130,7 +130,10 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(NULL, $obj->testParam);
     }
 
-    public function testMakeInjectsNullOnUntypehintedParameterWithoutDefinitionOrDefault() {
+    /**
+     * @expectedException Auryn\InjectionException
+     */
+    public function testMakeThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefault() {
         $provider  = new Provider(new ReflectionPool);
         $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefault');
         $this->assertNull($obj->val);
