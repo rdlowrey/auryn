@@ -79,7 +79,7 @@ class Provider implements Injector {
         $lowClassBackup = $lowClass;
 
         if (isset($this->beingProvisioned[$lowClass])) {
-            throw new InjectionException(
+            throw new CyclicDependencyException(
                 sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
                 self::E_CYCLIC_DEPENDENCY_CODE
             );
@@ -111,19 +111,19 @@ class Provider implements Injector {
                 self::E_MAKE_FAILURE_CODE,
                 $e
             );
-        } catch(InjectionException $e) {
+
+        } catch(CyclicDependencyException $e) {
             unset($this->beingProvisioned[$lowClass]);
-            if ($e->getCode() === self::E_CYCLIC_DEPENDENCY_CODE) {
-                $sameCyclicClass = sprintf(self::E_DELEGATION_FAILURE_MESSAGE, $className) === $e->getMessage();
-                if (!$sameCyclicClass) {
-                    throw new InjectionException(
-                        sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
-                        self::E_CYCLIC_DEPENDENCY_CODE,
-                        $e
-                    );
-                }
-            }
-            throw $e;
+	        $cycleDetector = $e->getCycleDetector();
+	        if ($cycleDetector !== $className) {
+		        throw new CyclicDependencyException(
+			        $cycleDetector,
+			        sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
+			        self::E_CYCLIC_DEPENDENCY_CODE,
+			        $e
+		        );
+	        }
+	        throw $e;
         }
 
         if ($this->isShared($lowClass)) {
@@ -564,8 +564,17 @@ class Provider implements Injector {
     
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam) {
         $typeHint = $this->reflectionStorage->getParamTypeHint($reflFunc, $reflParam);
-          
-        if ($typeHint && ($this->isInstantiable($typeHint) || $this->delegateExists($typeHint))) {
+	    $typeHintLower = strtolower($typeHint);
+
+	    if (isset($this->beingProvisioned[$typeHintLower])) {
+		    unset($this->beingProvisioned[$typeHintLower]);
+		    $class = $reflParam->getDeclaringClass()->getName();
+		    throw new CyclicDependencyException(
+			    $class,
+			    sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $class),
+			    self::E_CYCLIC_DEPENDENCY_CODE
+		    );
+	    } elseif ($typeHint && ($this->isInstantiable($typeHint) || $this->delegateExists($typeHint))) {
             return $this->make($typeHint);
         } elseif ($typeHint) {
             return $this->buildAbstractTypehintParam($typeHint, $reflParam);
