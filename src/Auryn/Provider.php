@@ -54,7 +54,7 @@ class Provider implements Injector {
     const E_BAD_IMPLEMENTATION_MESSAGE = 'Bad implementation: %s does not implement %s';
 
     const E_BAD_PARAM_IMPLEMENTATION_CODE = 11;
-    const E_BAD_PARAM_IMPLEMENTATION_MESSAGE = 'Bad implementation definition encountered while attempting to provision non-concrete parameter \$$paramName of type $typehint';
+    const E_BAD_PARAM_IMPLEMENTATION_MESSAGE = 'Bad implementation definition encountered while attempting to provision non-concrete parameter $%s of type %s';
 
     const E_UNDEFINED_PARAM_CODE = 12;
     const E_UNDEFINED_PARAM_MESSAGE = 'No definition available while attempting to provision typeless non-concrete parameter %s';
@@ -588,7 +588,7 @@ class Provider implements Injector {
                 return $this->buildImplementation($typehint);
             } catch (InjectionException $e) {
                 throw new InjectionException(
-                    sprintf(self::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, $reflParam, $typehint),
+                    sprintf(self::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, $reflParam->getName(), $typehint),
                     self::E_BAD_PARAM_IMPLEMENTATION_CODE,
                     $e
                 );
