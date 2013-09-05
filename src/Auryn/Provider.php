@@ -493,7 +493,7 @@ class Provider implements Injector {
 
             if (isset($definition[$funcParam->name])) {
                 $funcArgs[] = $this->make($definition[$funcParam->name]);
-            } elseif (isset($definition[$rawParamKey])) {
+            } elseif (array_key_exists($rawParamKey, $definition)) {
                 $funcArgs[] = $definition[$rawParamKey];
             } else {
                 $funcArgs[] = $this->buildArgumentFromTypeHint($funcRefl, $funcParam);
