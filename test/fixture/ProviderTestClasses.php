@@ -163,10 +163,19 @@ class ProvTestNoDefinitionNullDefaultClass {
     }
 }
 
-class ProviderTestCtorParamWithNoTypehintOrDefault {
+interface TestMissingDefine {}
+
+class ProviderTestCtorParamWithNoTypehintOrDefault implements TestMissingDefine {
     public $val = 42;
     public function __construct($val) {
         $this->val = $val;
+    }
+}
+
+class ProviderTestCtorParamWithNoTypehintOrDefaultDependent {
+    private $param;
+    function __construct(TestMissingDefine $param) {
+        $this->param = $param;
     }
 }
 

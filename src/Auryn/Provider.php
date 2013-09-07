@@ -556,7 +556,7 @@ class Provider implements Injector {
         $implRefl  = $this->reflectionStorage->getClass($implClass);
         
         if (!$implRefl->isSubclassOf($interfaceOrAbstractName)) {
-            throw new InjectionException(
+            throw new BadArgumentException(
                 sprintf(self::E_BAD_IMPLEMENTATION_MESSAGE, $implRefl->name, $interfaceOrAbstractName),
                 self::E_BAD_IMPLEMENTATION_CODE
             );
@@ -586,7 +586,7 @@ class Provider implements Injector {
         if ($this->isImplemented($typehint)) {
             try {
                 return $this->buildImplementation($typehint);
-            } catch (InjectionException $e) {
+            } catch (BadArgumentException $e) {
                 throw new InjectionException(
                     sprintf(self::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, $reflParam->getName(), $typehint),
                     self::E_BAD_PARAM_IMPLEMENTATION_CODE,
