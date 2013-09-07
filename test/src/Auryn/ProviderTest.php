@@ -706,4 +706,42 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertNull($class->interface);
     }
 
+    function testShareAfterAliasException() {
+        $this->setExpectedException(
+            'Auryn\\InjectionException',
+            sprintf(Provider::E_CANNOT_SHARE_ALREADY_ALIASED_MESSAGE, strtolower('StdClass'), 'SomeOtherClass'),
+            Provider::E_CANNOT_SHARE_ALREADY_ALIASED_CODE
+        );
+
+        $provider = new Provider();
+        $testClass = new StdClass();
+        $provider->alias('StdClass', 'SomeOtherClass');
+        $provider->share($testClass);
+    }
+
+    function testShareAfterAliasAliasedClassAllowed() {
+        $provider = new Provider();
+        $testClass = new DepImplementation();
+        $provider->alias('DepInterface', 'DepImplementation');
+        $provider->share($testClass);
+    }
+
+    function testAliasAfterShareByStringAllowed() {
+        $provider = new Provider();
+        $provider->share('DepInterface');
+        $provider->alias('DepInterface', 'DepImplementation');
+    }
+
+    function testAliasAfterShareException() {
+        $this->setExpectedException(
+            'Auryn\\InjectionException',
+            sprintf(Provider::E_CANNOT_ALIAS_ALREADY_SHARED_MESSAGE, strtolower('StdClass'), 'SomeOtherClass'),
+            Provider::E_CANNOT_ALIAS_ALREADY_SHARED_CODE
+        );
+
+        $provider = new Provider();
+        $testClass = new StdClass();
+        $provider->share($testClass);
+        $provider->alias('StdClass', 'SomeOtherClass');
+    }
 }
