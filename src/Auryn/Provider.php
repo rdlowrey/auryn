@@ -548,7 +548,15 @@ class Provider implements Injector {
         $lowNonConcrete = strtolower($nonConcreteType);
         return isset($this->aliases[$lowNonConcrete]);
     }
-    
+
+    /**
+     * Builds a concrete object from the interface or abstract class name, as defined by 
+     * the data set through $provider->alias().
+     * 
+     * @param $interfaceOrAbstractName
+     * @return mixed The object created.
+     * @throws \Auryn\BadArgumentException
+     */
     private function buildImplementation($interfaceOrAbstractName) {
         $lowClass  = strtolower($interfaceOrAbstractName);
         $implClass = $this->aliases[$lowClass];
