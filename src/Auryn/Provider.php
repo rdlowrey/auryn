@@ -54,12 +54,15 @@ class Provider implements Injector {
     const E_BAD_IMPLEMENTATION_MESSAGE = 'Bad implementation: %s does not implement %s';
 
     const E_BAD_PARAM_IMPLEMENTATION_CODE = 11;
-    const E_BAD_PARAM_IMPLEMENTATION_MESSAGE = 'Bad implementation definition encountered while attempting to provision non-concrete parameter \$$paramName of type $typehint';
+    const E_BAD_PARAM_IMPLEMENTATION_MESSAGE = 'Bad implementation definition encountered while attempting to provision non-concrete parameter $%s of type %s';
 
-    const E_NEEDS_DEFINITION_CODE = 12;
+    const E_UNDEFINED_PARAM_CODE = 12;
+    const E_UNDEFINED_PARAM_MESSAGE = 'No definition available while attempting to provision typeless non-concrete parameter %s';
+
+    const E_NEEDS_DEFINITION_CODE = 13;
     const E_NEEDS_DEFINITION_MESSAGE = 'Injection definition/implementation required for non-concrete parameter $%s of type %s';
 
-    const E_CYCLIC_DEPENDENCY_CODE = 13;
+    const E_CYCLIC_DEPENDENCY_CODE = 14;
     const E_CYCLIC_DEPENDENCY_MESSAGE = 'Detected a cyclic dependency while provisioning %s';
 
     function __construct(ReflectionStorage $reflectionStorage = NULL) {
@@ -490,7 +493,7 @@ class Provider implements Injector {
 
             if (isset($definition[$funcParam->name])) {
                 $funcArgs[] = $this->make($definition[$funcParam->name]);
-            } elseif (isset($definition[$rawParamKey])) {
+            } elseif (array_key_exists($rawParamKey, $definition)) {
                 $funcArgs[] = $definition[$rawParamKey];
             } else {
                 $funcArgs[] = $this->buildArgumentFromTypeHint($funcRefl, $funcParam);
@@ -545,7 +548,15 @@ class Provider implements Injector {
         $lowNonConcrete = strtolower($nonConcreteType);
         return isset($this->aliases[$lowNonConcrete]);
     }
-    
+
+    /**
+     * Builds a concrete object from the interface or abstract class name, as defined by 
+     * the data set through $provider->alias().
+     * 
+     * @param $interfaceOrAbstractName
+     * @return mixed The object created.
+     * @throws \Auryn\BadArgumentException
+     */
     private function buildImplementation($interfaceOrAbstractName) {
         $lowClass  = strtolower($interfaceOrAbstractName);
         $implClass = $this->aliases[$lowClass];
@@ -553,7 +564,7 @@ class Provider implements Injector {
         $implRefl  = $this->reflectionStorage->getClass($implClass);
         
         if (!$implRefl->isSubclassOf($interfaceOrAbstractName)) {
-            throw new InjectionException(
+            throw new BadArgumentException(
                 sprintf(self::E_BAD_IMPLEMENTATION_MESSAGE, $implRefl->name, $interfaceOrAbstractName),
                 self::E_BAD_IMPLEMENTATION_CODE
             );
@@ -581,17 +592,20 @@ class Provider implements Injector {
         } elseif ($reflParam->isDefaultValueAvailable()) {
             return $reflParam->getDefaultValue();
         } else {
-            return NULL;
+            throw new InjectionException(
+                sprintf(self::E_UNDEFINED_PARAM_MESSAGE, $reflParam->getName()),
+                self::E_UNDEFINED_PARAM_CODE
+            );
         }
     }
-    
+
     private function buildAbstractTypehintParam($typehint, \ReflectionParameter $reflParam) {
         if ($this->isImplemented($typehint)) {
             try {
                 return $this->buildImplementation($typehint);
-            } catch (InjectionException $e) {
+            } catch (BadArgumentException $e) {
                 throw new InjectionException(
-                    sprintf(self::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, $reflParam, $typehint),
+                    sprintf(self::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, $reflParam->getName(), $typehint),
                     self::E_BAD_PARAM_IMPLEMENTATION_CODE,
                     $e
                 );

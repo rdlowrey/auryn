@@ -55,7 +55,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     public function testMakeThrowsExceptionOnNonConcreteCtorParamWithBadAlias() {
         $this->setExpectedException(
             'Auryn\\InjectionException',
-            sprintf(Provider::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, 'interface', 'DepInterface'),
+            sprintf(Provider::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, 'dep', 'DepInterface'),
             Provider::E_BAD_PARAM_IMPLEMENTATION_CODE
         );
 
@@ -130,12 +130,30 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(NULL, $obj->testParam);
     }
 
-    public function testMakeInjectsNullOnUntypehintedParameterWithoutDefinitionOrDefault() {
+    public function testMakeThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefault() {
+        $this->setExpectedException(
+            'Auryn\\InjectionException',
+            sprintf(Provider::E_UNDEFINED_PARAM_MESSAGE, 'val'),
+            Provider::E_UNDEFINED_PARAM_CODE 
+        );
+        
         $provider  = new Provider(new ReflectionPool);
         $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefault');
         $this->assertNull($obj->val);
     }
 
+    public function testMakeThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefaultThroughAliasedTypehint() {
+        $this->setExpectedException(
+            'Auryn\\InjectionException',
+            sprintf(Provider::E_UNDEFINED_PARAM_MESSAGE, 'val'),
+            Provider::E_UNDEFINED_PARAM_CODE
+        );
+
+        $provider  = new Provider(new ReflectionPool);
+        $provider->alias('TestMissingDefine', 'ProviderTestCtorParamWithNoTypehintOrDefault');
+        $provider->make('ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
+    }
+    
     /**
      * @expectedException Auryn\InjectionException
      */
@@ -154,6 +172,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             ':array' => array(),
             ':float' => 9.3,
             ':bool' => true,
+            ':null' => null,
         ));
 
         $obj = $provider->make('ProviderTestRawCtorParams');
@@ -163,6 +182,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInternalType('array', $obj->array);
         $this->assertInternalType('float', $obj->float);
         $this->assertInternalType('bool', $obj->bool);
+        $this->assertNull($obj->null);
     }
 
     /**
