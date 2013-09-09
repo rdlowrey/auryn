@@ -31,7 +31,7 @@ $injector->share($config);
 $config->configVar = 'altered value';
 
 // outputs: "Config: altered value | Scalar arg: 42"
-echo $injector->execute(['Example', 'myMethod'], $args = [':arg' => 42]);
+echo $injector->execute('Example::myMethod', $args = [':arg' => 42]);
 ```
 
 #### REQUIREMENTS
