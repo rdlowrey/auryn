@@ -156,16 +156,16 @@ class Provider implements Injector {
             );
         } catch (CyclicDependencyException $e) {
             unset($this->beingProvisioned[$lowClass]);
-	        $cycleDetector = $e->getCycleDetector();
-	        if ($cycleDetector !== $className) {
-		        throw new CyclicDependencyException(
-			        $cycleDetector,
-			        sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
-			        self::E_CYCLIC_DEPENDENCY_CODE,
-			        $e
-		        );
-	        }
-	        throw $e;
+            $cycleDetector = $e->getCycleDetector();
+            if ($cycleDetector !== $className) {
+                throw new CyclicDependencyException(
+                    $cycleDetector,
+                    sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
+                    self::E_CYCLIC_DEPENDENCY_CODE,
+                    $e
+                );
+            }
+            throw $e;
         }
     }
 
@@ -251,32 +251,37 @@ class Provider implements Injector {
      * @return \Auryn\Provider Returns the current instance
      */
     function alias($typehintToReplace, $alias) {
-        if ($typehintToReplace && $alias && is_string($typehintToReplace) && is_string($alias)) {
-            $typehintToReplace = strtolower($typehintToReplace);
-
-            //If it's already shared to an instance
-            if (isset($this->sharedClasses[$typehintToReplace]) == true) {
-                if (is_string($this->sharedClasses[$typehintToReplace]) != true) {
-                    throw new InjectionException(
-                        sprintf(self::E_CANNOT_ALIAS_ALREADY_SHARED_MESSAGE, strtolower(get_class($this->sharedClasses[$typehintToReplace])), $alias),
-                        self::E_CANNOT_ALIAS_ALREADY_SHARED_CODE
-                    );
-                }
-            }
-
-            $this->aliases[$typehintToReplace] = $alias;
-
-            //If the class has already been shared by name, replace that sharing entry
-            //with one pointing to the aliased class name.
-            if (array_key_exists($typehintToReplace, $this->sharedClasses) == true) {
-                $this->sharedClasses[strtolower($alias)] = $this->sharedClasses[$typehintToReplace];
-                unset($this->sharedClasses[$typehintToReplace]);
-            }
-        } else {
+        if (empty($typehintToReplace) || !is_string($typehintToReplace)) {
             throw new BadArgumentException(
                 self::E_NON_EMPTY_STRING_ALIAS_MESSAGE,
                 self::E_NON_EMPTY_STRING_ALIAS_CODE
             );
+        } elseif (empty($alias) || !is_string($alias)) {
+            throw new BadArgumentException(
+                self::E_NON_EMPTY_STRING_ALIAS_MESSAGE,
+                self::E_NON_EMPTY_STRING_ALIAS_CODE
+            );
+        }
+        
+        $lowTypehint = strtolower($typehintToReplace);
+        $lowAlias = strtolower($alias);
+        
+        if (isset($this->sharedClasses[$lowTypehint])) {
+            $sharedClassName = strtolower(get_class($this->sharedClasses[$lowTypehint]));
+            throw new InjectionException(
+                sprintf(self::E_CANNOT_ALIAS_ALREADY_SHARED_MESSAGE, $sharedClassName, $alias),
+                self::E_CANNOT_ALIAS_ALREADY_SHARED_CODE
+            );
+        } elseif (array_key_exists($lowAlias, $this->sharedClasses)) {
+            $this->sharedClasses[$lowTypehint] = $this->sharedClasses[$lowAlias];
+            unset($this->sharedClasses[$lowAlias]);
+        } else {
+            $this->aliases[$lowTypehint] = $alias;
+        }
+        
+        if (array_key_exists($lowTypehint, $this->sharedClasses)) {
+            $this->sharedClasses[$lowAlias] = $this->sharedClasses[$lowTypehint];
+            unset($this->sharedClasses[$lowTypehint]);
         }
 
         return $this;
@@ -357,6 +362,7 @@ class Provider implements Injector {
 
         return $this;
     }
+    
     /**
      * Delegates the creation of $class to $callable. Passes $class to $callable as the only argument
      *
@@ -532,6 +538,16 @@ class Provider implements Injector {
     protected function getInjectedInstance($className, array $definition) {
         try {
             $ctorParams = $this->reflectionStorage->getConstructorParameters($className);
+            
+            if ($ctorParams) {
+                $ctorMethod = $this->reflectionStorage->getConstructor($className);
+                $args = $this->generateInvocationArgs($ctorMethod, $definition);
+                $reflectionClass = $this->reflectionStorage->getClass($className);
+                $object = $reflectionClass->newInstanceArgs($args);
+            } else {
+                $object = $this->buildWithoutConstructorParams($className);
+            }
+            
         } catch (\ReflectionException $e) {
             throw new InjectionException(
                 sprintf(self::E_CLASS_NOT_FOUND_MESSAGE, $className),
@@ -540,21 +556,14 @@ class Provider implements Injector {
             );
         }
 
-        if ($ctorParams) {
-            $ctorMethod = $this->reflectionStorage->getConstructor($className);
-            $args = $this->generateInvocationArgs($ctorMethod, $definition);
-            $reflectionClass = $this->reflectionStorage->getClass($className);
-            return $reflectionClass->newInstanceArgs($args);
-        } else {
-            return $this->buildWithoutConstructorParams($className);
-        }
+        return $object;
     }
 
     private function buildWithoutConstructorParams($className) {
         if ($this->isInstantiable($className)) {
-            return new $className;
+            $object = new $className;
         } elseif ($this->isImplemented($className)) {
-            return $this->buildImplementation($className);
+            $object = $this->buildImplementation($className);
         } else {
             $reflectionClass = $this->reflectionStorage->getClass($className);
             $type = $reflectionClass->isInterface() ? 'interface' : 'abstract';
@@ -563,26 +572,22 @@ class Provider implements Injector {
                 self::E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_CODE
             );
         }
+        
+        return $object;
     }
 
     private function isInstantiable($className) {
         $reflectionInstance = $this->reflectionStorage->getClass($className);
+        
         return $reflectionInstance->isInstantiable();
     }
 
     private function isImplemented($nonConcreteType) {
         $lowNonConcrete = strtolower($nonConcreteType);
+        
         return isset($this->aliases[$lowNonConcrete]);
     }
 
-    /**
-     * Builds a concrete object from the interface or abstract class name, as defined by
-     * the data set through $provider->alias().
-     *
-     * @param $interfaceOrAbstractName
-     * @return mixed The object created.
-     * @throws \Auryn\BadArgumentException
-     */
     private function buildImplementation($interfaceOrAbstractName) {
         $lowClass  = strtolower($interfaceOrAbstractName);
         $implClass = $this->aliases[$lowClass];
@@ -601,48 +606,39 @@ class Provider implements Injector {
 
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam) {
         $typeHint = $this->reflectionStorage->getParamTypeHint($reflFunc, $reflParam);
-	    $typeHintLower = strtolower($typeHint);
+        $typeHintLower = strtolower($typeHint);
 
-	    if (isset($this->beingProvisioned[$typeHintLower])) {
-		    unset($this->beingProvisioned[$typeHintLower]);
-		    $class = $reflParam->getDeclaringClass()->getName();
-		    throw new CyclicDependencyException(
-			    $class,
-			    sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $class),
-			    self::E_CYCLIC_DEPENDENCY_CODE
-		    );
-	    } elseif ($typeHint && ($this->isInstantiable($typeHint) || isset($this->delegatedClasses[$typeHintLower]))) {
-            return $this->make($typeHint);
+        if ($typeHint && ($this->isInstantiable($typeHint)
+            || isset($this->aliases[$typeHintLower])
+            || isset($this->delegatedClasses[$typeHintLower])
+        )) {
+            $argument = $this->make($typeHint);
         } elseif ($typeHint) {
-            return $this->buildAbstractTypehintParam($typeHint, $reflParam);
+            $argument = $this->buildAbstractTypehintParam($typeHint, $reflParam);
         } elseif ($reflParam->isDefaultValueAvailable()) {
-            return $reflParam->getDefaultValue();
+            $argument = $reflParam->getDefaultValue();
         } else {
             throw new InjectionException(
                 sprintf(self::E_UNDEFINED_PARAM_MESSAGE, $reflParam->getName()),
                 self::E_UNDEFINED_PARAM_CODE
             );
         }
+        
+        return $argument;
     }
-
+    
     private function buildAbstractTypehintParam($typehint, \ReflectionParameter $reflParam) {
         if ($this->isImplemented($typehint)) {
-            try {
-                return $this->buildImplementation($typehint);
-            } catch (BadArgumentException $e) {
-                throw new InjectionException(
-                    sprintf(self::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, $reflParam->getName(), $typehint),
-                    self::E_BAD_PARAM_IMPLEMENTATION_CODE,
-                    $e
-                );
-            }
+            $param = $this->buildImplementation($typehint);
         } elseif ($reflParam->isDefaultValueAvailable()) {
-            return $reflParam->getDefaultValue();
+            $param = $reflParam->getDefaultValue();
+        } else {
+            throw new InjectionException(
+                sprintf(self::E_NEEDS_DEFINITION_MESSAGE, $reflParam->getName(), $typehint),
+                self::E_NEEDS_DEFINITION_CODE
+            );
         }
-
-        throw new InjectionException(
-            sprintf(self::E_NEEDS_DEFINITION_MESSAGE, $reflParam->getName(), $typehint),
-            self::E_NEEDS_DEFINITION_CODE
-        );
+        
+        return $param;
     }
 }
