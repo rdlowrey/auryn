@@ -54,7 +54,7 @@ class Provider implements Injector {
     const E_BAD_IMPLEMENTATION_MESSAGE = 'Bad implementation: %s does not implement %s';
 
     const E_BAD_PARAM_IMPLEMENTATION_CODE = 11;
-    const E_BAD_PARAM_IMPLEMENTATION_MESSAGE = 'Bad implementation definition encountered while attempting to provision non-concrete parameter $%s of type %s';
+    const E_BAD_PARAM_IMPLEMENTATION_MESSAGE = 'Bad implementation definition encountered while attempting to provision non-concrete parameter %s of type %s';
 
     const E_UNDEFINED_PARAM_CODE = 12;
     const E_UNDEFINED_PARAM_MESSAGE = 'No definition available while attempting to provision typeless non-concrete parameter %s';
@@ -65,6 +65,12 @@ class Provider implements Injector {
     const E_CYCLIC_DEPENDENCY_CODE = 14;
     const E_CYCLIC_DEPENDENCY_MESSAGE = 'Detected a cyclic dependency while provisioning %s';
 
+    const E_CANNOT_SHARE_ALREADY_ALIASED_CODE = 14;
+    const E_CANNOT_SHARE_ALREADY_ALIASED_MESSAGE = 'Cannot share class %s, it has already been aliased to %s';
+
+    const E_CANNOT_ALIAS_ALREADY_SHARED_CODE = 15;
+    const E_CANNOT_ALIAS_ALREADY_SHARED_MESSAGE = 'Cannot alias class %s to %s, it has already been shared.';
+    
     function __construct(ReflectionStorage $reflectionStorage = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
@@ -245,6 +251,17 @@ class Provider implements Injector {
     function alias($typehintToReplace, $alias) {
         if ($typehintToReplace && $alias && is_string($typehintToReplace) && is_string($alias)) {
             $typehintToReplace = strtolower($typehintToReplace);
+
+            //If it's already shared to an instance
+            if (isset($this->sharedClasses[$typehintToReplace]) == true) {
+                if (is_string($this->sharedClasses[$typehintToReplace]) != true) {
+                    throw new InjectionException(
+                        sprintf(self::E_CANNOT_ALIAS_ALREADY_SHARED_MESSAGE, strtolower(get_class($this->sharedClasses[$typehintToReplace])), $alias),
+                        self::E_CANNOT_ALIAS_ALREADY_SHARED_CODE 
+                    );
+                }
+            }
+            
             $this->aliases[$typehintToReplace] = $alias;
 
             //If the class has already been shared by name, replace that sharing entry
@@ -290,6 +307,13 @@ class Provider implements Injector {
                 : NULL;
         } elseif (is_object($classNameOrInstance)) {
             $lowClass = strtolower(get_class($classNameOrInstance));
+            if (isset($this->aliases[$lowClass])) {
+                //You cannot share an instance of a class that has already been aliased to another class.
+                throw new InjectionException(
+                    sprintf(self::E_CANNOT_SHARE_ALREADY_ALIASED_MESSAGE, $lowClass, $this->aliases[$lowClass]),
+                    self::E_CANNOT_SHARE_ALREADY_ALIASED_CODE
+                );
+            }
             $this->sharedClasses[$lowClass] = $classNameOrInstance;
         } else {
             throw new BadArgumentException(
