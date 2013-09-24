@@ -282,6 +282,10 @@ function testExecuteFunction() {
     return 42;
 }
 
+function testExecuteFunctionWithArg(ConcreteClass1 $foo) {
+    return 42;
+}
+
 class MadeByDelegate {}
 
 class CallableDelegateClassTest {
