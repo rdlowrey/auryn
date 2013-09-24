@@ -531,6 +531,12 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
 
+
+        $toInvoke = 'testExecuteFunctionWithArg';
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
         // x -------------------------------------------------------------------------------------->
 
         return $return;
