@@ -44,7 +44,7 @@ class Executable {
 
         return $this->isMethod
             ? $this->callableReflection->invokeArgs($this->methodInvocationObject, $args)
-            : $this->callableReflection->invoke($args);
+            : $this->callableReflection->invokeArgs($args);
     }
 
 }

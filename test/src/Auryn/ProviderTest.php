@@ -52,18 +52,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('RequiresInterface', $obj);
     }
 
-    public function testMakeThrowsExceptionOnNonConcreteCtorParamWithBadAlias() {
-        $this->setExpectedException(
-            'Auryn\\InjectionException',
-            sprintf(Provider::E_BAD_PARAM_IMPLEMENTATION_MESSAGE, 'dep', 'DepInterface'),
-            Provider::E_BAD_PARAM_IMPLEMENTATION_CODE
-        );
-
-        $provider = new Provider(new ReflectionPool);
-        $provider->alias('DepInterface', 'StdClass');
-        $provider->make('RequiresInterface');
-    }
-
     public function testMakePassesNullCtorParameterIfNoTypehintOrDefaultCanBeDetermined() {
         $provider = new Provider(new ReflectionPool);
         $nullCtorParamObj = $provider->make('ProvTestNoDefinitionNullDefaultClass');
@@ -543,6 +531,12 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
 
+
+        $toInvoke = 'testExecuteFunctionWithArg';
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+        
         // x -------------------------------------------------------------------------------------->
 
         return $return;
