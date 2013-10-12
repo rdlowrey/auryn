@@ -550,8 +550,8 @@ class Provider implements Injector {
             
         } catch (\ReflectionException $e) {
             throw new InjectionException(
-                sprintf(self::E_CLASS_NOT_FOUND_MESSAGE, $className),
-                self::E_CLASS_NOT_FOUND_CODE,
+                sprintf(self::E_MAKE_FAILURE_MESSAGE, $className, $e->getMessage()),
+                self::E_MAKE_FAILURE_CODE,
                 $e
             );
         }
