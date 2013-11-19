@@ -217,11 +217,14 @@ class Provider implements Injector {
     /**
      * Unshares the specified class
      * 
-     * @param string $class Class name
+     * @param mixed $classNameOrInstance Class name or instance
      * @return \Auryn\Provider Returns the current instance
      */
-    function unshare($className) {
-        $className = strtolower($className);
+    function unshare($classNameOrInstance) {
+        if (is_object($classNameOrInstance)) {
+            $classNameOrInstance = get_class($classNameOrInstance);
+        }
+        $className = strtolower($classNameOrInstance);
         unset($this->sharedClasses[$className]);
         
         return $this;
@@ -230,11 +233,14 @@ class Provider implements Injector {
     /**
      * Forces re-instantiation of a shared class the next time it's requested
      * 
-     * @param string $class Class name
+     * @param mixed $classNameOrInstance Class name or instance
      * @return \Auryn\Provider Returns the current instance
      */
-    function refresh($className) {
-        $className = strtolower($className);
+    function refresh($classNameOrInstance) {
+        if (is_object($classNameOrInstance)) {
+            $classNameOrInstance = get_class($classNameOrInstance);
+        }
+        $className = strtolower($classNameOrInstance);
         if (isset($this->sharedClasses[$className])) {
             $this->sharedClasses[$className] = NULL;
         }
