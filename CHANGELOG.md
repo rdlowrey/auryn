@@ -1,4 +1,4 @@
-#### master
+#### v0.10.0
 
 - `Provider::execute()` and `Provider::getExecutable()` now accept string
   arguments for both instance and static class methods e.g.:
@@ -9,6 +9,10 @@ MyClass::myStaticMethod
 ChildOfMyClass::parent::myStaticMethod
 MyClassWithConstructorDependencies::myMethod
 ```
+
+- Provider::unshare and Provider::refresh now extrapolate class names if passed
+  objects instead of strings.
+- Miscellaneous bugfixes
 
 
 #### v0.9.1
