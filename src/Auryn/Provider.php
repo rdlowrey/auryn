@@ -628,21 +628,26 @@ class Provider implements Injector {
 
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam) {
         $typeHint = $this->reflectionStorage->getParamTypeHint($reflFunc, $reflParam);
+
+        if (!$typeHint) {
+            return NULL;
+        }
+
         $typeHintLower = strtolower($typeHint);
 
-        if ($typeHint && ($this->isInstantiable($typeHint)
+        if ($this->isInstantiable($typeHint)
             || isset($this->aliases[$typeHintLower])
-            || isset($this->delegatedClasses[$typeHintLower])
-        )) {
+            || isset($this->delegatedClasses[$typeHintLower])) {
             return $this->make($typeHint);
-        } elseif ($typeHint) {
-            return $this->buildAbstractTypehintParam($typeHint, $reflParam);
         }
-        
-        return NULL;
+
+        return $this->buildAbstractTypehintParam($typeHint, $reflParam);
     }
     
     private function buildAbstractTypehintParam($typehint, \ReflectionParameter $reflParam) {
+
+        //TODO - I think this code is never reached - it is covered by "isset($this->aliases[$typeHintLower]"
+        //In buildArgumentFromTypeHint
         if ($this->isImplemented($typehint)) {
             $param = $this->buildImplementation($typehint);
         } elseif ($reflParam->isDefaultValueAvailable()) {
