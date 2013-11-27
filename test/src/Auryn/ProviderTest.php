@@ -138,7 +138,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         );
 
         $provider  = new Provider(new ReflectionPool);
-        $provider->alias('TestMissingDefine', 'ProviderTestCtorParamWithNoTypehintOrDefault');
+        $provider->alias('TestNoExplicitDefine', 'ProviderTestCtorParamWithNoTypehintOrDefault');
         $provider->make('ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
     }
     
@@ -757,11 +757,20 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->alias('StdClass', 'SomeOtherClass');
     }
 
-    function testTypelessDefine() {
+    function testTypelessDefineForDependency() {
         $thumbnailSize = 128;
         $provider = new Provider();
         $provider->defineParam('thumbnailSize', $thumbnailSize);
         $testClass = $provider->make('RequiresDependencyWithTypelessParameters');
         $this->assertEquals($thumbnailSize, $testClass->getThumbnailSize(), 'Typeless define was not injected correctly.');
+    }
+
+    function testTypelessDefineForAliasedDependency() {
+        $provider = new Provider();
+        $provider->defineParam('val', 42);
+
+        $provider->alias('TestNoExplicitDefine', 'ProviderTestCtorParamWithNoTypehintOrDefault');
+        $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
+        var_dump($obj);
     }
 }
