@@ -533,7 +533,24 @@ class Provider implements Injector {
             } elseif (array_key_exists($rawParamKey, $definition)) {
                 $funcArgs[] = $definition[$rawParamKey];
             } else {
-                $funcArgs[] = $this->buildArgumentFromTypeHint($funcRefl, $funcParam);
+                $argument = $this->buildArgumentFromTypeHint($funcRefl, $funcParam);
+
+                //Failed to build argument from type hints, try building it from defaults
+                if ($argument == null) {
+                    if (array_key_exists($funcParam->getName(), $this->paramDefine)) {
+                        $argument = $this->paramDefine[$funcParam->getName()];
+                    } elseif ($funcParam->isDefaultValueAvailable()) {
+                        $argument = $funcParam->getDefaultValue();
+                    }
+                    else {
+                        throw new InjectionException(
+                            sprintf(self::E_UNDEFINED_PARAM_MESSAGE, $funcParam->getName()),
+                            self::E_UNDEFINED_PARAM_CODE
+                        );
+                    }
+                }
+
+                $funcArgs[] = $argument;
             }
         }
 
@@ -617,21 +634,12 @@ class Provider implements Injector {
             || isset($this->aliases[$typeHintLower])
             || isset($this->delegatedClasses[$typeHintLower])
         )) {
-            $argument = $this->make($typeHint);
+            return $this->make($typeHint);
         } elseif ($typeHint) {
-            $argument = $this->buildAbstractTypehintParam($typeHint, $reflParam);
-        } elseif ($reflParam->isDefaultValueAvailable()) {
-            $argument = $reflParam->getDefaultValue();
-        } elseif (array_key_exists($reflParam->getName(), $this->paramDefine)) {
-            $argument = $this->paramDefine[$reflParam->getName()];
-        } else {
-            throw new InjectionException(
-                sprintf(self::E_UNDEFINED_PARAM_MESSAGE, $reflParam->getName()),
-                self::E_UNDEFINED_PARAM_CODE
-            );
+            return $this->buildAbstractTypehintParam($typeHint, $reflParam);
         }
         
-        return $argument;
+        return NULL;
     }
     
     private function buildAbstractTypehintParam($typehint, \ReflectionParameter $reflParam) {

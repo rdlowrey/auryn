@@ -771,6 +771,5 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $provider->alias('TestNoExplicitDefine', 'ProviderTestCtorParamWithNoTypehintOrDefault');
         $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
-        var_dump($obj);
     }
 }
