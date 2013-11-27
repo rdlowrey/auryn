@@ -622,6 +622,8 @@ class Provider implements Injector {
             $argument = $this->buildAbstractTypehintParam($typeHint, $reflParam);
         } elseif ($reflParam->isDefaultValueAvailable()) {
             $argument = $reflParam->getDefaultValue();
+        } elseif (array_key_exists($reflParam->getName(), $this->paramDefine)) {
+            $argument = $this->paramDefine[$reflParam->getName()];
         } else {
             throw new InjectionException(
                 sprintf(self::E_UNDEFINED_PARAM_MESSAGE, $reflParam->getName()),
