@@ -328,3 +328,25 @@ class NonConcreteDependencyWithDefaultValue {
         $this->interface = $i;
     }
 }
+
+class TypelessParameterDependency {
+
+    public $thumbnailSize;
+
+    function __construct($thumbnailSize) {
+        $this->thumbnailSize = $thumbnailSize;
+    }
+}
+
+class RequiresDependencyWithTypelessParameters {
+
+    public $dependency;
+
+    function __construct(TypelessParameterDependency $dependency) {
+        $this->dependency = $dependency;
+    }
+
+    function getThumbnailSize() {
+        return $this->dependency->thumbnailSize;
+    }
+}

@@ -756,4 +756,12 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->share($testClass);
         $provider->alias('StdClass', 'SomeOtherClass');
     }
+
+    function testTypelessDefine() {
+        $thumbnailSize = 128;
+        $provider = new Provider();
+        $provider->defineParam('thumbnailSize', $thumbnailSize);
+        $testClass = $provider->make('RequiresDependencyWithTypelessParameters');
+        $this->assertEquals($thumbnailSize, $testClass->getThumbnailSize(), 'Typeless define was not injected correctly.');
+    }
 }

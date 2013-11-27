@@ -18,6 +18,7 @@ class Provider implements Injector {
     private $delegatedClasses = array();
     private $reflectionStorage;
     private $beingProvisioned = array();
+    private $paramDefine = array();
 
     const E_MAKE_FAILURE_CODE = 0;
     const E_MAKE_FAILURE_MESSAGE = "Could not make %s: %s";
@@ -229,6 +230,10 @@ class Provider implements Injector {
         $this->injectionDefinitions[$lowClass] = $injectionDefinition;
 
         return $this;
+    }
+
+    function defineParam($paramName, $value) {
+        $this->paramDefine[$paramName] = $value;
     }
 
     private function validateInjectionDefinition(array $injectionDefinition) {
