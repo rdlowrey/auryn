@@ -18,7 +18,7 @@ class Provider implements Injector {
     private $delegatedClasses = array();
     private $reflectionStorage;
     private $beingProvisioned = array();
-    private $paramDefine = array();
+    private $paramDefinitions = array();
 
     const E_MAKE_FAILURE_CODE = 0;
     const E_MAKE_FAILURE_MESSAGE = "Could not make %s: %s";
@@ -233,7 +233,7 @@ class Provider implements Injector {
     }
 
     function defineParam($paramName, $value) {
-        $this->paramDefine[$paramName] = $value;
+        $this->paramDefinitions[$paramName] = $value;
     }
 
     private function validateInjectionDefinition(array $injectionDefinition) {
@@ -537,8 +537,8 @@ class Provider implements Injector {
 
                 //Failed to build argument from type hints, try building it from defaults
                 if ($argument == null) {
-                    if (array_key_exists($funcParam->getName(), $this->paramDefine)) {
-                        $argument = $this->paramDefine[$funcParam->getName()];
+                    if (array_key_exists($funcParam->getName(), $this->paramDefinitions)) {
+                        $argument = $this->paramDefinitions[$funcParam->getName()];
                     } elseif ($funcParam->isDefaultValueAvailable()) {
                         $argument = $funcParam->getDefaultValue();
                     }
