@@ -232,6 +232,12 @@ class Provider implements Injector {
         return $this;
     }
 
+    /**
+     * Sets the default value to be used where a parameter without typehinting with
+     * the name '$paramName' needs to be injected, and has no other value available.
+     * @param $paramName
+     * @param $value
+     */
     function defineParam($paramName, $value) {
         $this->paramDefinitions[$paramName] = $value;
     }
@@ -626,6 +632,12 @@ class Provider implements Injector {
         return $implObj;
     }
 
+    /** Returns the argument for a function built from the typehinting
+     * information, or throws an exception if it fails to build the parameter.
+     * @param \ReflectionFunctionAbstract $reflFunc
+     * @param \ReflectionParameter $reflParam
+     * @return mixed|null
+     */
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam) {
         $typeHint = $this->reflectionStorage->getParamTypeHint($reflFunc, $reflParam);
 
