@@ -658,11 +658,7 @@ class Provider implements Injector {
     
     private function buildAbstractTypehintParam($typehint, \ReflectionParameter $reflParam) {
 
-        //TODO - I think this code is never reached - it is covered by "isset($this->aliases[$typeHintLower]"
-        //In buildArgumentFromTypeHint
-        if ($this->isImplemented($typehint)) {
-            $param = $this->buildImplementation($typehint);
-        } elseif ($reflParam->isDefaultValueAvailable()) {
+        if ($reflParam->isDefaultValueAvailable()) {
             $param = $reflParam->getDefaultValue();
         } else {
             throw new InjectionException(
