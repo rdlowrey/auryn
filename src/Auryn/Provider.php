@@ -653,20 +653,13 @@ class Provider implements Injector {
             return $this->make($typeHint);
         }
 
-        return $this->buildAbstractTypehintParam($typeHint, $reflParam);
-    }
-    
-    private function buildAbstractTypehintParam($typehint, \ReflectionParameter $reflParam) {
-
         if ($reflParam->isDefaultValueAvailable()) {
-            $param = $reflParam->getDefaultValue();
-        } else {
-            throw new InjectionException(
-                sprintf(self::E_NEEDS_DEFINITION_MESSAGE, $reflParam->getName(), $typehint),
-                self::E_NEEDS_DEFINITION_CODE
-            );
+            return $reflParam->getDefaultValue();
         }
-        
-        return $param;
+
+        throw new InjectionException(
+            sprintf(self::E_NEEDS_DEFINITION_MESSAGE, $reflParam->getName(), $typeHint),
+            self::E_NEEDS_DEFINITION_CODE
+        );
     }
 }
