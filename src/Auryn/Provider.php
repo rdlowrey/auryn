@@ -18,6 +18,7 @@ class Provider implements Injector {
     private $delegatedClasses = array();
     private $reflectionStorage;
     private $beingProvisioned = array();
+    private $paramDefinitions = array();
 
     const E_MAKE_FAILURE_CODE = 0;
     const E_MAKE_FAILURE_MESSAGE = "Could not make %s: %s";
@@ -229,6 +230,16 @@ class Provider implements Injector {
         $this->injectionDefinitions[$lowClass] = $injectionDefinition;
 
         return $this;
+    }
+
+    /**
+     * Sets the default value to be used where a parameter without typehinting with
+     * the name '$paramName' needs to be injected, and has no other value available.
+     * @param $paramName
+     * @param $value
+     */
+    function defineParam($paramName, $value) {
+        $this->paramDefinitions[$paramName] = $value;
     }
 
     private function validateInjectionDefinition(array $injectionDefinition) {
@@ -532,7 +543,24 @@ class Provider implements Injector {
             } elseif (array_key_exists($rawParamKey, $definition)) {
                 $funcArgs[] = $definition[$rawParamKey];
             } else {
-                $funcArgs[] = $this->buildArgumentFromTypeHint($funcRefl, $funcParam);
+                $argument = $this->buildArgumentFromTypeHint($funcRefl, $funcParam);
+
+                //Failed to build argument from type hints, try building it from defaults
+                if ($argument == null) {
+                    if (array_key_exists($funcParam->getName(), $this->paramDefinitions)) {
+                        $argument = $this->paramDefinitions[$funcParam->getName()];
+                    } elseif ($funcParam->isDefaultValueAvailable()) {
+                        $argument = $funcParam->getDefaultValue();
+                    }
+                    else {
+                        throw new InjectionException(
+                            sprintf(self::E_UNDEFINED_PARAM_MESSAGE, $funcParam->getName()),
+                            self::E_UNDEFINED_PARAM_CODE
+                        );
+                    }
+                }
+
+                $funcArgs[] = $argument;
             }
         }
 
@@ -608,41 +636,34 @@ class Provider implements Injector {
         return $implObj;
     }
 
+    /** Returns the argument for a function built from the typehinting
+     * information, or throws an exception if it fails to build the parameter.
+     * @param \ReflectionFunctionAbstract $reflFunc
+     * @param \ReflectionParameter $reflParam
+     * @return mixed|null
+     */
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam) {
         $typeHint = $this->reflectionStorage->getParamTypeHint($reflFunc, $reflParam);
+
+        if (!$typeHint) {
+            return NULL;
+        }
+
         $typeHintLower = strtolower($typeHint);
 
-        if ($typeHint && ($this->isInstantiable($typeHint)
+        if ($this->isInstantiable($typeHint)
             || isset($this->aliases[$typeHintLower])
-            || isset($this->delegatedClasses[$typeHintLower])
-        )) {
-            $argument = $this->make($typeHint);
-        } elseif ($typeHint) {
-            $argument = $this->buildAbstractTypehintParam($typeHint, $reflParam);
-        } elseif ($reflParam->isDefaultValueAvailable()) {
-            $argument = $reflParam->getDefaultValue();
-        } else {
-            throw new InjectionException(
-                sprintf(self::E_UNDEFINED_PARAM_MESSAGE, $reflParam->getName()),
-                self::E_UNDEFINED_PARAM_CODE
-            );
+            || isset($this->delegatedClasses[$typeHintLower])) {
+            return $this->make($typeHint);
         }
-        
-        return $argument;
-    }
-    
-    private function buildAbstractTypehintParam($typehint, \ReflectionParameter $reflParam) {
-        if ($this->isImplemented($typehint)) {
-            $param = $this->buildImplementation($typehint);
-        } elseif ($reflParam->isDefaultValueAvailable()) {
-            $param = $reflParam->getDefaultValue();
-        } else {
-            throw new InjectionException(
-                sprintf(self::E_NEEDS_DEFINITION_MESSAGE, $reflParam->getName(), $typehint),
-                self::E_NEEDS_DEFINITION_CODE
-            );
+
+        if ($reflParam->isDefaultValueAvailable()) {
+            return $reflParam->getDefaultValue();
         }
-        
-        return $param;
+
+        throw new InjectionException(
+            sprintf(self::E_NEEDS_DEFINITION_MESSAGE, $reflParam->getName(), $typeHint),
+            self::E_NEEDS_DEFINITION_CODE
+        );
     }
 }

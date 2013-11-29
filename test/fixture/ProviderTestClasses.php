@@ -163,9 +163,9 @@ class ProvTestNoDefinitionNullDefaultClass {
     }
 }
 
-interface TestMissingDefine {}
+interface TestNoExplicitDefine {}
 
-class ProviderTestCtorParamWithNoTypehintOrDefault implements TestMissingDefine {
+class ProviderTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine {
     public $val = 42;
     public function __construct($val) {
         $this->val = $val;
@@ -174,7 +174,7 @@ class ProviderTestCtorParamWithNoTypehintOrDefault implements TestMissingDefine 
 
 class ProviderTestCtorParamWithNoTypehintOrDefaultDependent {
     private $param;
-    function __construct(TestMissingDefine $param) {
+    function __construct(TestNoExplicitDefine $param) {
         $this->param = $param;
     }
 }
@@ -330,5 +330,27 @@ class NonConcreteDependencyWithDefaultValue {
     public $interface;
     function __construct(DelegatableInterface $i = NULL) {
         $this->interface = $i;
+    }
+}
+
+class TypelessParameterDependency {
+
+    public $thumbnailSize;
+
+    function __construct($thumbnailSize) {
+        $this->thumbnailSize = $thumbnailSize;
+    }
+}
+
+class RequiresDependencyWithTypelessParameters {
+
+    public $dependency;
+
+    function __construct(TypelessParameterDependency $dependency) {
+        $this->dependency = $dependency;
+    }
+
+    function getThumbnailSize() {
+        return $this->dependency->thumbnailSize;
     }
 }
