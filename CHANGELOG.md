@@ -1,3 +1,9 @@
+#### v0.11.0
+
+- Parameters may now be globally defined for all instantiations by name (@Danack)
+- Improved error message when instantiation fails due to (Issue #29) non-public
+  constructor method.
+
 #### v0.10.0
 
 - `Provider::execute()` and `Provider::getExecutable()` now accept string
