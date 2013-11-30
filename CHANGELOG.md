@@ -1,3 +1,11 @@
+#### master
+
+- Moar testing
+- Miscellaneous formatting, documentation and cleanup
+- Directory structure changes
+- Exception messages are no longer public (constants) and are treated as an
+  implementation detail.
+
 v0.11.0
 ================================================================================
 
