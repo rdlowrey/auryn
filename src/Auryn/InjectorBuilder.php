@@ -30,7 +30,7 @@ class InjectorBuilder {
 
     /**
      * Populate a Provider instance using the specified configuration file
-     * 
+     *
      * @param string $filePath The path to a PHP or JSON file holding the Provider configuration
      * @param Provider $provider An optional Provider instance; if not specified one will be created
      * @param string $fileType Used to determine config file type in place of the file's extension if specified
@@ -41,7 +41,7 @@ class InjectorBuilder {
         $provider = $provider ?: new Provider;
         $extension = isset($fileType) ? ltrim($fileType, '.') : pathinfo($filePath, PATHINFO_EXTENSION);
         $extension = strtolower($extension);
-        
+
         switch ($extension) {
             case 'php':
                 $this->loadFromPhpFile($provider, $filePath);
@@ -55,10 +55,10 @@ class InjectorBuilder {
                     self::E_UNKNOWN_FILE_TYPE_CODE
                 );
         }
-        
+
         return $provider;
     }
-    
+
     private function loadFromPhpFile(Provider $provider, $filePath) {
         if (!@include $filePath) {
             throw new BuilderException(
@@ -75,19 +75,19 @@ class InjectorBuilder {
             $this->fromArray($aurynConfig, $provider);
         }
     }
-    
+
     private function loadFromJsonFile(Provider $provider, $filePath) {
         $rawJson = @file_get_contents($filePath);
-        
+
         if ($rawJson === FALSE) {
             throw new BuilderException(
                 sprintf(self::E_FAILED_INCLUDE_MESSAGE, 'JSON', $filePath),
                 self::E_FAILED_INCLUDE_CODE
             );
         }
-        
+
         $jsonConfigurationArray = @json_decode($rawJson, TRUE);
-        
+
         if (isset($jsonConfigurationArray)) {
             $this->fromArray($jsonConfigurationArray, $provider);
         } else {
@@ -132,7 +132,7 @@ class InjectorBuilder {
                     );
             }
         }
-        
+
         return $provider;
     }
 

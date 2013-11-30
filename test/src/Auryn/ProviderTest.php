@@ -122,9 +122,9 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->setExpectedException(
             'Auryn\\InjectionException',
             sprintf(Provider::E_UNDEFINED_PARAM_MESSAGE, 'val'),
-            Provider::E_UNDEFINED_PARAM_CODE 
+            Provider::E_UNDEFINED_PARAM_CODE
         );
-        
+
         $provider  = new Provider(new ReflectionPool);
         $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefault');
         $this->assertNull($obj->val);
@@ -141,7 +141,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->alias('TestNoExplicitDefine', 'ProviderTestCtorParamWithNoTypehintOrDefault');
         $provider->make('ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
     }
-    
+
     /**
      * @expectedException Auryn\InjectionException
      */
@@ -536,7 +536,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
-        
+
         // x -------------------------------------------------------------------------------------->
 
         return $return;
@@ -546,7 +546,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Auryn\Provider;
         $exe = $provider->getExecutable('ClassWithStaticMethodThatTakesArg::doSomething');
         $this->assertEquals(42, $exe(41));
-        
+
     }
 
     public function testInterfaceFactoryDelegation() {
@@ -633,7 +633,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $toInvoke = array('InaccessibleExecutableClassMethod', 'doSomethingPrivate');
         $expectedResult = 42;
         $return[] = array($toInvoke, $expectedResult);
-        
+
         // 1 -------------------------------------------------------------------------------------->
 
         $toInvoke = 'InaccessibleExecutableClassMethod::doSomethingPrivate';
@@ -651,7 +651,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $toInvoke = array('InaccessibleExecutableClassMethod', 'doSomethingProtected');
         $expectedResult = 42;
         $return[] = array($toInvoke, $expectedResult);
-        
+
         // 4 -------------------------------------------------------------------------------------->
 
         $toInvoke = 'InaccessibleExecutableClassMethod::doSomethingProtected';
@@ -778,7 +778,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->alias('TestNoExplicitDefine', 'ProviderTestCtorParamWithNoTypehintOrDefault');
         $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
     }
-    
+
     /**
      * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode 16
@@ -787,7 +787,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider();
         $provider->make('HasNonPublicConstructor');
     }
-    
+
     /**
      * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode 16

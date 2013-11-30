@@ -50,7 +50,7 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         $configArray = array('aliases' => array($badAlias1, $badAlias2));
         $this->builder->fromArray($configArray);
     }
-    
+
     public function provideBadAliases() {
         return array(
             array(TRUE, 'ValidAlias'),
@@ -102,7 +102,7 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
             'shares' => array('MyUniversalClass')
         ), $provider);
     }
-    
+
     /**
      * @dataProvider provideBadShares
      */
@@ -116,7 +116,7 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         $configArray = array('shares' => array($badShare));
         $this->builder->fromArray($configArray);
     }
-    
+
     public function provideBadShares() {
         return array(
             array(TRUE),
@@ -138,7 +138,7 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
             'SomeImplementationClass' => 'SomeCallable'
         )), $provider);
     }
-    
+
     /**
      * @dataProvider provideBadDelegates
      */
@@ -154,7 +154,7 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         ));
         $this->builder->fromArray($configArray);
     }
-    
+
     public function provideBadDelegates() {
         return array(
             array(
@@ -168,13 +168,13 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
             )
         );
     }
-    
+
     public function testFromFilePopulatesProviderFromPhpConfig() {
         $file = FIXTURE_DIR . '/valid_config.php';
         $provider = $this->builder->fromFile($file);
         $this->assertInstanceOf('\Auryn\Provider', $provider);
     }
-    
+
     /**
      * @expectedException Auryn\BuilderException
      */
@@ -182,7 +182,7 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         $badFile = '/this_file_definitely_doesnt_exist.php';
         $this->builder->fromFile($badFile);
     }
-    
+
     /**
      * @expectedException Auryn\BuilderException
      */
@@ -190,7 +190,7 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         $badFile = '/we/cant/determine/the/type/because/theres/no/extension/present';
         $this->builder->fromFile($badFile);
     }
-    
+
     /**
      * @expectedException Auryn\BuilderException
      */
@@ -198,13 +198,13 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         $badFile = FIXTURE_DIR . '/config_missing_expected_array.php';
         $this->builder->fromFile($badFile);
     }
-    
+
     public function testFromFilePopulatesProviderFromJsonConfig() {
         $file = FIXTURE_DIR . '/valid_config.json';
         $provider = $this->builder->fromFile($file);
         $this->assertInstanceOf('\Auryn\Provider', $provider);
     }
-    
+
     /**
      * @expectedException Auryn\BuilderException
      */
@@ -212,7 +212,7 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         $badFile = '/this_file_definitely_doesnt_exist.json';
         $this->builder->fromFile($badFile);
     }
-    
+
     /**
      * @expectedException Auryn\BuilderException
      */
@@ -220,5 +220,5 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         $badFile = FIXTURE_DIR . '/config_with_unparsable.json';
         $this->builder->fromFile($badFile);
     }
-    
+
 }

@@ -73,7 +73,7 @@ class Provider implements Injector {
 
     const E_NON_PUBLIC_CONSTRUCTOR = 16;
     const E_NON_PUBLIC_CONSTRUCTOR_MESSAGE = 'Cannot instantiate class %s; constructor method is protected/private';
-    
+
     function __construct(ReflectionStorage $reflectionStorage = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
@@ -276,10 +276,10 @@ class Provider implements Injector {
                 self::E_NON_EMPTY_STRING_ALIAS_CODE
             );
         }
-        
+
         $lowTypehint = strtolower($typehintToReplace);
         $lowAlias = strtolower($alias);
-        
+
         if (isset($this->sharedClasses[$lowTypehint])) {
             $sharedClassName = strtolower(get_class($this->sharedClasses[$lowTypehint]));
             throw new InjectionException(
@@ -292,7 +292,7 @@ class Provider implements Injector {
         } else {
             $this->aliases[$lowTypehint] = $alias;
         }
-        
+
         if (array_key_exists($lowTypehint, $this->sharedClasses)) {
             $this->sharedClasses[$lowAlias] = $this->sharedClasses[$lowTypehint];
             unset($this->sharedClasses[$lowTypehint]);
@@ -365,7 +365,7 @@ class Provider implements Injector {
 
     /**
      * Forces re-instantiation of a shared class the next time it's requested
-     * 
+     *
      * @param mixed $classNameOrInstance Class name or instance
      * @return \Auryn\Provider Returns the current instance
      */
@@ -380,7 +380,7 @@ class Provider implements Injector {
 
         return $this;
     }
-    
+
     /**
      * Delegates the creation of $class to $callable. Passes $class to $callable as the only argument
      *
@@ -548,13 +548,13 @@ class Provider implements Injector {
             } elseif (!$argument = $this->buildArgumentFromTypeHint($function, $param)) {
                 $argument = $this->buildArgumentFromReflectionParameter($param);
             }
-            
+
             $invocationArgs[] = $argument;
         }
 
         return $invocationArgs;
     }
-    
+
     private function buildArgumentFromReflectionParameter(\ReflectionParameter $param) {
         if (array_key_exists($param->name, $this->paramDefinitions)) {
             $argument = $this->paramDefinitions[$param->name];
@@ -566,14 +566,14 @@ class Provider implements Injector {
                 self::E_UNDEFINED_PARAM_CODE
             );
         }
-        
+
         return $argument;
     }
 
     protected function getInjectedInstance($className, array $definition) {
         try {
             $ctorMethod = $this->reflectionStorage->getConstructor($className);
-            
+
             if (!$ctorMethod) {
                 $object = $this->buildWithoutConstructorParams($className);
             } elseif (!$ctorMethod->isPublic()) {
@@ -588,9 +588,9 @@ class Provider implements Injector {
             } else {
                 $object = $this->buildWithoutConstructorParams($className);
             }
-            
+
             return $object;
-            
+
         } catch (\ReflectionException $e) {
             throw new InjectionException(
                 sprintf(self::E_MAKE_FAILURE_MESSAGE, $className, $e->getMessage()),
@@ -613,13 +613,13 @@ class Provider implements Injector {
                 self::E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_CODE
             );
         }
-        
+
         return $object;
     }
 
     private function isInstantiable($className) {
         $reflectionInstance = $this->reflectionStorage->getClass($className);
-        
+
         return $reflectionInstance->isInstantiable();
     }
 
@@ -642,7 +642,7 @@ class Provider implements Injector {
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param) {
         $typeHint = $this->reflectionStorage->getParamTypeHint($function, $param);
         $typeHintLower = strtolower($typeHint);
-        
+
         if (!$typeHint) {
             $object = NULL;
         } elseif ($this->isInstantiable($typeHint)
@@ -658,7 +658,7 @@ class Provider implements Injector {
                 self::E_NEEDS_DEFINITION_CODE
             );
         }
-        
+
         return $object;
     }
 }
