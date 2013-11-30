@@ -796,4 +796,38 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider();
         $provider->make('HasNonPublicConstructorWithArgs');
     }
+
+    function testNonExistentFunction() {
+        $this->setExpectedException(
+            'Auryn\\BadArgumentException',
+            Provider::E_CALLABLE_MESSAGE,
+            Provider::E_CALLABLE_CODE
+        );
+        $provider = new Provider();
+        $provider->execute('nonExistentFunction');
+    }
+
+    function testNonExistentMethod() {
+        $this->setExpectedException(
+            'Auryn\\BadArgumentException',
+            Provider::E_CALLABLE_MESSAGE,
+            Provider::E_CALLABLE_CODE
+        );
+
+        $provider = new Provider();
+        $object = new StdClass();
+        $provider->execute([$object, 'nonExistentFunction']);
+    }
+
+    function testClassWithoutInvoke() {
+        $this->setExpectedException(
+            'Auryn\\BadArgumentException',
+            Provider::E_CALLABLE_MESSAGE,
+            Provider::E_CALLABLE_CODE
+        );
+
+        $provider = new Provider();
+        $object = new StdClass();
+        $provider->execute($object);
+    }
 }
