@@ -151,13 +151,6 @@ class Provider implements Injector {
 
             return $this->getInjectedInstance($className, $injectionDefinition);
 
-        } catch (\ReflectionException $e) {
-            unset($this->beingProvisioned[$lowClass]);
-            throw new InjectionException(
-                sprintf(self::E_MAKE_FAILURE_MESSAGE, $className, $e->getMessage()),
-                self::E_MAKE_FAILURE_CODE,
-                $e
-            );
         } catch (CyclicDependencyException $e) {
             unset($this->beingProvisioned[$lowClass]);
             $cycleDetector = $e->getCycleDetector();
