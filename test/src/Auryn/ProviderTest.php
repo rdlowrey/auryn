@@ -23,24 +23,20 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(new DepImplementation, $provider->make('DepInterface'));
     }
 
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\Provider::E_ABSTRACT_PARAM_ALIAS
+     */
     public function testMakeThrowsExceptionOnNonConcreteParameterWithoutAlias() {
-        $this->setExpectedException(
-            'Auryn\\InjectionException',
-            sprintf(Provider::E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_MESSAGE, 'interface', 'DepInterface'),
-            Provider::E_NON_CONCRETE_PARAMETER_WITHOUT_ALIAS_CODE
-        );
-
         $provider = new Provider(new ReflectionPool);
         $provider->make('DepInterface');
     }
 
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\Provider::E_NEEDS_DEFINITION
+     */
     public function testMakeThrowsExceptionOnNonConcreteCtorParamWithoutImplementation() {
-        $this->setExpectedException(
-            'Auryn\\InjectionException',
-            sprintf(Provider::E_NEEDS_DEFINITION_MESSAGE, 'dep', 'DepInterface'),
-            Provider::E_NEEDS_DEFINITION_CODE
-        );
-
         $provider = new Provider(new ReflectionPool);
         $provider->make('RequiresInterface');
     }
@@ -118,31 +114,28 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(NULL, $obj->testParam);
     }
 
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\Provider::E_UNDEFINED_PARAM
+     */
     public function testMakeThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefault() {
-        $this->setExpectedException(
-            'Auryn\\InjectionException',
-            sprintf(Provider::E_UNDEFINED_PARAM_MESSAGE, 'val'),
-            Provider::E_UNDEFINED_PARAM_CODE
-        );
-
         $provider  = new Provider(new ReflectionPool);
         $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefault');
         $this->assertNull($obj->val);
     }
 
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\Provider::E_UNDEFINED_PARAM
+     */
     public function testMakeThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefaultThroughAliasedTypehint() {
-        $this->setExpectedException(
-            'Auryn\\InjectionException',
-            sprintf(Provider::E_UNDEFINED_PARAM_MESSAGE, 'val'),
-            Provider::E_UNDEFINED_PARAM_CODE
-        );
-
         $provider  = new Provider(new ReflectionPool);
         $provider->alias('TestNoExplicitDefine', 'ProviderTestCtorParamWithNoTypehintOrDefault');
         $provider->make('ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
     }
 
     /**
+     * @TODO
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionOnUninstantiableTypehintWithoutDefinition() {
@@ -151,7 +144,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testMakeInjectsRawParametersDirectlyWhenDefinedWithParameterNamePrefix() {
-
         $provider = new Provider(new ReflectionPool);
         $provider->define('ProviderTestRawCtorParams', array(
             ':string' => 'string',
@@ -174,6 +166,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
 
     /**
+     * @TODO
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionWhenDelegateDoes() {
@@ -193,6 +186,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->make('TestDependency');
     }
     /**
+     * @TODO
      * @expectedException Auryn\InjectionException
      */
     public function testMakeThrowsExceptionWhenDelegateFailsToCreateObject() {
@@ -669,7 +663,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         return $return;
     }
 
-    function testUnshareRemovesClassFromObjectParameter() {
+    public function testUnshareRemovesClassFromObjectParameter() {
         $provider = new Auryn\Provider();
         $sharedObj = new \StdClass;
         $provider->share($sharedObj);
@@ -680,7 +674,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertNotSame($sharedObj, $provider->make('StdClass'));
     }
 
-    function testBugWithReflectionPoolIncorrectlyReturningBadInfo() {
+    public function testBugWithReflectionPoolIncorrectlyReturningBadInfo() {
         $provider = new Provider;
         $obj = $provider->make('ClassOuter');
         $this->assertInstanceOf('ClassOuter', $obj);
@@ -688,7 +682,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('ClassInnerB', $obj->dep->dep);
     }
 
-    function provideCyclicDependencies() {
+    public function provideCyclicDependencies() {
         return array(
             'RecursiveClassA' => array('RecursiveClassA'),
             'RecursiveClassB' => array('RecursiveClassB'),
@@ -699,41 +693,35 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         );
     }
 
-    /**
+     /**
      * @dataProvider provideCyclicDependencies
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\Provider::E_CYCLIC_DEPENDENCY
      */
-    function testCyclicDependencies($class) {
-        $this->setExpectedException(
-            'Auryn\\InjectionException',
-            sprintf(Provider::E_CYCLIC_DEPENDENCY_MESSAGE, $class),
-            Provider::E_CYCLIC_DEPENDENCY_CODE
-        );
-
+    public function testCyclicDependencies($class) {
         $provider = new Provider;
         $provider->make($class);
     }
 
-    function testNonConcreteDependencyWithDefaultValue() {
+    public function testNonConcreteDependencyWithDefaultValue() {
         $provider = new Provider;
         $class = $provider->make('NonConcreteDependencyWithDefaultValue');
         $this->assertInstanceOf('NonConcreteDependencyWithDefaultValue', $class);
         $this->assertNull($class->interface);
     }
 
-    function testShareAfterAliasException() {
-        $this->setExpectedException(
-            'Auryn\\InjectionException',
-            sprintf(Provider::E_CANNOT_SHARE_ALREADY_ALIASED_MESSAGE, strtolower('StdClass'), 'SomeOtherClass'),
-            Provider::E_CANNOT_SHARE_ALREADY_ALIASED_CODE
-        );
-
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\Provider::E_ALIASED_CANNOT_SHARE
+     */
+    public function testShareAfterAliasException() {
         $provider = new Provider();
         $testClass = new StdClass();
         $provider->alias('StdClass', 'SomeOtherClass');
         $provider->share($testClass);
     }
 
-    function testShareAfterAliasAliasedClassAllowed() {
+    public function testShareAfterAliasAliasedClassAllowed() {
         $provider = new Provider();
         $testClass = new DepImplementation();
         $provider->alias('DepInterface', 'DepImplementation');
@@ -742,7 +730,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('DepImplementation', $obj);
     }
 
-    function testAliasAfterShareByStringAllowed() {
+    public function testAliasAfterShareByStringAllowed() {
         $provider = new Provider();
         $provider->share('DepInterface');
         $provider->alias('DepInterface', 'DepImplementation');
@@ -750,20 +738,18 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('DepImplementation', $obj);
     }
 
-    function testAliasAfterShareException() {
-        $this->setExpectedException(
-            'Auryn\\InjectionException',
-            sprintf(Provider::E_CANNOT_ALIAS_ALREADY_SHARED_MESSAGE, strtolower('StdClass'), 'SomeOtherClass'),
-            Provider::E_CANNOT_ALIAS_ALREADY_SHARED_CODE
-        );
-
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\Provider::E_SHARED_CANNOT_ALIAS
+     */
+    public function testAliasAfterShareException() {
         $provider = new Provider();
         $testClass = new StdClass();
         $provider->share($testClass);
         $provider->alias('StdClass', 'SomeOtherClass');
     }
 
-    function testTypelessDefineForDependency() {
+    public function testTypelessDefineForDependency() {
         $thumbnailSize = 128;
         $provider = new Provider();
         $provider->defineParam('thumbnailSize', $thumbnailSize);
@@ -771,7 +757,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($thumbnailSize, $testClass->getThumbnailSize(), 'Typeless define was not injected correctly.');
     }
 
-    function testTypelessDefineForAliasedDependency() {
+    public function testTypelessDefineForAliasedDependency() {
         $provider = new Provider();
         $provider->defineParam('val', 42);
 
@@ -781,56 +767,50 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode 16
+     * @expectedExceptionCode \Auryn\Provider::E_NON_PUBLIC_CONSTRUCTOR
      */
-    function testAppropriateExceptionThrownOnNonPublicConstructor() {
+    public function testAppropriateExceptionThrownOnNonPublicConstructor() {
         $provider = new Provider();
         $provider->make('HasNonPublicConstructor');
     }
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode 16
+     * @expectedExceptionCode \Auryn\Provider::E_NON_PUBLIC_CONSTRUCTOR
      */
-    function testAppropriateExceptionThrownOnNonPublicConstructorWithArgs() {
+    public function testAppropriateExceptionThrownOnNonPublicConstructorWithArgs() {
         $provider = new Provider();
         $provider->make('HasNonPublicConstructorWithArgs');
     }
 
-    function testNonExistentFunction() {
-        $this->setExpectedException(
-            'Auryn\\BadArgumentException',
-            Provider::E_CALLABLE_MESSAGE,
-            Provider::E_CALLABLE_CODE
-        );
+    /**
+     * @expectedException \Auryn\BadArgumentException
+     * @expectedExceptionCode \Auryn\Provider::E_CALLABLE
+     */
+    public function testNonExistentFunction() {
         $provider = new Provider();
         $provider->execute('nonExistentFunction');
     }
 
-    function testNonExistentMethod() {
-        $this->setExpectedException(
-            'Auryn\\BadArgumentException',
-            Provider::E_CALLABLE_MESSAGE,
-            Provider::E_CALLABLE_CODE
-        );
-
+    /**
+     * @expectedException \Auryn\BadArgumentException
+     * @expectedExceptionCode \Auryn\Provider::E_CALLABLE
+     */
+    public function testNonExistentMethod() {
         $provider = new Provider();
         $object = new StdClass();
         $provider->execute([$object, 'nonExistentFunction']);
     }
 
-    function testClassWithoutInvoke() {
-        $this->setExpectedException(
-            'Auryn\\BadArgumentException',
-            Provider::E_CALLABLE_MESSAGE,
-            Provider::E_CALLABLE_CODE
-        );
-
+    /**
+     * @expectedException \Auryn\BadArgumentException
+     * @expectedExceptionCode \Auryn\Provider::E_CALLABLE
+     */
+    public function testClassWithoutInvoke() {
         $provider = new Provider();
         $object = new StdClass();
         $provider->execute($object);
     }
-
 
     public function testRefreshShare() {
         $provider = new Provider(new ReflectionPool);
@@ -842,19 +822,17 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertTrue(($object1 !== $object2), "Same instances, new object was not created.");
     }
 
-    function testBadAlias() {
-        $this->setExpectedException(
-            'Auryn\\BadArgumentException',
-            Provider::E_NON_EMPTY_STRING_ALIAS_MESSAGE,
-            Provider::E_NON_EMPTY_STRING_ALIAS_CODE
-        );
-
+    /**
+     * @expectedException \Auryn\BadArgumentException
+     * @expectedExceptionCode \Auryn\Provider::E_NON_EMPTY_STRING_ALIAS
+     */
+    public function testBadAlias() {
         $provider = new Provider();
         $provider->share('DepInterface');
         $provider->alias('DepInterface', '');
     }
 
-    function testShareNewAlias() {
+    public function testShareNewAlias() {
         $provider = new Provider();
         $provider->share('DepImplementation');
         $provider->alias('DepInterface', 'DepImplementation');

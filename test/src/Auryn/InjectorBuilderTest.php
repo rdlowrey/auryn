@@ -17,8 +17,8 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         $invalidKey = 'InvalidKey';
         $this->setExpectedException(
             'Auryn\\BuilderException',
-            sprintf(InjectorBuilder::E_INVALID_CONFIG_OPTION_MESSAGE, $invalidKey),
-            InjectorBuilder::E_INVALID_CONFIG_OPTION_CODE
+            sprintf(InjectorBuilder::E_INVALID_CONFIG_OPTION, $invalidKey),
+            InjectorBuilder::E_INVALID_CONFIG_OPTION
         );
         $this->builder->fromArray(array($invalidKey => 'value'), $this->getMock('\Auryn\Provider'));
     }
@@ -39,14 +39,10 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider provideBadAliases
+     * @expectedException \Auryn\BuilderException
+     * @expectedExeptionCode \Auryn\InjectorBuilder::E_INVALID_ALIAS
      */
     public function testFromArrayThrowsExceptionOnBadAlias($badAlias1, $badAlias2) {
-        $this->setExpectedException(
-            'Auryn\\BuilderException',
-            InjectorBuilder::E_INVALID_ALIAS_MESSAGE,
-            InjectorBuilder::E_INVALID_ALIAS_CODE
-        );
-
         $configArray = array('aliases' => array($badAlias1, $badAlias2));
         $this->builder->fromArray($configArray);
     }
@@ -78,13 +74,11 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         ), $provider);
     }
 
+    /**
+     * @expectedException \Auryn\BuilderException
+     * @expectedExeptionCode \Auryn\InjectorBuilder::E_INVALID_DEFINE
+     */
     public function testFromArrayThrowsExceptionOnBadDefinition() {
-        $this->setExpectedException(
-            'Auryn\\BuilderException',
-            InjectorBuilder::E_INVALID_DEFINE_MESSAGE,
-            InjectorBuilder::E_INVALID_DEFINE_CODE
-        );
-
         $configArray = array('definitions' => array(
             'SomeImplementationClass' => array(
                 'thisShouldHaveRawScalarPrefixButDoesnt' => new StdClass
@@ -105,14 +99,10 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider provideBadShares
+     * @expectedException \Auryn\BuilderException
+     * @expectedExeptionCode \Auryn\InjectorBuilder::E_INVALID_SHARE
      */
     public function testFromArrayThrowsExceptionOnBadShare($badShare) {
-        $this->setExpectedException(
-            'Auryn\\BuilderException',
-            InjectorBuilder::E_INVALID_SHARE_MESSAGE,
-            InjectorBuilder::E_INVALID_SHARE_CODE
-        );
-
         $configArray = array('shares' => array($badShare));
         $this->builder->fromArray($configArray);
     }
@@ -141,14 +131,10 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider provideBadDelegates
+     * @expectedException \Auryn\BuilderException
+     * @expectedExeptionCode \Auryn\InjectorBuilder::E_INVALID_DELEGATE
      */
     public function testFromArrayThrowsExceptionOnBadDelegate($badDelegate) {
-        $this->setExpectedException(
-            'Auryn\\BuilderException',
-            InjectorBuilder::E_INVALID_DELEGATE_MESSAGE,
-            InjectorBuilder::E_INVALID_DELEGATE_CODE
-        );
-
         $configArray = array('delegates' => array(
             'ClassName' => $badDelegate
         ));

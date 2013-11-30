@@ -4,38 +4,34 @@ namespace Auryn;
 
 class InjectorBuilder {
 
-    const E_INVALID_CONFIG_OPTION_CODE = 0;
-    const E_INVALID_CONFIG_OPTION_MESSAGE = 'Unknown configuration option: %s';
+    const E_INVALID_CONFIG_OPTION = 0;
+    const E_INVALID_ALIAS = 1;
+    const E_INVALID_DEFINE = 2;
+    const E_INVALID_SHARE = 3;
+    const E_INVALID_DELEGATE = 4;
+    const E_UNKNOWN_FILE_TYPE = 5;
+    const E_FAILED_INCLUDE = 6;
+    const E_FAILED_PARSING = 7;
 
-    const E_INVALID_ALIAS_CODE = 1;
-    const E_INVALID_ALIAS_MESSAGE = 'Invalid alias specified in configuration array';
-
-    const E_INVALID_DEFINE_CODE = 2;
-    const E_INVALID_DEFINE_MESSAGE = 'Invalid definition specified in configuration array';
-
-    const E_INVALID_SHARE_CODE = 3;
-    const E_INVALID_SHARE_MESSAGE = 'Invalid share specified in configuration array';
-
-    const E_INVALID_DELEGATE_CODE = 4;
-    const E_INVALID_DELEGATE_MESSAGE = 'Invalid delegate specified in configuration array';
-
-    const E_UNKNOWN_FILE_TYPE_CODE = 5;
-    const E_UNKNOWN_FILE_TYPE_MESSAGE = 'Unknown configuration file type; must end in .php, .json or specify the file type using the optional $fileType parameter at Argument 3';
-
-    const E_FAILED_INCLUDE_CODE = 6;
-    const E_FAILED_INCLUDE_MESSAGE = 'Failed including the specified % configuration file: %';
-
-    const E_FAILED_PARSING_CODE = 7;
-    const E_FAILED_PARSING_MESSAGE = 'Failed parsing %s configuration from the specified file: %s';
+    private $errorMessages = array(
+        self::E_INVALID_CONFIG_OPTION => 'Unknown configuration option: %s',
+        self::E_INVALID_ALIAS => 'Invalid alias specified in configuration array',
+        self::E_INVALID_DEFINE => 'Invalid definition specified in configuration array',
+        self::E_INVALID_SHARE => 'Invalid share specified in configuration array',
+        self::E_INVALID_DELEGATE => 'Invalid delegate specified in configuration array',
+        self::E_UNKNOWN_FILE_TYPE => 'Unknown configuration file type; must end in .php, .json or specify the file type using the optional $fileType parameter at Argument 3',
+        self::E_FAILED_INCLUDE => 'Failed including the specified % configuration file: %',
+        self::E_FAILED_PARSING => 'Failed parsing %s configuration from the specified file: %s'
+    );
 
     /**
      * Populate a Provider instance using the specified configuration file
      *
      * @param string $filePath The path to a PHP or JSON file holding the Provider configuration
-     * @param Provider $provider An optional Provider instance; if not specified one will be created
+     * @param \Auryn\Provider $provider An optional Provider instance; if not specified one will be created
      * @param string $fileType Used to determine config file type in place of the file's extension if specified
-     * @throws BuilderException On bad configuration value(s)
-     * @return Provider Returns the populated Provider instance
+     * @throws \Auryn\BuilderException On bad configuration value(s)
+     * @return \Auryn\Provider Returns the populated Provider instance
      */
     public function fromFile($filePath, Provider $provider = NULL, $fileType = NULL) {
         $provider = $provider ?: new Provider;
@@ -51,8 +47,8 @@ class InjectorBuilder {
                 break;
             default:
                 throw new BuilderException(
-                    self::E_UNKNOWN_FILE_TYPE_MESSAGE,
-                    self::E_UNKNOWN_FILE_TYPE_CODE
+                    $this->errorMessages[self::E_UNKNOWN_FILE_TYPE],
+                    self::E_UNKNOWN_FILE_TYPE
                 );
         }
 
@@ -62,14 +58,14 @@ class InjectorBuilder {
     private function loadFromPhpFile(Provider $provider, $filePath) {
         if (!@include $filePath) {
             throw new BuilderException(
-                sprintf(self::E_FAILED_INCLUDE_MESSAGE, 'PHP', $filePath),
-                self::E_FAILED_INCLUDE_CODE
+                sprintf($this->errorMessages[self::E_FAILED_INCLUDE], 'PHP', $filePath),
+                self::E_FAILED_INCLUDE
             );
         } elseif (!(isset($aurynConfig) && is_array($aurynConfig))) {
             $message ='must specify an array named $aurynConfig';
             throw new BuilderException(
-                sprintf(self::E_FAILED_PARSING_MESSAGE, 'PHP', $message),
-                self::E_FAILED_PARSING_CODE
+                sprintf($this->errorMessages[self::E_FAILED_PARSING], 'PHP', $message),
+                self::E_FAILED_PARSING
             );
         } else {
             $this->fromArray($aurynConfig, $provider);
@@ -81,8 +77,8 @@ class InjectorBuilder {
 
         if ($rawJson === FALSE) {
             throw new BuilderException(
-                sprintf(self::E_FAILED_INCLUDE_MESSAGE, 'JSON', $filePath),
-                self::E_FAILED_INCLUDE_CODE
+                sprintf($this->errorMessages[self::E_FAILED_INCLUDE], 'JSON', $filePath),
+                self::E_FAILED_INCLUDE
             );
         }
 
@@ -92,8 +88,8 @@ class InjectorBuilder {
             $this->fromArray($jsonConfigurationArray, $provider);
         } else {
             throw new BuilderException(
-                sprintf(self::E_FAILED_PARSING_MESSAGE, 'JSON', $filePath),
-                self::E_FAILED_PARSING_CODE
+                sprintf($this->errorMessages[self::E_FAILED_PARSING], 'JSON', $filePath),
+                self::E_FAILED_PARSING
             );
         }
     }
@@ -102,10 +98,10 @@ class InjectorBuilder {
      * Populate a Provider instance using the specified configuration array
      *
      * @param array $configuration An array describing how to populate the Provider instance
-     * @param Provider $provider An optional Provider instance; if not specified one will be created
-     * @throws BuilderException
-     * @throws BadArgumentException
-     * @return Provider Returns the populated Provider instance
+     * @param \Auryn\Provider $provider An optional Provider instance; if not specified one will be created
+     * @throws \Auryn\BuilderException
+     * @throws \Auryn\BadArgumentException
+     * @return \Auryn\Provider Returns the populated Provider instance
      */
     public function fromArray(array $configuration, Provider $provider = NULL) {
         $provider = $provider ?: new Provider;
@@ -127,8 +123,8 @@ class InjectorBuilder {
 
                 default:
                     throw new BuilderException(
-                        sprintf(self::E_INVALID_CONFIG_OPTION_MESSAGE, $configurationType),
-                        self::E_INVALID_CONFIG_OPTION_CODE
+                        sprintf($this->errorMessages[self::E_INVALID_CONFIG_OPTION], $configurationType),
+                        self::E_INVALID_CONFIG_OPTION
                     );
             }
         }
@@ -143,8 +139,8 @@ class InjectorBuilder {
             }
         } catch (BadArgumentException $error) {
             throw new BuilderException(
-                self::E_INVALID_ALIAS_MESSAGE,
-                self::E_INVALID_ALIAS_CODE,
+                $this->errorMessages[self::E_INVALID_ALIAS],
+                self::E_INVALID_ALIAS,
                 $error
             );
         }
@@ -157,8 +153,8 @@ class InjectorBuilder {
             }
         } catch (BadArgumentException $error) {
             throw new BuilderException(
-                self::E_INVALID_DEFINE_MESSAGE,
-                self::E_INVALID_DEFINE_CODE,
+                $this->errorMessages[self::E_INVALID_DEFINE],
+                self::E_INVALID_DEFINE,
                 $error
             );
         }
@@ -171,8 +167,8 @@ class InjectorBuilder {
             }
         } catch (BadArgumentException $error) {
             throw new BuilderException(
-                self::E_INVALID_SHARE_MESSAGE,
-                self::E_INVALID_SHARE_CODE,
+                $this->errorMessages[self::E_INVALID_SHARE],
+                self::E_INVALID_SHARE,
                 $error
             );
         }
@@ -185,8 +181,8 @@ class InjectorBuilder {
             }
         } catch (BadArgumentException $error) {
             throw new BuilderException(
-                self::E_INVALID_DELEGATE_MESSAGE,
-                self::E_INVALID_DELEGATE_CODE,
+                $this->errorMessages[self::E_INVALID_DELEGATE],
+                self::E_INVALID_DELEGATE,
                 $error
             );
         }
