@@ -796,4 +796,16 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider();
         $provider->make('HasNonPublicConstructorWithArgs');
     }
+
+    function testBadAlias() {
+        $this->setExpectedException(
+            'Auryn\\BadArgumentException',
+            Provider::E_NON_EMPTY_STRING_ALIAS_MESSAGE,
+            Provider::E_NON_EMPTY_STRING_ALIAS_CODE
+        );
+
+        $provider = new Provider();
+        $provider->share('DepInterface');
+        $provider->alias('DepInterface', '');
+    }
 }
