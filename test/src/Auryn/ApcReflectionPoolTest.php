@@ -6,6 +6,7 @@ class ApcReflectionPoolTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @covers Auryn\ApcReflectionPool::setTimeToLive
+     * @requires extension apc
      */
     public function testSetTimeToLive() {
         $pool = new ApcReflectionPool();
@@ -15,6 +16,7 @@ class ApcReflectionPoolTest extends PHPUnit_Framework_TestCase {
     /**
      * @covers Auryn\ApcReflectionPool::fetchFromCache
      * @covers Auryn\ApcReflectionPool::storeInCache
+     * @requires extension apc
      */
     public function testGetClassRetrievesNewReflectionIfNotCached() {
         $pool = $this->getMock('Auryn\\ApcReflectionPool', array('doApcFetch', 'doApcStore'));
@@ -33,11 +35,15 @@ class ApcReflectionPoolTest extends PHPUnit_Framework_TestCase {
     /**
      * @depends testGetClassRetrievesNewReflectionIfNotCached
      * @covers Auryn\ApcReflectionPool::fetchFromCache
+     * @requires extension apc
      */
     public function testGetClassRetrievesCachedReflectionIfAvailable($pool) {
         $this->assertInstanceOf('ReflectionClass', $pool->getClass('TestClass'));
     }
 
+    /**
+     * @requires extension apc
+     */
     function testCache(){
         $provider = new Auryn\Provider(new ApcReflectionPool());
         $provider->make('ClassWithCtor');
