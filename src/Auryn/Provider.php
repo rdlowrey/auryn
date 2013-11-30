@@ -119,6 +119,7 @@ class Provider implements Injector {
     private function doCyclicDependencyCheck($className, $lowClass) {
         if (isset($this->beingProvisioned[$lowClass])) {
             throw new CyclicDependencyException(
+                $className,
                 sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
                 self::E_CYCLIC_DEPENDENCY_CODE
             );
@@ -154,15 +155,13 @@ class Provider implements Injector {
         } catch (CyclicDependencyException $e) {
             unset($this->beingProvisioned[$lowClass]);
             $cycleDetector = $e->getCycleDetector();
-            if ($cycleDetector !== $className) {
-                throw new CyclicDependencyException(
-                    $cycleDetector,
-                    sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
-                    self::E_CYCLIC_DEPENDENCY_CODE,
-                    $e
-                );
-            }
-            throw $e;
+
+            throw new CyclicDependencyException(
+                $cycleDetector,
+                sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
+                self::E_CYCLIC_DEPENDENCY_CODE,
+                $e
+            );
         }
     }
 
