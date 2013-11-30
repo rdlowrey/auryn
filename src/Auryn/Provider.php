@@ -603,8 +603,6 @@ class Provider implements Injector {
     private function buildWithoutConstructorParams($className) {
         if ($this->isInstantiable($className)) {
             $object = new $className;
-        } elseif (isset($this->aliases[strtolower($className)])) {
-            $object = $this->buildNonConcreteImplementation($className);
         } else {
             $reflectionClass = $this->reflectionStorage->getClass($className);
             $type = $reflectionClass->isInterface() ? 'interface' : 'abstract';
@@ -621,22 +619,6 @@ class Provider implements Injector {
         $reflectionInstance = $this->reflectionStorage->getClass($className);
 
         return $reflectionInstance->isInstantiable();
-    }
-
-    private function buildNonConcreteImplementation($interfaceOrAbstractName) {
-        $lowClass  = strtolower($interfaceOrAbstractName);
-        $implClass = $this->aliases[$lowClass];
-        $implObj   = $this->make($implClass);
-        $implRefl  = $this->reflectionStorage->getClass($implClass);
-
-        if (!$implRefl->isSubclassOf($interfaceOrAbstractName)) {
-            throw new BadArgumentException(
-                sprintf(self::E_BAD_IMPLEMENTATION_MESSAGE, $implRefl->name, $interfaceOrAbstractName),
-                self::E_BAD_IMPLEMENTATION_CODE
-            );
-        }
-
-        return $implObj;
     }
 
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param) {
