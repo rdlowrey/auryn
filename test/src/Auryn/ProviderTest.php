@@ -830,4 +830,15 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $object = new StdClass();
         $provider->execute($object);
     }
+
+
+    public function testRefreshShare() {
+        $provider = new Provider(new ReflectionPool);
+        $provider->share('TestDependency');
+        $object1 = $provider->make('TestDependency');
+        $provider->refresh($object1);
+        $object2 = $provider->make('TestDependency');
+
+        $this->assertTrue(($object1 !== $object2), "Same instances, new object was not created.");
+    }
 }
