@@ -362,3 +362,7 @@ class HasNonPublicConstructor {
 class HasNonPublicConstructorWithArgs {
     protected function __construct($arg1, $arg2, $arg3) {}
 }
+
+class ClassWithCtor {
+    function __construct(){}
+}

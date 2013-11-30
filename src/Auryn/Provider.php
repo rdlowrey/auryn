@@ -119,6 +119,7 @@ class Provider implements Injector {
     private function doCyclicDependencyCheck($className, $lowClass) {
         if (isset($this->beingProvisioned[$lowClass])) {
             throw new CyclicDependencyException(
+                $className,
                 sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
                 self::E_CYCLIC_DEPENDENCY_CODE
             );
@@ -151,25 +152,16 @@ class Provider implements Injector {
 
             return $this->getInjectedInstance($className, $injectionDefinition);
 
-        } catch (\ReflectionException $e) {
-            unset($this->beingProvisioned[$lowClass]);
-            throw new InjectionException(
-                sprintf(self::E_MAKE_FAILURE_MESSAGE, $className, $e->getMessage()),
-                self::E_MAKE_FAILURE_CODE,
-                $e
-            );
         } catch (CyclicDependencyException $e) {
             unset($this->beingProvisioned[$lowClass]);
             $cycleDetector = $e->getCycleDetector();
-            if ($cycleDetector !== $className) {
-                throw new CyclicDependencyException(
-                    $cycleDetector,
-                    sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
-                    self::E_CYCLIC_DEPENDENCY_CODE,
-                    $e
-                );
-            }
-            throw $e;
+
+            throw new CyclicDependencyException(
+                $cycleDetector,
+                sprintf(self::E_CYCLIC_DEPENDENCY_MESSAGE, $className),
+                self::E_CYCLIC_DEPENDENCY_CODE,
+                $e
+            );
         }
     }
 
@@ -603,8 +595,6 @@ class Provider implements Injector {
     private function buildWithoutConstructorParams($className) {
         if ($this->isInstantiable($className)) {
             $object = new $className;
-        } elseif (isset($this->aliases[strtolower($className)])) {
-            $object = $this->buildNonConcreteImplementation($className);
         } else {
             $reflectionClass = $this->reflectionStorage->getClass($className);
             $type = $reflectionClass->isInterface() ? 'interface' : 'abstract';
@@ -621,22 +611,6 @@ class Provider implements Injector {
         $reflectionInstance = $this->reflectionStorage->getClass($className);
 
         return $reflectionInstance->isInstantiable();
-    }
-
-    private function buildNonConcreteImplementation($interfaceOrAbstractName) {
-        $lowClass  = strtolower($interfaceOrAbstractName);
-        $implClass = $this->aliases[$lowClass];
-        $implObj   = $this->make($implClass);
-        $implRefl  = $this->reflectionStorage->getClass($implClass);
-
-        if (!$implRefl->isSubclassOf($interfaceOrAbstractName)) {
-            throw new BadArgumentException(
-                sprintf(self::E_BAD_IMPLEMENTATION_MESSAGE, $implRefl->name, $interfaceOrAbstractName),
-                self::E_BAD_IMPLEMENTATION_CODE
-            );
-        }
-
-        return $implObj;
     }
 
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param) {

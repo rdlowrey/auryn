@@ -797,6 +797,51 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->make('HasNonPublicConstructorWithArgs');
     }
 
+    function testNonExistentFunction() {
+        $this->setExpectedException(
+            'Auryn\\BadArgumentException',
+            Provider::E_CALLABLE_MESSAGE,
+            Provider::E_CALLABLE_CODE
+        );
+        $provider = new Provider();
+        $provider->execute('nonExistentFunction');
+    }
+
+    function testNonExistentMethod() {
+        $this->setExpectedException(
+            'Auryn\\BadArgumentException',
+            Provider::E_CALLABLE_MESSAGE,
+            Provider::E_CALLABLE_CODE
+        );
+
+        $provider = new Provider();
+        $object = new StdClass();
+        $provider->execute([$object, 'nonExistentFunction']);
+    }
+
+    function testClassWithoutInvoke() {
+        $this->setExpectedException(
+            'Auryn\\BadArgumentException',
+            Provider::E_CALLABLE_MESSAGE,
+            Provider::E_CALLABLE_CODE
+        );
+
+        $provider = new Provider();
+        $object = new StdClass();
+        $provider->execute($object);
+    }
+
+
+    public function testRefreshShare() {
+        $provider = new Provider(new ReflectionPool);
+        $provider->share('TestDependency');
+        $object1 = $provider->make('TestDependency');
+        $provider->refresh($object1);
+        $object2 = $provider->make('TestDependency');
+
+        $this->assertTrue(($object1 !== $object2), "Same instances, new object was not created.");
+    }
+
     function testBadAlias() {
         $this->setExpectedException(
             'Auryn\\BadArgumentException',
@@ -807,5 +852,11 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider();
         $provider->share('DepInterface');
         $provider->alias('DepInterface', '');
+    }
+
+    function testShareNewAlias() {
+        $provider = new Provider();
+        $provider->share('DepImplementation');
+        $provider->alias('DepInterface', 'DepImplementation');
     }
 }

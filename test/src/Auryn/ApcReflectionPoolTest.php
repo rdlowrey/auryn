@@ -37,6 +37,12 @@ class ApcReflectionPoolTest extends PHPUnit_Framework_TestCase {
     public function testGetClassRetrievesCachedReflectionIfAvailable($pool) {
         $this->assertInstanceOf('ReflectionClass', $pool->getClass('TestClass'));
     }
+
+    function testCache(){
+        $provider = new Auryn\Provider(new ApcReflectionPool());
+        $provider->make('ClassWithCtor');
+        $provider->make('ClassWithCtor');
+    }
 }
 
 class TestClass {}
