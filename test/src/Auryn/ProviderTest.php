@@ -841,4 +841,16 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $this->assertTrue(($object1 !== $object2), "Same instances, new object was not created.");
     }
+
+    function testBadAlias() {
+        $this->setExpectedException(
+            'Auryn\\BadArgumentException',
+            Provider::E_NON_EMPTY_STRING_ALIAS_MESSAGE,
+            Provider::E_NON_EMPTY_STRING_ALIAS_CODE
+        );
+
+        $provider = new Provider();
+        $provider->share('DepInterface');
+        $provider->alias('DepInterface', '');
+    }
 }
