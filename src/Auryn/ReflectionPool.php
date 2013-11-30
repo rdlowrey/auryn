@@ -46,7 +46,7 @@ class ReflectionPool implements ReflectionStorage {
     }
     
     protected function fetchFromCache($key) {
-        return array_key_exists($key, $this->cache) ? $this->cache[$key] : false;
+        return array_key_exists($key, $this->cache) ? $this->cache[$key] : FALSE;
     }
     
     protected function storeInCache($key, $data) {
@@ -65,7 +65,7 @@ class ReflectionPool implements ReflectionStorage {
         
         $reflectedCtor = $this->fetchFromCache($cacheKey);
         
-        if (false === $reflectedCtor) {
+        if (FALSE === $reflectedCtor) {
             $reflectionClass = $this->getClass($class);
             $reflectedCtor = $reflectionClass->getConstructor();
             $this->storeInCache($cacheKey, $reflectedCtor);
@@ -86,7 +86,7 @@ class ReflectionPool implements ReflectionStorage {
         
         $reflectedCtorParams = $this->fetchFromCache($cacheKey);
         
-        if (false !== $reflectedCtorParams) {
+        if (FALSE !== $reflectedCtorParams) {
             return $reflectedCtorParams;
         } elseif ($reflectedCtor = $this->getConstructor($class)) {
             $reflectedCtorParams = $reflectedCtor->getParameters();
@@ -156,7 +156,7 @@ class ReflectionPool implements ReflectionStorage {
         
         $reflectedFunc = $this->fetchFromCache($cacheKey);
         
-        if (false === $reflectedFunc) {
+        if (FALSE === $reflectedFunc) {
             $reflectedFunc = new \ReflectionFunction($functionName);
             $this->storeInCache($cacheKey, $reflectedFunc);
         }
