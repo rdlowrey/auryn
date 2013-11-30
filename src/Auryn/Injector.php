@@ -3,7 +3,7 @@
 namespace Auryn;
 
 /**
- * An interface for class dependency injection containers
+ * An interface for class dependency injectors
  */
 interface Injector {
 
@@ -18,16 +18,29 @@ interface Injector {
     /**
      * Defines custom instantiation parameters for the specified class
      *
-     * @param string $className
-     * @param array $injectionDefinition
+     * @param string $className The class whose instantiation we wish to define
+     * @param array $injectionDefinition An array mapping parameter names to classes and/or raw values
      */
     function define($className, array $injectionDefinition);
 
     /**
-     * Defines an implementation class for all occurrences of a given typehint
+     * Assign a global default value for all parameters named $paramName
      *
-     * @param string $originalTypehint
-     * @param string $aliasClassName
+     * Global parameter definitions are only used for parameters with no typehint, pre-defined or
+     * call-time definition.
+     *
+     * @param string $paramName The parameter name for which this value applies
+     * @param mixed $value The value to inject for this parameter name
+     */
+    function defineParam($paramName, $value);
+
+    /**
+     * Defines an alias class for all occurrences of a given typehint
+     *
+     * Use this method to specify implementation classes for interface and abstract class typehints.
+     *
+     * @param string $originalTypehint The typehint to replace
+     * @param string $aliasClassName The implementation class name
      */
     function alias($originalTypehint, $aliasClassName);
 
@@ -43,21 +56,21 @@ interface Injector {
     /**
      * Shares the specified class across the Injector context
      *
-     * @param mixed $classNameOrInstance
+     * @param mixed $classNameOrInstance The class or object to share
      */
     function share($classNameOrInstance);
 
     /**
      * Unshares the specified class or the class of the specified instance
      *
-     * @param string $classNameOrInstance
+     * @param string $classNameOrInstance The class or object to unshare
      */
     function unshare($classNameOrInstance);
 
     /**
      * Forces re-instantiation of a shared class the next time it is requested
      *
-     * @param string $className
+     * @param string $className The class name for which an existing share should be cleared for re-instantiation
      */
     function refresh($className);
 
