@@ -853,4 +853,10 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->share('DepInterface');
         $provider->alias('DepInterface', '');
     }
+
+    function testShareNewAlias() {
+        $provider = new Provider();
+        $provider->share('DepImplementation');
+        $provider->alias('DepInterface', 'DepImplementation');
+    }
 }
