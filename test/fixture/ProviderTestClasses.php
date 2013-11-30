@@ -354,3 +354,11 @@ class RequiresDependencyWithTypelessParameters {
         return $this->dependency->thumbnailSize;
     }
 }
+
+class HasNonPublicConstructor {
+    protected function __construct() {}
+}
+
+class HasNonPublicConstructorWithArgs {
+    protected function __construct($arg1, $arg2, $arg3) {}
+}

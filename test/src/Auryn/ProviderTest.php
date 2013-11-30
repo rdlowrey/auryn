@@ -778,4 +778,22 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->alias('TestNoExplicitDefine', 'ProviderTestCtorParamWithNoTypehintOrDefault');
         $obj = $provider->make('ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
     }
+    
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode 16
+     */
+    function testAppropriateExceptionThrownOnNonPublicConstructor() {
+        $provider = new Provider();
+        $provider->make('HasNonPublicConstructor');
+    }
+    
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode 16
+     */
+    function testAppropriateExceptionThrownOnNonPublicConstructorWithArgs() {
+        $provider = new Provider();
+        $provider->make('HasNonPublicConstructorWithArgs');
+    }
 }

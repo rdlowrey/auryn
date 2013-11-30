@@ -71,6 +71,9 @@ class Provider implements Injector {
     const E_CANNOT_ALIAS_ALREADY_SHARED_CODE = 15;
     const E_CANNOT_ALIAS_ALREADY_SHARED_MESSAGE = 'Cannot alias class %s to %s, it has already been shared.';
 
+    const E_NON_PUBLIC_CONSTRUCTOR = 16;
+    const E_NON_PUBLIC_CONSTRUCTOR_MESSAGE = 'Cannot instantiate class %s; constructor method is protected/private';
+    
     function __construct(ReflectionStorage $reflectionStorage = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
@@ -569,10 +572,16 @@ class Provider implements Injector {
 
     protected function getInjectedInstance($className, array $definition) {
         try {
-            $ctorParams = $this->reflectionStorage->getConstructorParameters($className);
+            $ctorMethod = $this->reflectionStorage->getConstructor($className);
             
-            if ($ctorParams) {
-                $ctorMethod = $this->reflectionStorage->getConstructor($className);
+            if (!$ctorMethod) {
+                $object = $this->buildWithoutConstructorParams($className);
+            } elseif (!$ctorMethod->isPublic()) {
+                throw new InjectionException(
+                    sprintf(self::E_NON_PUBLIC_CONSTRUCTOR_MESSAGE, $className),
+                    self::E_NON_PUBLIC_CONSTRUCTOR
+                );
+            } elseif ($ctorParams = $this->reflectionStorage->getConstructorParameters($className)) {
                 $args = $this->generateInvocationArgs($ctorMethod, $definition);
                 $reflectionClass = $this->reflectionStorage->getClass($className);
                 $object = $reflectionClass->newInstanceArgs($args);
