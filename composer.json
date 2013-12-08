@@ -15,6 +15,12 @@
       "email": "levim@php.net",
       "homepage": "http://morrisonlevi.github.com/",
       "role": "Developer"
+    },
+    {
+      "name": "Dan Ackroyd",
+      "email": "Danack@basereality.com",
+      "homepage": "http://www.basereality.com",
+      "role": "Developer"
     }
   ],
   "require": {
