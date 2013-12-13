@@ -266,9 +266,6 @@ class Provider implements Injector {
                 sprintf($this->errorMessages[self::E_SHARED_CANNOT_ALIAS], $sharedClassName, $alias),
                 self::E_SHARED_CANNOT_ALIAS
             );
-        } elseif (array_key_exists($lowAlias, $this->sharedClasses)) {
-            $this->sharedClasses[$lowTypehint] = $this->sharedClasses[$lowAlias];
-            unset($this->sharedClasses[$lowAlias]);
         } else {
             $this->aliases[$lowTypehint] = $alias;
         }
