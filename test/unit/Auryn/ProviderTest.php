@@ -735,7 +735,19 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->share('DepInterface');
         $provider->alias('DepInterface', 'DepImplementation');
         $obj = $provider->make('DepInterface');
+        $obj2 = $provider->make('DepInterface');
         $this->assertInstanceOf('DepImplementation', $obj);
+        $this->assertEquals($obj, $obj2);
+    }
+
+    public function testAliasAfterShareBySharingAliasAllowed() {
+        $provider = new Provider();
+        $provider->share('DepImplementation');
+        $provider->alias('DepInterface', 'DepImplementation');
+        $obj = $provider->make('DepInterface');
+        $obj2 = $provider->make('DepInterface');
+        $this->assertInstanceOf('DepImplementation', $obj);
+        $this->assertEquals($obj, $obj2);
     }
 
     /**
