@@ -56,6 +56,10 @@ class SharedClass implements SharedAliasedInterface {
     function foo(){}
 }
 
+class NotSharedClass implements SharedAliasedInterface {
+    function foo(){}
+}
+
 class ClassWithAliasAsParameter {
 
     private $sharedClass;
