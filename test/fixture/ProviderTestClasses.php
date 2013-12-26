@@ -62,14 +62,10 @@ class NotSharedClass implements SharedAliasedInterface {
 
 class ClassWithAliasAsParameter {
 
-    private $sharedClass;
+    public $sharedClass;
 
     function    __construct(SharedClass $sharedClass) {
         $this->sharedClass = $sharedClass;
-    }
-
-    function getSharedClass() {
-        return $this->sharedClass;
     }
 }
 

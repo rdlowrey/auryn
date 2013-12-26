@@ -582,7 +582,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $class = $provider->make('SharedAliasedInterface');
         $class2 = $provider->make('SharedAliasedInterface');
 
-        $this->assertNotEquals($class, $class2);
+        $this->assertNotSame($class, $class2);
     }
 
     public function testSharedByAliasedInterfaceNameReversedOrder() {
@@ -600,7 +600,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->share('SharedAliasedInterface');
         $sharedClass = $provider->make('SharedAliasedInterface');
         $childClass = $provider->make('ClassWithAliasAsParameter');
-        $this->assertSame($sharedClass, $childClass->getSharedClass());
+        $this->assertSame($sharedClass, $childClass->sharedClass);
     }
 
     public function testSharedByAliasedInstance() {
@@ -609,7 +609,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $sharedClass = $provider->make('SharedAliasedInterface');
         $provider->share($sharedClass);
         $childClass = $provider->make('ClassWithAliasAsParameter');
-        $this->assertSame($sharedClass, $childClass->getSharedClass());
+        $this->assertSame($sharedClass, $childClass->sharedClass);
     }
 
     public function testMultipleShareCallsDontOverrideTheOriginalSharedInstance() {
@@ -628,6 +628,16 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Auryn\Provider();
         $executable = $provider->getExecutable($toInvoke, $setAccessible = TRUE);
         $this->assertSame($expectedResult, $executable());
+    }
+
+    public function testDependencyWhereShared() {
+        $provider = new Auryn\Provider();
+        $provider->share('ClassInnerB');
+        $innerDep = $provider->make('ClassInnerB');
+        $inner = $provider->make('ClassInnerA');
+        $this->assertSame($innerDep, $inner->dep);
+        $outer = $provider->make('ClassOuter');
+        $this->assertSame($innerDep, $outer->dep->dep);
     }
 
     public function provideInaccessibleExecutables() {
@@ -822,7 +832,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     public function testNonExistentMethod() {
         $provider = new Provider();
         $object = new StdClass();
-        $provider->execute([$object, 'nonExistentFunction']);
+        $provider->execute(array($object, 'nonExistentFunction'));
     }
 
     /**
