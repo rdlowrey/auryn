@@ -130,8 +130,8 @@ class Provider implements Injector {
     }
 
     private function provisionInstance($className, array $customDefinition) {
+        $lowClass = strtolower($className);
         try {
-            $lowClass = strtolower($className);
             $injectionDefinition = $this->selectClassDefinition($className, $customDefinition);
 
             return $this->getInjectedInstance($className, $injectionDefinition);
@@ -241,7 +241,8 @@ class Provider implements Injector {
      *
      * @param string $typehintToReplace
      * @param string $alias
-     * @throws \Auryn\BadArgumentException On non-empty string argument
+     * @throws InjectionException
+     * @throws BadArgumentException On non-empty string argument
      * @return \Auryn\Provider Returns the current instance
      */
     public function alias($typehintToReplace, $alias) {
@@ -290,7 +291,8 @@ class Provider implements Injector {
      * class it's instance will be stored and shared.
      *
      * @param mixed $classNameOrInstance
-     * @throws \Auryn\BadArgumentException
+     * @throws InjectionException
+     * @throws BadArgumentException
      * @return \Auryn\Provider Returns the current instance
      */
     public function share($classNameOrInstance) {
@@ -363,7 +365,8 @@ class Provider implements Injector {
      *
      * @param string $className
      * @param callable $callable
-     * @throws \Auryn\BadArgumentException
+     * @param array $args [optional]
+     * @throws BadArgumentException
      * @return \Auryn\Provider Returns the current instance
      */
     public function delegate($className, $callable, array $args = array()) {
