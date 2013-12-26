@@ -602,6 +602,8 @@ class Provider implements Injector {
 
         if (!$typeHint) {
             $object = NULL;
+        } elseif (isset($this->sharedClasses[$typeHintLower])) {
+            $object = $this->sharedClasses[$typeHintLower];
         } elseif ($this->isInstantiable($typeHint)
             || isset($this->aliases[$typeHintLower])
             || isset($this->delegatedClasses[$typeHintLower])
