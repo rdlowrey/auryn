@@ -881,4 +881,22 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->share('DepImplementation');
         $provider->alias('DepInterface', 'DepImplementation');
     }
+    
+    function testDefineWithBackslashAndMakeWithoutBackslash(){
+        $provider = new Provider();
+        $provider->define('\SimpleNoTypehintClass', array(':arg' => 'tested'));
+        $testClass = $provider->make('SimpleNoTypehintClass');
+        $this->assertEquals('tested', $testClass->testParam);
+    }
+    
+    function testShareWithBackslashAndMakeWithoutBackslash(){
+        $provider = new Provider();
+        $provider->share('\StdClass');
+        $classA = $provider->make('StdClass');
+        $classA->tested = false;
+        $classB = $provider->make('\StdClass');
+        $classB->tested = true;
+        
+        $this->assertEquals($classA->tested, $classB->tested);
+    }
 }
