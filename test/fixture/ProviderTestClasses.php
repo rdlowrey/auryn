@@ -384,3 +384,13 @@ class TestNeedsDepWithProtCons {
         $this->dep = $dep;
     }
 }
+
+class SimpleNoTypehintClass {
+
+    public $testParam = 1;
+
+    public function __construct($arg) {
+        $this->testParam = $arg;
+    }
+
+}
