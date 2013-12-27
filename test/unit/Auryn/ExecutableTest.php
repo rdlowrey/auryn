@@ -12,7 +12,7 @@ class ExecutableTest extends PHPUnit_Framework_TestCase {
     /**
      * @expectedException \InvalidArgumentException
      */
-    function testContstructorThrowsOnInstanceMethodCallableWithoutInvocationObject() {
+    function testConstructorThrowsOnInstanceMethodCallableWithoutInvocationObject() {
         $reflectionFunction = new \ReflectionMethod('ArrayObject::count');
         $invocationObj = NULL;
         $exe = new Executable($reflectionFunction, $invocationObj);
