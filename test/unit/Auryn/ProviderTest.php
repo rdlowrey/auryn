@@ -629,6 +629,17 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $executable = $provider->getExecutable($toInvoke, $setAccessible = TRUE);
         $this->assertSame($expectedResult, $executable());
     }
+    
+    public function testDependencyWhereSharedWithProtectedConstructor() {
+        $provider = new Auryn\Provider();
+        
+        $inner = TestDependencyWithProtectedConstructor::create();
+        $provider->share($inner);
+        
+        $outer = $provider->make('TestNeedsDepWithProtCons');
+        
+        $this->assertSame($inner, $outer->dep);
+    }
 
     public function testDependencyWhereShared() {
         $provider = new Auryn\Provider();
