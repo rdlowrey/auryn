@@ -629,6 +629,17 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $executable = $provider->getExecutable($toInvoke, $setAccessible = TRUE);
         $this->assertSame($expectedResult, $executable());
     }
+    
+    public function testDependencyWhereSharedWithProtectedConstructor() {
+        $provider = new Auryn\Provider();
+        
+        $inner = TestDependencyWithProtectedConstructor::create();
+        $provider->share($inner);
+        
+        $outer = $provider->make('TestNeedsDepWithProtCons');
+        
+        $this->assertSame($inner, $outer->dep);
+    }
 
     public function testDependencyWhereShared() {
         $provider = new Auryn\Provider();
@@ -869,5 +880,23 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider();
         $provider->share('DepImplementation');
         $provider->alias('DepInterface', 'DepImplementation');
+    }
+    
+    function testDefineWithBackslashAndMakeWithoutBackslash(){
+        $provider = new Provider();
+        $provider->define('\SimpleNoTypehintClass', array(':arg' => 'tested'));
+        $testClass = $provider->make('SimpleNoTypehintClass');
+        $this->assertEquals('tested', $testClass->testParam);
+    }
+    
+    function testShareWithBackslashAndMakeWithoutBackslash(){
+        $provider = new Provider();
+        $provider->share('\StdClass');
+        $classA = $provider->make('StdClass');
+        $classA->tested = false;
+        $classB = $provider->make('\StdClass');
+        $classB->tested = true;
+        
+        $this->assertEquals($classA->tested, $classB->tested);
     }
 }

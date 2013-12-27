@@ -366,3 +366,31 @@ class HasNonPublicConstructorWithArgs {
 class ClassWithCtor {
     function __construct(){}
 }
+
+class TestDependencyWithProtectedConstructor {
+
+    protected function __construct() {
+        
+    }
+    
+    public static function create(){
+        return new TestDependencyWithProtectedConstructor();
+    }
+
+}
+
+class TestNeedsDepWithProtCons {
+    function __construct(TestDependencyWithProtectedConstructor $dep) {
+        $this->dep = $dep;
+    }
+}
+
+class SimpleNoTypehintClass {
+
+    public $testParam = 1;
+
+    public function __construct($arg) {
+        $this->testParam = $arg;
+    }
+
+}

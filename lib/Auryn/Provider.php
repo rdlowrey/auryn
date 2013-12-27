@@ -71,7 +71,7 @@ class Provider implements Injector {
      * @return mixed A provisioned instance of the $className class
      */
     public function make($className, array $customDefinition = array()) {
-        $lowClass = strtolower($className);
+        $lowClass = ltrim(strtolower($className),'\\');
 
         if (isset($this->aliases[$lowClass])) {
             $className = $this->aliases[$lowClass];
@@ -203,7 +203,7 @@ class Provider implements Injector {
      */
     public function define($className, array $injectionDefinition) {
         $this->validateInjectionDefinition($injectionDefinition);
-        $lowClass = strtolower($className);
+        $lowClass = ltrim(strtolower($className),'\\');
         $this->injectionDefinitions[$lowClass] = $injectionDefinition;
 
         return $this;
@@ -297,7 +297,7 @@ class Provider implements Injector {
      */
     public function share($classNameOrInstance) {
         if (is_string($classNameOrInstance)) {
-            $lowClass = strtolower($classNameOrInstance);
+            $lowClass = ltrim(strtolower($classNameOrInstance),'\\');
             $lowClass = isset($this->aliases[$lowClass])
                 ? strtolower($this->aliases[$lowClass])
                 : $lowClass;
@@ -382,7 +382,7 @@ class Provider implements Injector {
             );
         }
 
-        $lowClass = strtolower($className);
+        $lowClass = ltrim(strtolower($className),'\\');
         $this->delegatedClasses[$lowClass] = $delegate;
 
         return $this;
