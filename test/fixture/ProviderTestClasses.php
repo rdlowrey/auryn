@@ -374,7 +374,7 @@ class TestDependencyWithProtectedConstructor {
     }
     
     public static function create(){
-        return new TestDependencyWithProtectedConstructor();
+        return new self();
     }
 
 }

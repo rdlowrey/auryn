@@ -25,9 +25,9 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_ABSTRACT_PARAM_ALIAS
+     * @expectedExceptionCode \Auryn\Provider::E_NEEDS_DEFINITION
      */
-    public function testMakeThrowsExceptionOnNonConcreteParameterWithoutAlias() {
+    public function testMakeThrowsExceptionOnInterfaceWithoutAlias() {
         $provider = new Provider(new ReflectionPool);
         $provider->make('DepInterface');
     }

@@ -20,15 +20,14 @@ class Provider implements Injector {
     const E_SHARE_ARGUMENT = 6;
     const E_DELEGATE_ARGUMENT = 7;
     const E_CALLABLE = 8;
-    const E_ABSTRACT_PARAM_ALIAS = 9;
-    const E_BAD_IMPLEMENTATION = 10;
-    const E_BAD_PARAM_IMPLEMENTATION = 11;
-    const E_UNDEFINED_PARAM = 12;
-    const E_NEEDS_DEFINITION = 13;
-    const E_CYCLIC_DEPENDENCY = 14;
-    const E_ALIASED_CANNOT_SHARE = 15;
-    const E_SHARED_CANNOT_ALIAS = 16;
-    const E_NON_PUBLIC_CONSTRUCTOR = 17;
+    const E_BAD_IMPLEMENTATION = 9;
+    const E_BAD_PARAM_IMPLEMENTATION = 10;
+    const E_UNDEFINED_PARAM = 11;
+    const E_NEEDS_DEFINITION = 12;
+    const E_CYCLIC_DEPENDENCY = 13;
+    const E_ALIASED_CANNOT_SHARE = 14;
+    const E_SHARED_CANNOT_ALIAS = 15;
+    const E_NON_PUBLIC_CONSTRUCTOR = 16;
 
     private $reflectionStorage;
     private $aliases = array();
@@ -47,7 +46,6 @@ class Provider implements Injector {
         self::E_SHARE_ARGUMENT => '%s::share() requires a string class name or object instance at Argument 1; %s specified',
         self::E_DELEGATE_ARGUMENT => '%s::delegate expects a valid callable or provisionable executable class or method reference at Argument 2',
         self::E_CALLABLE => 'Invalid executable: callable, invokable class name or array in the form [className, methodName] required',
-        self::E_ABSTRACT_PARAM_ALIAS => 'Cannot instantiate %s %s without an injection definition or implementation',
         self::E_BAD_IMPLEMENTATION => 'Bad implementation: %s does not implement %s',
         self::E_BAD_PARAM_IMPLEMENTATION => 'Bad implementation definition encountered while attempting to provision non-concrete parameter %s of type %s',
         self::E_UNDEFINED_PARAM => 'No definition available while attempting to provision typeless non-concrete parameter %s',
@@ -585,8 +583,8 @@ class Provider implements Injector {
             $reflectionClass = $this->reflectionStorage->getClass($className);
             $type = $reflectionClass->isInterface() ? 'interface' : 'abstract';
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_ABSTRACT_PARAM_ALIAS], $type, $className),
-                self::E_ABSTRACT_PARAM_ALIAS
+                sprintf($this->errorMessages[self::E_NEEDS_DEFINITION], $type, $className),
+                self::E_NEEDS_DEFINITION
             );
         }
 
@@ -601,24 +599,13 @@ class Provider implements Injector {
 
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param) {
         $typeHint = $this->reflectionStorage->getParamTypeHint($function, $param);
-        $typeHintLower = strtolower($typeHint);
 
         if (!$typeHint) {
             $object = NULL;
-        } elseif (isset($this->sharedClasses[$typeHintLower])) {
-            $object = $this->sharedClasses[$typeHintLower];
-        } elseif ($this->isInstantiable($typeHint)
-            || isset($this->aliases[$typeHintLower])
-            || isset($this->delegatedClasses[$typeHintLower])
-        ) {
-            $object = $this->make($typeHint);
         } elseif ($param->isDefaultValueAvailable()) {
             $object = $param->getDefaultValue();
         } else {
-            throw new InjectionException(
-                sprintf($this->errorMessages[self::E_NEEDS_DEFINITION], $param->getName(), $typeHint),
-                self::E_NEEDS_DEFINITION
-            );
+            $object = $this->make($typeHint);
         }
 
         return $object;
