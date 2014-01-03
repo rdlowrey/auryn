@@ -1,6 +1,12 @@
 #### master
 
-- Moar testing
+v0.12.0
+================================================================================
+
+- Significant internals simplification; all tests pass but may have unintended
+  side-effects.
+- Fixed bug where providing a shared class would fail.
+- Improved test cases
 - Miscellaneous formatting, documentation and cleanup
 - Directory structure changes
 - Exception messages are no longer public (constants) and are treated as an
