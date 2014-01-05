@@ -397,7 +397,7 @@ $myController = $injector->make('MyController');
 ```
 
 In the above code, the `DataMapper` instance will be provisioned with the same `PDO` database
-connection instance we originally shared. This is example is contrived and overly simple, but the
+connection instance we originally shared. This example is contrived and overly simple, but the
 implication should be clear:
 
 > By sharing an instance of a class, `Auryn\Provider` will always use that instance when
@@ -588,7 +588,7 @@ good DIC should be the exact opposite of a Service Locator.
 
 ###### Auryn Is NOT A Service Locator!
 
-There's a galaxy of difference between using a DIC to wire together your application versus
+There's a galaxy of differences between using a DIC to wire together your application versus
 passing the DIC as a dependency to your objects (Service Locator). Service Locator (SL) is an
 anti-pattern -- it hides class dependencies, makes code difficult to maintain and makes a liar of
 your API.
