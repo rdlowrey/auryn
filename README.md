@@ -361,7 +361,7 @@ this problem by exposing the `Injector::defineParam()` method. Consider the foll
 <?php
 $myUniversalValue = 42;
 
-class Config {
+class MyClass {
     public $myValue;
     public function __construct($myValue) {
         $this->myValue = $myValue;
@@ -369,9 +369,9 @@ class Config {
 }
 
 $injector = new Auryn\Provider;
-$injector->defineParam('appConfig', $myUniversalValue);
-$config = $injector->make('Config');
-var_dump($config->myValue === 42); // bool(true)
+$injector->defineParam('myValue', $myUniversalValue);
+$obj = $injector->make('MyClass');
+var_dump($obj->myValue === 42); // bool(true)
 ```
 
 Because we specified a global definition for `appConfig`, all parameters that are not in some other
