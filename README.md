@@ -357,7 +357,7 @@ Sometimes applications may reuse the same value everywhere. However, it can be a
 specify definitions for this sort of thing everywhere it might be used in the app. Auryn mitigates
 this problem by exposing the `Injector::defineParam()` method. Consider the following example ...
 
-```
+```php
 <?php
 $myUniversalValue = 42;
 
