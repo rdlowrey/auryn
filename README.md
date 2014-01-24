@@ -260,7 +260,7 @@ You may also specify injection definitions at call-time with `Auryn\Provider::ma
 <?php
 interface SomeInterface {}
 
-class SomeImplementation Class implements SomeInterface {}
+class SomeImplementationClass implements SomeInterface {}
 
 class MyClass {
     private $dependency;
@@ -353,7 +353,34 @@ instantiate it.
 
 ### Global Parameter Definitions
 
-@TODO
+Sometimes applications may reuse the same value everywhere. However, it can be a hassle to manually
+specify definitions for this sort of thing everywhere it might be used in the app. Auryn mitigates
+this problem by exposing the `Injector::defineParam()` method. Consider the following example ...
+
+```
+<?php
+$myUniversalValue = 42;
+
+class Config {
+    public $myValue;
+    public function __construct($myValue) {
+        $this->myValue = $myValue;
+    }
+}
+
+$injector = new Auryn\Provider;
+$injector->defineParam('appConfig', $myUniversalValue);
+$config = $injector->make('Config');
+var_dump($config->myValue === 42); // bool(true)
+```
+
+Because we specified a global definition for `appConfig`, all parameters that are not in some other
+way defined (as below) that match the specified parameter name are auto-filled with the global value.
+If a parameter matches any of the following criteria the global value is not used:
+
+- A typehint
+- A predefined injection definition
+- A custom call time definition
 
 
 ## Advanced Usage
