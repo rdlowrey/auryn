@@ -24,7 +24,7 @@ caches any reflections it generates to minimize the potential performance impact
 
 * [Basic Instantiation](#basic-instantiation)
 * [Injection Definitions](#injection-definitions)
-* [Type-Hint Aliasing](#typehint-aliasing)
+* [Type-Hint Aliasing](#type-hint-aliasing)
 * [Non-Class Parameters](#non-class-parameters)
 * [Global Parameter Definitions](#global-parameter-definitions)
 
