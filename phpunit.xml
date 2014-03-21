@@ -7,11 +7,11 @@
          processIsolation="false"
          stopOnFailure="false"
          syntaxCheck="false"
-         bootstrap="test/bootstrap.php"
+         bootstrap="src/unit-test-bootstrap.php"
         >
     <testsuites>
         <testsuite name="Unit-Tests">
-            <directory>./test/unit</directory>
+            <directory>./test</directory>
         </testsuite>
     </testsuites>
     <filter>
