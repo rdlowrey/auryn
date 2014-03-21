@@ -14,7 +14,6 @@ use ReflectionClass,
  * reflection usage across applications.
  */
 class ReflectionPool implements ReflectionStorage {
-
     const CACHE_KEY_CLASSES = 'auryn.refls.classes';
     const CACHE_KEY_CTORS = 'auryn.refls.ctors';
     const CACHE_KEY_CTOR_PARAMS = 'auryn.refls.ctor-params';
@@ -187,5 +186,4 @@ class ReflectionPool implements ReflectionStorage {
 
         return $reflectedMethod;
     }
-
 }

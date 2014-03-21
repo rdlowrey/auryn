@@ -22,7 +22,7 @@ class ApcReflectionPool extends ReflectionPool {
      * @param int $seconds How long to cache reflection instances
      * @return ApcReflectionPool Returns the current object instance
      */
-    function setTimeToLive($seconds) {
+    public function setTimeToLive($seconds) {
         $seconds = (int) $seconds;
         $this->timeToLive = ($seconds > 0) ? $seconds : $this->timeToLive;
 

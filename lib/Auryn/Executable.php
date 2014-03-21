@@ -3,12 +3,11 @@
 namespace Auryn;
 
 class Executable {
-
     private $callableReflection;
     private $methodInvocationObject;
     private $isMethod;
 
-    function __construct(\ReflectionFunctionAbstract $reflection, $invocationObject = NULL) {
+    public function __construct(\ReflectionFunctionAbstract $reflection, $invocationObject = NULL) {
         if ($reflection instanceof \ReflectionMethod) {
             $this->isMethod = TRUE;
             $this->setMethodCallable($reflection, $invocationObject);
@@ -31,20 +30,19 @@ class Executable {
         }
     }
 
-    function getCallableReflection() {
+    public function getCallableReflection() {
         return $this->callableReflection;
     }
 
-    function getInvocationObject() {
+    public function getInvocationObject() {
         return $this->methodInvocationObject;
     }
 
-    function __invoke() {
+    public function __invoke() {
         $args = func_get_args();
 
         return $this->isMethod
             ? $this->callableReflection->invokeArgs($this->methodInvocationObject, $args)
             : $this->callableReflection->invokeArgs($args);
     }
-
 }

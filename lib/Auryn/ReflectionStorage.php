@@ -13,7 +13,7 @@ interface ReflectionStorage {
      * @param string $class
      * @return \ReflectionClass
      */
-    function getClass($class);
+    public function getClass($class);
 
     /**
      * Retrieves and caches the constructor (ReflectionMethod) for the specified class
@@ -21,7 +21,7 @@ interface ReflectionStorage {
      * @param string $class
      * @return \ReflectionMethod
      */
-    function getConstructor($class);
+    public function getConstructor($class);
 
     /**
      * Retrieves and caches an array of constructor parameters for the given class
@@ -29,7 +29,7 @@ interface ReflectionStorage {
      * @param string $class
      * @return array[\ReflectionParameter]
      */
-    function getConstructorParameters($class);
+    public function getConstructorParameters($class);
 
     /**
      * Retrieves the class type-hint from a given ReflectionParameter
@@ -43,7 +43,7 @@ interface ReflectionStorage {
      * @param \ReflectionFunctionAbstract $function
      * @param \ReflectionParameter $parameter
      */
-    function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $parameter);
+    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $parameter);
 
     /**
      * Retrieves and caches a reflection for the specified function
@@ -51,7 +51,7 @@ interface ReflectionStorage {
      * @param string $functionName
      * @return \ReflectionFunction
      */
-    function getFunction($functionName);
+    public function getFunction($functionName);
 
     /**
      * Retrieves and caches a reflection for the specified class method
@@ -60,6 +60,5 @@ interface ReflectionStorage {
      * @param string $methodName
      * @return \ReflectionMethod
      */
-    function getMethod($classNameOrInstance, $methodName);
-
+    public function getMethod($classNameOrInstance, $methodName);
 }

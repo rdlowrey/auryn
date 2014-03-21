@@ -3,7 +3,6 @@
 namespace Auryn;
 
 class InjectorBuilder {
-
     const E_INVALID_CONFIG_OPTION = 0;
     const E_INVALID_ALIAS = 1;
     const E_INVALID_DEFINE = 2;
@@ -187,5 +186,4 @@ class InjectorBuilder {
             );
         }
     }
-
 }

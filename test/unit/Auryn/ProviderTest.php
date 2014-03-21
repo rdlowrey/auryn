@@ -629,15 +629,15 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $executable = $provider->getExecutable($toInvoke, $setAccessible = TRUE);
         $this->assertSame($expectedResult, $executable());
     }
-    
+
     public function testDependencyWhereSharedWithProtectedConstructor() {
         $provider = new Auryn\Provider();
-        
+
         $inner = TestDependencyWithProtectedConstructor::create();
         $provider->share($inner);
-        
+
         $outer = $provider->make('TestNeedsDepWithProtCons');
-        
+
         $this->assertSame($inner, $outer->dep);
     }
 
@@ -881,22 +881,22 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->share('DepImplementation');
         $provider->alias('DepInterface', 'DepImplementation');
     }
-    
-    function testDefineWithBackslashAndMakeWithoutBackslash(){
+
+    public function testDefineWithBackslashAndMakeWithoutBackslash(){
         $provider = new Provider();
         $provider->define('\SimpleNoTypehintClass', array(':arg' => 'tested'));
         $testClass = $provider->make('SimpleNoTypehintClass');
         $this->assertEquals('tested', $testClass->testParam);
     }
-    
-    function testShareWithBackslashAndMakeWithoutBackslash(){
+
+    public function testShareWithBackslashAndMakeWithoutBackslash(){
         $provider = new Provider();
         $provider->share('\StdClass');
         $classA = $provider->make('StdClass');
         $classA->tested = false;
         $classB = $provider->make('\StdClass');
         $classB->tested = true;
-        
+
         $this->assertEquals($classA->tested, $classB->tested);
     }
 
@@ -906,7 +906,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             $obj->testval = 42;
         });
         $obj = $provider->make('StdClass');
-        
+
         $this->assertSame(42, $obj->testval);
     }
 
@@ -916,7 +916,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
             $obj->testProp = 42;
         });
         $obj = $provider->make('PreparesTraitTest');
-        
+
         $this->assertSame(42, $obj->testProp);
     }
 
