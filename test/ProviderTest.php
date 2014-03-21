@@ -910,16 +910,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertSame(42, $obj->testval);
     }
 
-    public function testTraitPrepare() {
-        $provider = new Provider();
-        $provider->prepare('SomeTrait', function($obj, Provider $injector) {
-            $obj->testProp = 42;
-        });
-        $obj = $provider->make('PreparesTraitTest');
-
-        $this->assertSame(42, $obj->testProp);
-    }
-
     public function testInterfacePrepare() {
         $provider = new Provider();
         $provider->prepare('SomeInterface', function($obj, Provider $injector) {

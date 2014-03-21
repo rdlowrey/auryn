@@ -434,15 +434,6 @@ class Provider implements Injector {
             $exe($obj, $this);
         }
 
-        if ($traitsUsed = class_uses($obj)) {
-            $traitsUsed = array_flip(array_map('strtolower', $traitsUsed));
-            $traitPrepares = array_intersect_key($this->prepares, $traitsUsed);
-            foreach ($traitPrepares as $preparer) {
-                $exe = $this->getExecutable($preparer);
-                $exe($obj, $this);
-            }
-        }
-
         if ($interfacesImplemented = class_implements($obj)) {
             $interfacesImplemented = array_flip(array_map('strtolower', $interfacesImplemented));
             $interfacePrepares = array_intersect_key($this->prepares, $interfacesImplemented);
