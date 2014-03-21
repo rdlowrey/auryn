@@ -54,6 +54,17 @@ interface Injector {
     function delegate($className, $callable, array $args = array());
 
     /**
+     * Register a mutator callable to modify (prepare) objects after instantiation
+     *
+     * Any callable or provisionable executable may be specified. Preparers are passed two
+     * arguments: the instantiated object to be modified and the current Injector instance.
+     *
+     * @param string $classInterfaceOrTraitName
+     * @param mixed $executable Any callable or provisionable executable method
+     */
+    function prepare($classInterfaceOrTraitName, $executable);
+
+    /**
      * Shares the specified class across the Injector context
      *
      * @param mixed $classNameOrInstance The class or object to share

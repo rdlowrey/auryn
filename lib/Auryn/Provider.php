@@ -28,9 +28,11 @@ class Provider implements Injector {
     const E_ALIASED_CANNOT_SHARE = 14;
     const E_SHARED_CANNOT_ALIAS = 15;
     const E_NON_PUBLIC_CONSTRUCTOR = 16;
+    const E_NOT_EXECUTABLE = 17;
 
     private $reflectionStorage;
     private $aliases = array();
+    private $prepares = array();
     private $sharedClasses = array();
     private $delegatedClasses = array();
     private $beingProvisioned = array();
@@ -91,6 +93,10 @@ class Provider implements Injector {
 
         if ($this->isShared($lowClass)) {
             $this->sharedClasses[$lowClass] = $provisionedObject;
+        }
+
+        if ($this->prepares) {
+            $this->prepareInstance($provisionedObject, $lowClass);
         }
 
         unset($this->beingProvisioned[$lowClass]);
@@ -368,10 +374,7 @@ class Provider implements Injector {
      * @return \Auryn\Provider Returns the current instance
      */
     public function delegate($className, $callable, array $args = array()) {
-        if (is_callable($callable)
-            || (is_string($callable) && method_exists($callable, '__invoke'))
-            || (is_array($callable) && isset($callable[0], $callable[1]) && method_exists($callable[0], $callable[1]))
-        ) {
+        if ($this->canExecute($callable)) {
             $delegate = array($callable, $args);
         } else {
             throw new BadArgumentException(
@@ -384,6 +387,70 @@ class Provider implements Injector {
         $this->delegatedClasses[$lowClass] = $delegate;
 
         return $this;
+    }
+
+    private function canExecute($exe) {
+        if (is_callable($exe)) {
+            return TRUE;
+        }
+
+        if (is_string($exe) && method_exists($exe, '__invoke')) {
+            return TRUE;
+        }
+
+        if (is_array($exe) && isset($exe[0], $exe[1]) && method_exists($exe[0], $exe[1])) {
+            return TRUE;
+        }
+
+        return FALSE;
+    }
+
+    /**
+     * Register a mutator callable to modify objects after instantiation
+     *
+     * @param string $classInterfaceOrTraitName
+     * @param mixed $executable Any callable or provisionable executable method
+     * @throws \Auryn\BadArgumentException
+     * @return \Auryn\Provider Returns the current instance
+     */
+    public function prepare($classInterfaceOrTraitName, $executable) {
+        if (!$this->canExecute($executable)) {
+            throw new BadArgumentException(
+                $this->errorMessages[self::E_CALLABLE],
+                self::E_CALLABLE
+            );
+        }
+
+        $normalizedName = ltrim(strtolower($classInterfaceOrTraitName),'\\');
+        $this->prepares[$normalizedName] = $executable;
+
+        return $this;
+    }
+
+    private function prepareInstance($obj, $lowClass) {
+        if (isset($this->prepares[$lowClass])) {
+            $preparer = $this->prepares[$lowClass];
+            $exe = $this->getExecutable($preparer);
+            $exe($obj, $this);
+        }
+
+        if ($traitsUsed = class_uses($obj)) {
+            $traitsUsed = array_flip(array_map('strtolower', $traitsUsed));
+            $traitPrepares = array_intersect_key($this->prepares, $traitsUsed);
+            foreach ($traitPrepares as $preparer) {
+                $exe = $this->getExecutable($preparer);
+                $exe($obj, $this);
+            }
+        }
+
+        if ($interfacesImplemented = class_implements($obj)) {
+            $interfacesImplemented = array_flip(array_map('strtolower', $interfacesImplemented));
+            $interfacePrepares = array_intersect_key($this->prepares, $interfacesImplemented);
+            foreach ($interfacePrepares as $preparer) {
+                $exe = $this->getExecutable($preparer);
+                $exe($obj, $this);
+            }
+        }
     }
 
     /**

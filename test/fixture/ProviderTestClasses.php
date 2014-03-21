@@ -132,7 +132,15 @@ class NoTypehintNoDefaultConstructorClass {
 
 interface DepInterface {}
 interface SomeInterface {}
+trait SomeTrait {}
 class SomeImplementation implements SomeInterface {}
+class PreparesImplementationTest implements SomeInterface {
+    public $testProp = 0;
+}
+class PreparesTraitTest {
+    use SomeTrait;
+    public $testProp = 0;
+}
 
 class DepImplementation implements DepInterface {
     public $testProp = 'something';
