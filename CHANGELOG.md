@@ -1,4 +1,5 @@
-#### master
+v0.13.0
+================================================================================
 
 - Added `Injector::prepare()` method to allow custom mutators for setter
   injection (among other things) after object instantiation.

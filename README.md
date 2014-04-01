@@ -32,6 +32,7 @@ caches any reflections it generates to minimize the potential performance impact
 
 * [Instance Sharing](#instance-sharing)
 * [Instantiation Delegates](#instantiation-delegates)
+* [Prepares and Setter Injection](#prepares-and-setters)
 * [Injecting for Execution](#injecting-for-execution)
 * [Dependency Resolution](#dependency-resolution)
 
@@ -552,6 +553,31 @@ $obj = $injector->make('SomeClassWithDelegatedInstantiation');
 $obj = $injector->make('SomeClassWithDelegatedInstantiation');
 var_dump($obj->value); // int(2)
 ```
+
+### Prepares and Setter Injection
+
+Constructor injection is almost always preferable to setter injection. However, some APIs require
+additional post-instantiation mutations. Auryn accomodates these use cases with its
+`Injector::prepare()` method. Users may register any class or instance name for post-instantiation
+modification. Consider:
+
+```php
+<?php
+
+class MyClass {
+    public $myProperty = 0;
+}
+
+$injector->prepare('MyClass', function($myObj, $injector) {
+    $myObj->myProperty = 42;
+});
+
+$myObj = $injector->make('MyClass');
+var_dump($myObj->myProperty); // int(42)
+```
+
+While the above example is contrived, the usefulness should be clear.
+
 
 ### Injecting for Execution
 
