@@ -339,7 +339,7 @@ $injector->share('PDO');
 $injector->define('PDO', array(
     ':dsn' => 'mysql:dbname=testdb;host=127.0.0.1',
     ':username' => 'dbuser',
-    ':password' => 'dbpass'
+    ':passwd' => 'dbpass'
 ));
 
 $db = $injector->make('PDO');
