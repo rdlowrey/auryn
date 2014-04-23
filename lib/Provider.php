@@ -178,7 +178,7 @@ class Provider implements Injector {
     }
 
     private function getDefinition($className) {
-        $lowClass = strtolower($className);
+        $lowClass = ltrim(strtolower($className),'\\');
 
         return $this->isDefined($lowClass)
             ? $this->injectionDefinitions[$lowClass]
@@ -186,7 +186,7 @@ class Provider implements Injector {
     }
 
     private function isDefined($className) {
-        $lowClass = strtolower($className);
+        $lowClass = ltrim(strtolower($className),'\\');
 
         return isset($this->injectionDefinitions[$lowClass]);
     }
