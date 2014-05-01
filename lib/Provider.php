@@ -597,7 +597,7 @@ class Provider implements Injector {
         } else {
             $declaringClass = $param->getDeclaringClass()->getName();
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_UNDEFINED_PARAM], $param->name, $declaringClass),
+                sprintf($this->errorMessages[self::E_UNDEFINED_PARAM], $declaringClass,$param->name),
                 self::E_UNDEFINED_PARAM
             );
         }
