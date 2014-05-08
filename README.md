@@ -187,7 +187,7 @@ ahead of time:
 ```php
 <?php
 $injector = new Auryn\Provider;
-$injector->define('Car', array('engine' => 'V8'));
+$injector->define('Car', ['engine' => 'V8']);
 $car = $injector->make('Car');
 
 var_dump($car instanceof Car); // true
@@ -218,7 +218,7 @@ class MyClass {
 }
 
 $injector = new Auryn\Provider;
-$injector->define('MyClass', array('arg2' => 'SomeImplementationClass'));
+$injector->define('MyClass', ['arg2' => 'SomeImplementationClass']);
 
 $myObj = $injector->make('MyClass');
 ```
@@ -271,7 +271,7 @@ class MyClass {
 }
 
 $injector = new Auryn\Provider;
-$myObj = $injector->make('MyClass', array('dependency' => 'SomeImplementation'));
+$myObj = $injector->make('MyClass', ['dependency' => 'SomeImplementation']);
 
 var_dump($myObj instanceof MyClass); // true
 ```
@@ -336,11 +336,11 @@ define its scalar constructor parameters:
 <?php
 $injector = new Auryn\Provider;
 $injector->share('PDO');
-$injector->define('PDO', array(
+$injector->define('PDO', [
     ':dsn' => 'mysql:dbname=testdb;host=127.0.0.1',
     ':username' => 'dbuser',
     ':passwd' => 'dbpass'
-));
+]);
 
 $db = $injector->make('PDO');
 ```
