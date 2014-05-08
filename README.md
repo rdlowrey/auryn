@@ -375,7 +375,7 @@ $obj = $injector->make('MyClass');
 var_dump($obj->myValue === 42); // bool(true)
 ```
 
-Because we specified a global definition for `appConfig`, all parameters that are not in some other
+Because we specified a global definition for `myValue`, all parameters that are not in some other
 way defined (as below) that match the specified parameter name are auto-filled with the global value.
 If a parameter matches any of the following criteria the global value is not used:
 
