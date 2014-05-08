@@ -235,7 +235,7 @@ string class name:
 <?php
 interface SomeInterface {}
 
-class SomeImplementation Class implements SomeInterface {}
+class SomeImplementation implements SomeInterface {}
 
 class MyClass {
     private $dependency;
@@ -246,7 +246,7 @@ class MyClass {
 
 $injector = new Auryn\Provider;
 $dependencyInstance = new SomeImplementation;
-$injector->define('MyClass', array('dependency' => $dependencyInstance));
+$injector->define('MyClass', [':dependency' => $dependencyInstance]);
 
 $myObj = $injector->make('MyClass');
 
