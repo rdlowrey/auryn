@@ -27,6 +27,8 @@
     "php": ">=5.3.0"
   },
   "autoload": {
-    "files": ["src/bootstrap.php"]
+    "psr-4": {
+      "Auryn\\": "lib/"
+    }
   }
 }
