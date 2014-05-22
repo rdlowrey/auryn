@@ -73,36 +73,14 @@ class Provider implements Injector {
      * @return mixed A provisioned instance of the $className class
      */
     public function make($className, array $customDefinition = array()) {
-        $lowClass = ltrim(strtolower($className), '\\');
+        list($className, $lowClass) = $this->resolveAliasIfNeeded($className);
+        $this->guardAgainstCyclicDependency($className, $lowClass);
 
-        if (isset($this->aliases[$lowClass])) {
-            $className = $this->aliases[$lowClass];
-            $lowClass = strtolower($className);
-        }
+        $provisionedObject = $this->makeClass($className, $lowClass, $customDefinition);
+        $this->shareIfNeeded($lowClass, $provisionedObject);
+        $this->prepareIfNeeded($lowClass, $provisionedObject);
 
-        $this->doCyclicDependencyCheck($className, $lowClass);
-
-        // isset() is used specifically here instead of $this->isShared() because classes may be
-        // marked as "shared" before an instance is stored. In these cases the class is "shared,"
-        // but it has a NULL value and instantiation is needed.
-        if (isset($this->sharedClasses[$lowClass])) {
-            $provisionedObject = $this->sharedClasses[$lowClass];
-        } elseif (isset($this->delegatedClasses[$lowClass])) {
-            $provisionedObject = $this->provisionFromDelegate($className);
-        } else {
-            $provisionedObject = $this->provisionInstance($className, $customDefinition);
-        }
-
-        if ($this->isShared($lowClass)) {
-            $this->sharedClasses[$lowClass] = $provisionedObject;
-        }
-
-        if ($this->prepares) {
-            $this->prepareInstance($provisionedObject, $lowClass);
-        }
-
-        unset($this->beingProvisioned[$lowClass]);
-
+        $this->unguardAgainstCyclicDependency($lowClass);
         return $provisionedObject;
     }
 
@@ -466,7 +444,7 @@ class Provider implements Injector {
     }
 
 
-    private function doCyclicDependencyCheck($className, $lowClass) {
+    private function guardAgainstCyclicDependency($className, $lowClass) {
         if (isset($this->beingProvisioned[$lowClass])) {
             throw new CyclicDependencyException(
                 $className,
@@ -476,6 +454,11 @@ class Provider implements Injector {
         }
 
         $this->beingProvisioned[$lowClass] = TRUE;
+    }
+
+
+    private function unguardAgainstCyclicDependency($lowClass) {
+        unset($this->beingProvisioned[$lowClass]);
     }
 
 
@@ -702,4 +685,50 @@ class Provider implements Injector {
 
         return $object;
     }
+
+
+    private function makeClass($className, $lowClass, array $customDefinition) {
+        // isset() is used specifically here instead of $this->isShared() because classes may be
+        // marked as "shared" before an instance is stored. In these cases the class is "shared,"
+        // but it has a NULL value and instantiation is needed.
+        if (isset($this->sharedClasses[$lowClass])) {
+            $provisionedObject = $this->sharedClasses[$lowClass];
+        } elseif (isset($this->delegatedClasses[$lowClass])) {
+            $provisionedObject = $this->provisionFromDelegate($className);
+        } else {
+            $provisionedObject = $this->provisionInstance($className, $customDefinition);
+        }
+        return $provisionedObject;
+    }
+
+
+    private function resolveAliasIfNeeded($className) {
+        $lowClass = ltrim(strtolower($className), '\\');
+
+        if (isset($this->aliases[$lowClass])) {
+            $className = $this->aliases[$lowClass];
+            $lowClass = strtolower($className);
+        }
+        return array($className, $lowClass);
+    }
+
+
+    private function shareIfNeeded($lowClass, $provisionedObject) {
+        if ($this->isShared($lowClass)) {
+            $this->sharedClasses[$lowClass] = $provisionedObject;
+        }
+    }
+
+
+    /**
+     * @param $lowClass
+     * @param $provisionedObject
+     */
+    private function prepareIfNeeded($lowClass, $provisionedObject) {
+        if ($this->prepares) {
+            $this->prepareInstance($provisionedObject, $lowClass);
+        }
+    }
+
+
 }
