@@ -717,10 +717,7 @@ class Provider implements Injector {
 
 
     private function shareClass($classNameOrInstance) {
-        $normalizedClass = $this->normalizeClassName($classNameOrInstance);
-        $normalizedClass = isset($this->aliases[$normalizedClass])
-            ? $this->normalizeClassName($this->aliases[$normalizedClass])
-            : $normalizedClass;
+        list(, $normalizedClass) = $this->resolveAliasIfNeeded($classNameOrInstance);
 
         $this->sharedClasses[$normalizedClass] = isset($this->sharedClasses[$normalizedClass])
             ? $this->sharedClasses[$normalizedClass]
