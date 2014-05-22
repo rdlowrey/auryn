@@ -58,9 +58,11 @@ class Provider implements Injector {
         self::E_NON_PUBLIC_CONSTRUCTOR => 'Cannot instantiate class %s; constructor method is protected/private'
     );
 
+
     public function __construct(ReflectionStorage $reflectionStorage = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
+
 
     /**
      * Instantiate a class according to a predefined or custom call-time injection definition
@@ -71,7 +73,7 @@ class Provider implements Injector {
      * @return mixed A provisioned instance of the $className class
      */
     public function make($className, array $customDefinition = array()) {
-        $lowClass = ltrim(strtolower($className),'\\');
+        $lowClass = ltrim(strtolower($className), '\\');
 
         if (isset($this->aliases[$lowClass])) {
             $className = $this->aliases[$lowClass];
@@ -104,98 +106,6 @@ class Provider implements Injector {
         return $provisionedObject;
     }
 
-    private function doCyclicDependencyCheck($className, $lowClass) {
-        if (isset($this->beingProvisioned[$lowClass])) {
-            throw new CyclicDependencyException(
-                $className,
-                sprintf($this->errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
-                self::E_CYCLIC_DEPENDENCY
-            );
-        }
-
-        $this->beingProvisioned[$lowClass] = TRUE;
-    }
-
-    private function provisionFromDelegate($className) {
-        $lowClass = strtolower($className);
-
-        list($delegate, $args) = $this->delegatedClasses[$lowClass];
-
-        $provisionedObject = $this->execute($delegate, $args);
-
-        if (!$provisionedObject instanceof $className) {
-            throw new InjectionException(
-                sprintf($this->errorMessages[self::E_INVALID_CLASS], $className, get_class($provisionedObject)),
-                self::E_INVALID_CLASS
-            );
-        }
-
-        return $provisionedObject;
-    }
-
-    private function provisionInstance($className, array $customDefinition) {
-        $lowClass = strtolower($className);
-        try {
-            $injectionDefinition = $this->selectClassDefinition($className, $customDefinition);
-
-            return $this->getInjectedInstance($className, $injectionDefinition);
-
-        } catch (CyclicDependencyException $e) {
-            unset($this->beingProvisioned[$lowClass]);
-            $cycleDetector = $e->getCycleDetector();
-
-            throw new CyclicDependencyException(
-                $cycleDetector,
-                sprintf($this->errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
-                self::E_CYCLIC_DEPENDENCY,
-                $e
-            );
-        }
-    }
-
-    private function selectClassDefinition($className, $customDefinition) {
-        $definitions = $this->selectParentDefinition($className, $this->getDefinition($className));
-
-        return array_merge($definitions, $customDefinition);
-    }
-
-    private function selectParentDefinition($className, $childDefinition) {
-        try {
-            $classReflector = $this->reflectionStorage->getClass($className);
-            $parent = $classReflector->getParentClass();
-
-            return $parent
-                ? $this->selectParentDefinition($parent->getName(), $childDefinition)
-                : array_merge($this->getDefinition($className), $childDefinition);
-
-        } catch (\ReflectionException $e) {
-            throw new InjectionException(
-                sprintf($this->errorMessages[self::E_CLASS_NOT_FOUND], $className),
-                self::E_CLASS_NOT_FOUND,
-                $e
-            );
-        }
-    }
-
-    private function getDefinition($className) {
-        $lowClass = ltrim(strtolower($className),'\\');
-
-        return $this->isDefined($lowClass)
-            ? $this->injectionDefinitions[$lowClass]
-            : array();
-    }
-
-    private function isDefined($className) {
-        $lowClass = ltrim(strtolower($className),'\\');
-
-        return isset($this->injectionDefinitions[$lowClass]);
-    }
-
-    private function isShared($className) {
-        $lowClass = strtolower($className);
-
-        return array_key_exists($lowClass, $this->sharedClasses);
-    }
 
     /**
      * Defines a custom injection definition for the specified class
@@ -207,11 +117,12 @@ class Provider implements Injector {
      */
     public function define($className, array $injectionDefinition) {
         $this->validateInjectionDefinition($injectionDefinition);
-        $lowClass = ltrim(strtolower($className),'\\');
+        $lowClass = ltrim(strtolower($className), '\\');
         $this->injectionDefinitions[$lowClass] = $injectionDefinition;
 
         return $this;
     }
+
 
     /**
      * Assign a global default value for all parameters named $paramName
@@ -229,16 +140,6 @@ class Provider implements Injector {
         return $this;
     }
 
-    private function validateInjectionDefinition(array $injectionDefinition) {
-        foreach ($injectionDefinition as $paramName => $value) {
-            if ($paramName[0] !== self::RAW_INJECTION_PREFIX && !is_string($value)) {
-                throw new BadArgumentException(
-                    sprintf($this->errorMessages[self::E_RAW_PREFIX], $paramName, $paramName),
-                    self::E_RAW_PREFIX
-                );
-            }
-        }
-    }
 
     /**
      * Defines an alias class name for all occurrences of a given typehint
@@ -283,6 +184,7 @@ class Provider implements Injector {
         return $this;
     }
 
+
     /**
      * Stores a shared instance of the specified class
      *
@@ -301,7 +203,7 @@ class Provider implements Injector {
      */
     public function share($classNameOrInstance) {
         if (is_string($classNameOrInstance)) {
-            $lowClass = ltrim(strtolower($classNameOrInstance),'\\');
+            $lowClass = ltrim(strtolower($classNameOrInstance), '\\');
             $lowClass = isset($this->aliases[$lowClass])
                 ? strtolower($this->aliases[$lowClass])
                 : $lowClass;
@@ -329,6 +231,7 @@ class Provider implements Injector {
         return $this;
     }
 
+
     /**
      * Unshares the specified class (or the class of the specified object)
      *
@@ -345,6 +248,7 @@ class Provider implements Injector {
 
         return $this;
     }
+
 
     /**
      * Forces re-instantiation of a shared class the next time it's requested
@@ -363,6 +267,7 @@ class Provider implements Injector {
 
         return $this;
     }
+
 
     /**
      * Delegates the creation of $class to $callable. Passes $class to $callable as the only argument
@@ -383,27 +288,12 @@ class Provider implements Injector {
             );
         }
 
-        $lowClass = ltrim(strtolower($className),'\\');
+        $lowClass = ltrim(strtolower($className), '\\');
         $this->delegatedClasses[$lowClass] = $delegate;
 
         return $this;
     }
 
-    private function canExecute($exe) {
-        if (is_callable($exe)) {
-            return TRUE;
-        }
-
-        if (is_string($exe) && method_exists($exe, '__invoke')) {
-            return TRUE;
-        }
-
-        if (is_array($exe) && isset($exe[0], $exe[1]) && method_exists($exe[0], $exe[1])) {
-            return TRUE;
-        }
-
-        return FALSE;
-    }
 
     /**
      * Register a mutator callable to modify objects after instantiation
@@ -421,28 +311,12 @@ class Provider implements Injector {
             );
         }
 
-        $normalizedName = ltrim(strtolower($classInterfaceOrTraitName),'\\');
+        $normalizedName = ltrim(strtolower($classInterfaceOrTraitName), '\\');
         $this->prepares[$normalizedName] = $executable;
 
         return $this;
     }
 
-    private function prepareInstance($obj, $lowClass) {
-        if (isset($this->prepares[$lowClass])) {
-            $preparer = $this->prepares[$lowClass];
-            $exe = $this->getExecutable($preparer);
-            $exe($obj, $this);
-        }
-
-        if ($interfacesImplemented = class_implements($obj)) {
-            $interfacesImplemented = array_flip(array_map('strtolower', $interfacesImplemented));
-            $interfacePrepares = array_intersect_key($this->prepares, $interfacesImplemented);
-            foreach ($interfacePrepares as $preparer) {
-                $exe = $this->getExecutable($preparer);
-                $exe($obj, $this);
-            }
-        }
-    }
 
     /**
      * Invoke the specified callable or class/method array, provisioning dependencies along the way
@@ -462,6 +336,7 @@ class Provider implements Injector {
         return call_user_func_array(array($executable, '__invoke'), $args);
     }
 
+
     /**
      * Generate and provision an executable object from any PHP callable or class/method string array
      *
@@ -472,7 +347,7 @@ class Provider implements Injector {
      * @return \Auryn\Executable Returns an executable object
      */
     public function getExecutable($callableOrMethodArr, $makeAccessible = FALSE) {
-        $makeAccessible = (bool) $makeAccessible;
+        $makeAccessible = (bool)$makeAccessible;
         $executableArr = $this->generateExecutableReflection($callableOrMethodArr);
         list($reflectionFunction, $invocationObject) = $executableArr;
 
@@ -486,124 +361,6 @@ class Provider implements Injector {
         return new Executable($reflectionFunction, $invocationObject);
     }
 
-    private function generateExecutableReflection($exeCallable) {
-        if (is_string($exeCallable)) {
-            $executableArr = $this->generateExecutableFromString($exeCallable);
-        } elseif ($exeCallable instanceof \Closure) {
-            $callableRefl = new \ReflectionFunction($exeCallable);
-            $executableArr = array($callableRefl, NULL);
-        } elseif (is_object($exeCallable) && is_callable($exeCallable)) {
-            $invocationObj = $exeCallable;
-            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
-            $executableArr = array($callableRefl, $invocationObj);
-        } elseif (is_array($exeCallable)
-            && isset($exeCallable[0], $exeCallable[1])
-            && count($exeCallable) === 2
-        ) {
-            $executableArr = $this->generateExecutableFromArray($exeCallable);
-        } else {
-            throw new BadArgumentException(
-                $this->errorMessages[self::E_CALLABLE],
-                self::E_CALLABLE
-            );
-        }
-
-        return $executableArr;
-    }
-
-    private function generateExecutableFromArray($arrayExecutable) {
-        list($classOrObj, $method) = $arrayExecutable;
-
-        if (is_object($classOrObj) && method_exists($classOrObj, $method)) {
-            $callableRefl = $this->reflectionStorage->getMethod($classOrObj, $method);
-            $executableArr = array($callableRefl, $classOrObj);
-        } elseif (is_string($classOrObj)) {
-            $executableArr = $this->generateStringClassMethodCallable($classOrObj, $method);
-        } else {
-            throw new BadArgumentException(
-                $this->errorMessages[self::E_CALLABLE],
-                self::E_CALLABLE
-            );
-        }
-
-        return $executableArr;
-    }
-
-    private function generateExecutableFromString($stringExecutable) {
-        if (function_exists($stringExecutable)) {
-            $callableRefl = $this->reflectionStorage->getFunction($stringExecutable);
-            $executableArr = array($callableRefl, NULL);
-        } elseif (method_exists($stringExecutable, '__invoke')) {
-            $invocationObj = $this->make($stringExecutable);
-            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
-            $executableArr = array($callableRefl, $invocationObj);
-        } elseif (strpos($stringExecutable, '::') !== FALSE) {
-            list($class, $method) = explode('::', $stringExecutable, 2);
-            $executableArr = $this->generateStringClassMethodCallable($class, $method);
-        } else {
-            throw new BadArgumentException(
-                $this->errorMessages[self::E_CALLABLE],
-                self::E_CALLABLE
-            );
-        }
-
-        return $executableArr;
-    }
-
-    private function generateStringClassMethodCallable($class, $method) {
-        $relativeStaticMethodStartPos = strpos($method, 'parent::');
-
-        if ($relativeStaticMethodStartPos === 0) {
-            $childReflection = $this->reflectionStorage->getClass($class);
-            $class = $childReflection->getParentClass()->name;
-            $method = substr($method, $relativeStaticMethodStartPos + 8);
-        }
-
-        $reflectionMethod = $this->reflectionStorage->getMethod($class, $method);
-
-        return $reflectionMethod->isStatic()
-            ? array($reflectionMethod, NULL)
-            : array($reflectionMethod, $this->make($class));
-    }
-
-    private function generateInvocationArgs(\ReflectionFunctionAbstract $function, array $definition) {
-        $invocationArgs = array();
-
-        // @TODO store this in ReflectionStorage
-        $reflectionParams = $function->getParameters();
-
-        foreach ($reflectionParams as $param) {
-            $rawParamKey = self::RAW_INJECTION_PREFIX . $param->name;
-
-            if (isset($definition[$param->name])) {
-                $argument = $this->make($definition[$param->name]);
-            } elseif (array_key_exists($rawParamKey, $definition)) {
-                $argument = $definition[$rawParamKey];
-            } elseif (!$argument = $this->buildArgumentFromTypeHint($function, $param)) {
-                $argument = $this->buildArgumentFromReflectionParameter($param);
-            }
-
-            $invocationArgs[] = $argument;
-        }
-
-        return $invocationArgs;
-    }
-
-    private function buildArgumentFromReflectionParameter(\ReflectionParameter $param) {
-        if (array_key_exists($param->name, $this->paramDefinitions)) {
-            $argument = $this->paramDefinitions[$param->name];
-        } elseif ($param->isDefaultValueAvailable()) {
-            $argument = $param->getDefaultValue();
-        } else {
-            $declaringClass = $param->getDeclaringClass()->getName();
-            throw new InjectionException(
-                sprintf($this->errorMessages[self::E_UNDEFINED_PARAM], $declaringClass,$param->name),
-                self::E_UNDEFINED_PARAM
-            );
-        }
-
-        return $argument;
-    }
 
     protected function getInjectedInstance($className, array $definition) {
         try {
@@ -635,6 +392,280 @@ class Provider implements Injector {
         }
     }
 
+
+    private function canExecute($exe) {
+        if (is_callable($exe)) {
+            return TRUE;
+        }
+
+        if (is_string($exe) && method_exists($exe, '__invoke')) {
+            return TRUE;
+        }
+
+        if (is_array($exe) && isset($exe[0], $exe[1]) && method_exists($exe[0], $exe[1])) {
+            return TRUE;
+        }
+
+        return FALSE;
+    }
+
+
+    private function prepareInstance($obj, $lowClass) {
+        if (isset($this->prepares[$lowClass])) {
+            $preparer = $this->prepares[$lowClass];
+            $exe = $this->getExecutable($preparer);
+            $exe($obj, $this);
+        }
+
+        if ($interfacesImplemented = class_implements($obj)) {
+            $interfacesImplemented = array_flip(array_map('strtolower', $interfacesImplemented));
+            $interfacePrepares = array_intersect_key($this->prepares, $interfacesImplemented);
+            foreach ($interfacePrepares as $preparer) {
+                $exe = $this->getExecutable($preparer);
+                $exe($obj, $this);
+            }
+        }
+    }
+
+
+    private function validateInjectionDefinition(array $injectionDefinition) {
+        foreach ($injectionDefinition as $paramName => $value) {
+            if ($paramName[0] !== self::RAW_INJECTION_PREFIX && !is_string($value)) {
+                throw new BadArgumentException(
+                    sprintf($this->errorMessages[self::E_RAW_PREFIX], $paramName, $paramName),
+                    self::E_RAW_PREFIX
+                );
+            }
+        }
+    }
+
+
+    private function generateExecutableReflection($exeCallable) {
+        if (is_string($exeCallable)) {
+            $executableArr = $this->generateExecutableFromString($exeCallable);
+        } elseif ($exeCallable instanceof \Closure) {
+            $callableRefl = new \ReflectionFunction($exeCallable);
+            $executableArr = array($callableRefl, NULL);
+        } elseif (is_object($exeCallable) && is_callable($exeCallable)) {
+            $invocationObj = $exeCallable;
+            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
+            $executableArr = array($callableRefl, $invocationObj);
+        } elseif (is_array($exeCallable)
+            && isset($exeCallable[0], $exeCallable[1])
+            && count($exeCallable) === 2
+        ) {
+            $executableArr = $this->generateExecutableFromArray($exeCallable);
+        } else {
+            throw new BadArgumentException(
+                $this->errorMessages[self::E_CALLABLE],
+                self::E_CALLABLE
+            );
+        }
+
+        return $executableArr;
+    }
+
+
+    private function doCyclicDependencyCheck($className, $lowClass) {
+        if (isset($this->beingProvisioned[$lowClass])) {
+            throw new CyclicDependencyException(
+                $className,
+                sprintf($this->errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
+                self::E_CYCLIC_DEPENDENCY
+            );
+        }
+
+        $this->beingProvisioned[$lowClass] = TRUE;
+    }
+
+
+    private function provisionFromDelegate($className) {
+        $lowClass = strtolower($className);
+
+        list($delegate, $args) = $this->delegatedClasses[$lowClass];
+
+        $provisionedObject = $this->execute($delegate, $args);
+
+        if (!$provisionedObject instanceof $className) {
+            throw new InjectionException(
+                sprintf($this->errorMessages[self::E_INVALID_CLASS], $className, get_class($provisionedObject)),
+                self::E_INVALID_CLASS
+            );
+        }
+
+        return $provisionedObject;
+    }
+
+
+    private function provisionInstance($className, array $customDefinition) {
+        $lowClass = strtolower($className);
+        try {
+            $injectionDefinition = $this->selectClassDefinition($className, $customDefinition);
+
+            return $this->getInjectedInstance($className, $injectionDefinition);
+
+        } catch (CyclicDependencyException $e) {
+            unset($this->beingProvisioned[$lowClass]);
+            $cycleDetector = $e->getCycleDetector();
+
+            throw new CyclicDependencyException(
+                $cycleDetector,
+                sprintf($this->errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
+                self::E_CYCLIC_DEPENDENCY,
+                $e
+            );
+        }
+    }
+
+
+    private function selectClassDefinition($className, $customDefinition) {
+        $definitions = $this->selectParentDefinition($className, $this->getDefinition($className));
+
+        return array_merge($definitions, $customDefinition);
+    }
+
+
+    private function selectParentDefinition($className, $childDefinition) {
+        try {
+            $classReflector = $this->reflectionStorage->getClass($className);
+            $parent = $classReflector->getParentClass();
+
+            return $parent
+                ? $this->selectParentDefinition($parent->getName(), $childDefinition)
+                : array_merge($this->getDefinition($className), $childDefinition);
+
+        } catch (\ReflectionException $e) {
+            throw new InjectionException(
+                sprintf($this->errorMessages[self::E_CLASS_NOT_FOUND], $className),
+                self::E_CLASS_NOT_FOUND,
+                $e
+            );
+        }
+    }
+
+
+    private function getDefinition($className) {
+        $lowClass = ltrim(strtolower($className), '\\');
+
+        return $this->isDefined($lowClass)
+            ? $this->injectionDefinitions[$lowClass]
+            : array();
+    }
+
+
+    private function isDefined($className) {
+        $lowClass = ltrim(strtolower($className), '\\');
+
+        return isset($this->injectionDefinitions[$lowClass]);
+    }
+
+
+    private function isShared($className) {
+        $lowClass = strtolower($className);
+
+        return array_key_exists($lowClass, $this->sharedClasses);
+    }
+
+
+    private function generateExecutableFromArray($arrayExecutable) {
+        list($classOrObj, $method) = $arrayExecutable;
+
+        if (is_object($classOrObj) && method_exists($classOrObj, $method)) {
+            $callableRefl = $this->reflectionStorage->getMethod($classOrObj, $method);
+            $executableArr = array($callableRefl, $classOrObj);
+        } elseif (is_string($classOrObj)) {
+            $executableArr = $this->generateStringClassMethodCallable($classOrObj, $method);
+        } else {
+            throw new BadArgumentException(
+                $this->errorMessages[self::E_CALLABLE],
+                self::E_CALLABLE
+            );
+        }
+
+        return $executableArr;
+    }
+
+
+    private function generateExecutableFromString($stringExecutable) {
+        if (function_exists($stringExecutable)) {
+            $callableRefl = $this->reflectionStorage->getFunction($stringExecutable);
+            $executableArr = array($callableRefl, NULL);
+        } elseif (method_exists($stringExecutable, '__invoke')) {
+            $invocationObj = $this->make($stringExecutable);
+            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
+            $executableArr = array($callableRefl, $invocationObj);
+        } elseif (strpos($stringExecutable, '::') !== FALSE) {
+            list($class, $method) = explode('::', $stringExecutable, 2);
+            $executableArr = $this->generateStringClassMethodCallable($class, $method);
+        } else {
+            throw new BadArgumentException(
+                $this->errorMessages[self::E_CALLABLE],
+                self::E_CALLABLE
+            );
+        }
+
+        return $executableArr;
+    }
+
+
+    private function generateStringClassMethodCallable($class, $method) {
+        $relativeStaticMethodStartPos = strpos($method, 'parent::');
+
+        if ($relativeStaticMethodStartPos === 0) {
+            $childReflection = $this->reflectionStorage->getClass($class);
+            $class = $childReflection->getParentClass()->name;
+            $method = substr($method, $relativeStaticMethodStartPos + 8);
+        }
+
+        $reflectionMethod = $this->reflectionStorage->getMethod($class, $method);
+
+        return $reflectionMethod->isStatic()
+            ? array($reflectionMethod, NULL)
+            : array($reflectionMethod, $this->make($class));
+    }
+
+
+    private function generateInvocationArgs(\ReflectionFunctionAbstract $function, array $definition) {
+        $invocationArgs = array();
+
+        // @TODO store this in ReflectionStorage
+        $reflectionParams = $function->getParameters();
+
+        foreach ($reflectionParams as $param) {
+            $rawParamKey = self::RAW_INJECTION_PREFIX . $param->name;
+
+            if (isset($definition[$param->name])) {
+                $argument = $this->make($definition[$param->name]);
+            } elseif (array_key_exists($rawParamKey, $definition)) {
+                $argument = $definition[$rawParamKey];
+            } elseif (!$argument = $this->buildArgumentFromTypeHint($function, $param)) {
+                $argument = $this->buildArgumentFromReflectionParameter($param);
+            }
+
+            $invocationArgs[] = $argument;
+        }
+
+        return $invocationArgs;
+    }
+
+
+    private function buildArgumentFromReflectionParameter(\ReflectionParameter $param) {
+        if (array_key_exists($param->name, $this->paramDefinitions)) {
+            $argument = $this->paramDefinitions[$param->name];
+        } elseif ($param->isDefaultValueAvailable()) {
+            $argument = $param->getDefaultValue();
+        } else {
+            $declaringClass = $param->getDeclaringClass()->getName();
+            throw new InjectionException(
+                sprintf($this->errorMessages[self::E_UNDEFINED_PARAM], $declaringClass, $param->name),
+                self::E_UNDEFINED_PARAM
+            );
+        }
+
+        return $argument;
+    }
+
+
     private function buildWithoutConstructorParams($className) {
         if ($this->isInstantiable($className)) {
             $object = new $className;
@@ -650,11 +681,13 @@ class Provider implements Injector {
         return $object;
     }
 
+
     private function isInstantiable($className) {
         $reflectionInstance = $this->reflectionStorage->getClass($className);
 
         return $reflectionInstance->isInstantiable();
     }
+
 
     private function buildArgumentFromTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param) {
         $typeHint = $this->reflectionStorage->getParamTypeHint($function, $param);
