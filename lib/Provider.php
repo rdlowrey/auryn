@@ -73,14 +73,14 @@ class Provider implements Injector {
      * @return mixed A provisioned instance of the $className class
      */
     public function make($className, array $customDefinition = array()) {
-        list($className, $lowClass) = $this->resolveAliasIfNeeded($className);
-        $this->guardAgainstCyclicDependency($className, $lowClass);
+        list($className, $normalizedClass) = $this->resolveAliasIfNeeded($className);
+        $this->guardAgainstCyclicDependency($className, $normalizedClass);
 
-        $provisionedObject = $this->makeClass($className, $lowClass, $customDefinition);
-        $this->shareIfNeeded($lowClass, $provisionedObject);
-        $this->prepareIfNeeded($lowClass, $provisionedObject);
+        $provisionedObject = $this->makeClass($className, $normalizedClass, $customDefinition);
+        $this->shareIfNeeded($normalizedClass, $provisionedObject);
+        $this->prepareIfNeeded($normalizedClass, $provisionedObject);
 
-        $this->unguardAgainstCyclicDependency($lowClass);
+        $this->unguardAgainstCyclicDependency($normalizedClass);
         return $provisionedObject;
     }
 
@@ -95,8 +95,8 @@ class Provider implements Injector {
      */
     public function define($className, array $injectionDefinition) {
         $this->validateInjectionDefinition($injectionDefinition);
-        $lowClass = ltrim(strtolower($className), '\\');
-        $this->injectionDefinitions[$lowClass] = $injectionDefinition;
+        $normalizedClass = $this->normalizeClassName($className);
+        $this->injectionDefinitions[$normalizedClass] = $injectionDefinition;
 
         return $this;
     }
@@ -141,22 +141,22 @@ class Provider implements Injector {
             );
         }
 
-        $lowTypehint = strtolower($typehintToReplace);
-        $lowAlias = strtolower($alias);
+        $normalizedTypehint = $this->normalizeClassName($typehintToReplace);
+        $normalizedAlias = $this->normalizeClassName($alias);
 
-        if (isset($this->sharedClasses[$lowTypehint])) {
-            $sharedClassName = strtolower(get_class($this->sharedClasses[$lowTypehint]));
+        if (isset($this->sharedClasses[$normalizedTypehint])) {
+            $sharedClassName = $this->normalizeClassName(get_class($this->sharedClasses[$normalizedTypehint]));
             throw new InjectionException(
                 sprintf($this->errorMessages[self::E_SHARED_CANNOT_ALIAS], $sharedClassName, $alias),
                 self::E_SHARED_CANNOT_ALIAS
             );
         } else {
-            $this->aliases[$lowTypehint] = $alias;
+            $this->aliases[$normalizedTypehint] = $alias;
         }
 
-        if (array_key_exists($lowTypehint, $this->sharedClasses)) {
-            $this->sharedClasses[$lowAlias] = $this->sharedClasses[$lowTypehint];
-            unset($this->sharedClasses[$lowTypehint]);
+        if (array_key_exists($normalizedTypehint, $this->sharedClasses)) {
+            $this->sharedClasses[$normalizedAlias] = $this->sharedClasses[$normalizedTypehint];
+            unset($this->sharedClasses[$normalizedTypehint]);
         }
 
         return $this;
@@ -205,7 +205,7 @@ class Provider implements Injector {
         $className = is_object($classNameOrInstance)
             ? get_class($classNameOrInstance)
             : $classNameOrInstance;
-        $className = strtolower($className);
+        $className = $this->normalizeClassName($className);
 
         unset($this->sharedClasses[$className]);
 
@@ -223,7 +223,7 @@ class Provider implements Injector {
         if (is_object($classNameOrInstance)) {
             $classNameOrInstance = get_class($classNameOrInstance);
         }
-        $className = strtolower($classNameOrInstance);
+        $className = $this->normalizeClassName($classNameOrInstance);
         if (isset($this->sharedClasses[$className])) {
             $this->sharedClasses[$className] = NULL;
         }
@@ -251,8 +251,8 @@ class Provider implements Injector {
             );
         }
 
-        $lowClass = ltrim(strtolower($className), '\\');
-        $this->delegatedClasses[$lowClass] = $delegate;
+        $normalizedClass =$this->normalizeClassName($className);
+        $this->delegatedClasses[$normalizedClass] = $delegate;
 
         return $this;
     }
@@ -274,7 +274,7 @@ class Provider implements Injector {
             );
         }
 
-        $normalizedName = ltrim(strtolower($classInterfaceOrTraitName), '\\');
+        $normalizedName = $this->normalizeClassName($classInterfaceOrTraitName);
         $this->prepares[$normalizedName] = $executable;
 
         return $this;
@@ -373,15 +373,15 @@ class Provider implements Injector {
     }
 
 
-    private function prepareInstance($obj, $lowClass) {
-        if (isset($this->prepares[$lowClass])) {
-            $preparer = $this->prepares[$lowClass];
+    private function prepareInstance($obj, $normalizedClass) {
+        if (isset($this->prepares[$normalizedClass])) {
+            $preparer = $this->prepares[$normalizedClass];
             $exe = $this->getExecutable($preparer);
             $exe($obj, $this);
         }
 
         if ($interfacesImplemented = class_implements($obj)) {
-            $interfacesImplemented = array_flip(array_map('strtolower', $interfacesImplemented));
+            $interfacesImplemented = array_flip(array_map(array($this, 'normalizeClassName'), $interfacesImplemented));
             $interfacePrepares = array_intersect_key($this->prepares, $interfacesImplemented);
             foreach ($interfacePrepares as $preparer) {
                 $exe = $this->getExecutable($preparer);
@@ -429,8 +429,8 @@ class Provider implements Injector {
     }
 
 
-    private function guardAgainstCyclicDependency($className, $lowClass) {
-        if (isset($this->beingProvisioned[$lowClass])) {
+    private function guardAgainstCyclicDependency($className, $normalizedClass) {
+        if (isset($this->beingProvisioned[$normalizedClass])) {
             throw new CyclicDependencyException(
                 $className,
                 sprintf($this->errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
@@ -438,19 +438,19 @@ class Provider implements Injector {
             );
         }
 
-        $this->beingProvisioned[$lowClass] = TRUE;
+        $this->beingProvisioned[$normalizedClass] = TRUE;
     }
 
 
-    private function unguardAgainstCyclicDependency($lowClass) {
-        unset($this->beingProvisioned[$lowClass]);
+    private function unguardAgainstCyclicDependency($normalizedClass) {
+        unset($this->beingProvisioned[$normalizedClass]);
     }
 
 
     private function provisionFromDelegate($className) {
-        $lowClass = strtolower($className);
+        $normalizedClass = $this->normalizeClassName($className);
 
-        list($delegate, $args) = $this->delegatedClasses[$lowClass];
+        list($delegate, $args) = $this->delegatedClasses[$normalizedClass];
 
         $provisionedObject = $this->execute($delegate, $args);
 
@@ -466,14 +466,14 @@ class Provider implements Injector {
 
 
     private function provisionInstance($className, array $customDefinition) {
-        $lowClass = strtolower($className);
+        $normalizedClass = $this->normalizeClassName($className);
         try {
             $injectionDefinition = $this->selectClassDefinition($className, $customDefinition);
 
             return $this->getInjectedInstance($className, $injectionDefinition);
 
         } catch (CyclicDependencyException $e) {
-            unset($this->beingProvisioned[$lowClass]);
+            unset($this->beingProvisioned[$normalizedClass]);
             $cycleDetector = $e->getCycleDetector();
 
             throw new CyclicDependencyException(
@@ -513,25 +513,25 @@ class Provider implements Injector {
 
 
     private function getDefinition($className) {
-        $lowClass = ltrim(strtolower($className), '\\');
+        $normalizedClass = $this->normalizeClassName($className);
 
-        return $this->isDefined($lowClass)
-            ? $this->injectionDefinitions[$lowClass]
+        return $this->isDefined($normalizedClass)
+            ? $this->injectionDefinitions[$normalizedClass]
             : array();
     }
 
 
     private function isDefined($className) {
-        $lowClass = ltrim(strtolower($className), '\\');
+        $normalizedClass = $this->normalizeClassName($className);
 
-        return isset($this->injectionDefinitions[$lowClass]);
+        return isset($this->injectionDefinitions[$normalizedClass]);
     }
 
 
     private function isShared($className) {
-        $lowClass = strtolower($className);
+        $normalizedClass = $this->normalizeClassName($className);
 
-        return array_key_exists($lowClass, $this->sharedClasses);
+        return array_key_exists($normalizedClass, $this->sharedClasses);
     }
 
 
@@ -672,13 +672,13 @@ class Provider implements Injector {
     }
 
 
-    private function makeClass($className, $lowClass, array $customDefinition) {
+    private function makeClass($className, $normalizedClass, array $customDefinition) {
         // isset() is used specifically here instead of $this->isShared() because classes may be
         // marked as "shared" before an instance is stored. In these cases the class is "shared,"
         // but it has a NULL value and instantiation is needed.
-        if (isset($this->sharedClasses[$lowClass])) {
-            $provisionedObject = $this->sharedClasses[$lowClass];
-        } elseif (isset($this->delegatedClasses[$lowClass])) {
+        if (isset($this->sharedClasses[$normalizedClass])) {
+            $provisionedObject = $this->sharedClasses[$normalizedClass];
+        } elseif (isset($this->delegatedClasses[$normalizedClass])) {
             $provisionedObject = $this->provisionFromDelegate($className);
         } else {
             $provisionedObject = $this->provisionInstance($className, $customDefinition);
@@ -688,56 +688,61 @@ class Provider implements Injector {
 
 
     private function resolveAliasIfNeeded($className) {
-        $lowClass = ltrim(strtolower($className), '\\');
+        $normalizedClass = $this->normalizeClassName($className);
 
-        if (isset($this->aliases[$lowClass])) {
-            $className = $this->aliases[$lowClass];
-            $lowClass = strtolower($className);
+        if (isset($this->aliases[$normalizedClass])) {
+            $className = $this->aliases[$normalizedClass];
+            $normalizedClass = $this->normalizeClassName($className);
         }
-        return array($className, $lowClass);
+        return array($className, $normalizedClass);
     }
 
 
-    private function shareIfNeeded($lowClass, $provisionedObject) {
-        if ($this->isShared($lowClass)) {
-            $this->sharedClasses[$lowClass] = $provisionedObject;
+    private function shareIfNeeded($normalizedClass, $provisionedObject) {
+        if ($this->isShared($normalizedClass)) {
+            $this->sharedClasses[$normalizedClass] = $provisionedObject;
         }
     }
 
 
     /**
-     * @param $lowClass
+     * @param $normalizedClass
      * @param $provisionedObject
      */
-    private function prepareIfNeeded($lowClass, $provisionedObject) {
+    private function prepareIfNeeded($normalizedClass, $provisionedObject) {
         if ($this->prepares) {
-            $this->prepareInstance($provisionedObject, $lowClass);
+            $this->prepareInstance($provisionedObject, $normalizedClass);
         }
     }
 
 
     private function shareClass($classNameOrInstance) {
-        $lowClass = ltrim(strtolower($classNameOrInstance), '\\');
-        $lowClass = isset($this->aliases[$lowClass])
-            ? strtolower($this->aliases[$lowClass])
-            : $lowClass;
+        $normalizedClass = $this->normalizeClassName($classNameOrInstance);
+        $normalizedClass = isset($this->aliases[$normalizedClass])
+            ? $this->normalizeClassName($this->aliases[$normalizedClass])
+            : $normalizedClass;
 
-        $this->sharedClasses[$lowClass] = isset($this->sharedClasses[$lowClass])
-            ? $this->sharedClasses[$lowClass]
+        $this->sharedClasses[$normalizedClass] = isset($this->sharedClasses[$normalizedClass])
+            ? $this->sharedClasses[$normalizedClass]
             : NULL;
     }
 
 
     private function shareObject($classNameOrInstance) {
-        $lowClass = strtolower(get_class($classNameOrInstance));
-        if (isset($this->aliases[$lowClass])) {
+        $normalizedClass = $this->normalizeClassName(get_class($classNameOrInstance));
+        if (isset($this->aliases[$normalizedClass])) {
             // You cannot share an instance of a class that has already been aliased to another class.
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_ALIASED_CANNOT_SHARE], $lowClass, $this->aliases[$lowClass]),
+                sprintf($this->errorMessages[self::E_ALIASED_CANNOT_SHARE], $normalizedClass, $this->aliases[$normalizedClass]),
                 self::E_ALIASED_CANNOT_SHARE
             );
         }
-        $this->sharedClasses[$lowClass] = $classNameOrInstance;
+        $this->sharedClasses[$normalizedClass] = $classNameOrInstance;
+    }
+
+
+    private function normalizeClassName($className) {
+        return ltrim(strtolower($className), '\\');
     }
 
 
