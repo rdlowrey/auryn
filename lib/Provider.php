@@ -181,24 +181,9 @@ class Provider implements Injector {
      */
     public function share($classNameOrInstance) {
         if (is_string($classNameOrInstance)) {
-            $lowClass = ltrim(strtolower($classNameOrInstance), '\\');
-            $lowClass = isset($this->aliases[$lowClass])
-                ? strtolower($this->aliases[$lowClass])
-                : $lowClass;
-
-            $this->sharedClasses[$lowClass] = isset($this->sharedClasses[$lowClass])
-                ? $this->sharedClasses[$lowClass]
-                : NULL;
+            $this->shareClass($classNameOrInstance);
         } elseif (is_object($classNameOrInstance)) {
-            $lowClass = strtolower(get_class($classNameOrInstance));
-            if (isset($this->aliases[$lowClass])) {
-                // You cannot share an instance of a class that has already been aliased to another class.
-                throw new InjectionException(
-                    sprintf($this->errorMessages[self::E_ALIASED_CANNOT_SHARE], $lowClass, $this->aliases[$lowClass]),
-                    self::E_ALIASED_CANNOT_SHARE
-                );
-            }
-            $this->sharedClasses[$lowClass] = $classNameOrInstance;
+            $this->shareObject($classNameOrInstance);
         } else {
             throw new BadArgumentException(
                 sprintf($this->errorMessages[self::E_SHARE_ARGUMENT], __CLASS__, gettype($classNameOrInstance)),
@@ -728,6 +713,31 @@ class Provider implements Injector {
         if ($this->prepares) {
             $this->prepareInstance($provisionedObject, $lowClass);
         }
+    }
+
+
+    private function shareClass($classNameOrInstance) {
+        $lowClass = ltrim(strtolower($classNameOrInstance), '\\');
+        $lowClass = isset($this->aliases[$lowClass])
+            ? strtolower($this->aliases[$lowClass])
+            : $lowClass;
+
+        $this->sharedClasses[$lowClass] = isset($this->sharedClasses[$lowClass])
+            ? $this->sharedClasses[$lowClass]
+            : NULL;
+    }
+
+
+    private function shareObject($classNameOrInstance) {
+        $lowClass = strtolower(get_class($classNameOrInstance));
+        if (isset($this->aliases[$lowClass])) {
+            // You cannot share an instance of a class that has already been aliased to another class.
+            throw new InjectionException(
+                sprintf($this->errorMessages[self::E_ALIASED_CANNOT_SHARE], $lowClass, $this->aliases[$lowClass]),
+                self::E_ALIASED_CANNOT_SHARE
+            );
+        }
+        $this->sharedClasses[$lowClass] = $classNameOrInstance;
     }
 
 
