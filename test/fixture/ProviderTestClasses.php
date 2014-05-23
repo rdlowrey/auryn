@@ -402,3 +402,19 @@ class SimpleNoTypehintClass {
     }
 
 }
+
+abstract class AbstractPrepareClass {
+
+    private $param;
+
+    public function setParam($param) {
+        $this->param = $param;
+    }
+
+    public function getParam() {
+        return $this->param;
+    }
+
+}
+
+class ConcretePrepareClass extends AbstractPrepareClass {}

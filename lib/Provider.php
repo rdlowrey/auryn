@@ -388,6 +388,16 @@ class Provider implements Injector {
                 $exe($obj, $this);
             }
         }
+
+        $parentClass = get_parent_class($obj);
+        if ($parentClass) {
+            $parentClass = $this->normalizeClassName($parentClass);
+            if (isset($this->prepares[$parentClass])) {
+                $preparer = $this->prepares[$parentClass];
+                $exe = $this->getExecutable($preparer);
+                $exe($obj, $this);
+            }
+        }
     }
 
 
