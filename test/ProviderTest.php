@@ -919,4 +919,15 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $this->assertSame(42, $obj->testProp);
     }
+
+    public function testAbstractClassPrepare() {
+        $provider = new Provider();
+        $provider->prepare('AbstractPrepareClass', function($obj, Provider $injector) {
+            $obj->setParam('some param');
+        });
+
+        $obj = $provider->make('ConcretePrepareClass');
+
+        $this->assertSame('some param', $obj->getParam());
+    }
 }
