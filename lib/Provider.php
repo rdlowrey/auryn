@@ -10,9 +10,16 @@ namespace Auryn;
  * implementation and delegation rules for injecting and automatically provisioning deeply nested
  * class dependencies.
  */
-class Provider implements Injector, \Auryn\Plugin\ProviderPlugin {
+class Provider {
 
+    /**
+     * @var AurynInjector
+     */
     private $injector;
+
+    /**
+     * @var Plugin\ProviderPlugin
+     */
     private $plugin;
     
     public function __construct(ReflectionStorage $reflectionStorage = NULL) {

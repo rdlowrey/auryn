@@ -35,8 +35,9 @@ class AurynInjector implements Injector {
     
     /** @var ReflectionStorage */
     private $reflectionStorage;
-    
-    private $beingProvisioned = array();
+
+    /** @var array List of the typename of the objects being created, in hierarchy */
+    private $classConstructorChain = array();
 
     public static $errorMessages = array(
         self::E_MAKE_FAILURE => "Could not make %s: %s",
@@ -64,6 +65,9 @@ class AurynInjector implements Injector {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
     }
 
+    private function resetClassConstructorChain() {
+        $this->classConstructorChain = array();
+    }
 
     /**
      * Instantiate a class according to a predefined or custom call-time injection definition
@@ -74,13 +78,20 @@ class AurynInjector implements Injector {
      * @return mixed A provisioned instance of the $className class
      */
     public function make($className, array $customDefinition = array()) {
-        list($className, $normalizedClass) = $this->providerPlugin->resolveAlias($className);
+        $this->resetClassConstructorChain();
+        return $this->makeInternal($className, $customDefinition);
+    }
+
+    private function makeInternal($className, array $customDefinition = array()) {
+        list($className, $normalizedClass) = $this->providerPlugin->resolveAlias($className, $this->classConstructorChain);
+
         $this->guardAgainstCyclicDependency($className, $normalizedClass);
 
         $provisionedObject = $this->makeClass($className, $normalizedClass, $customDefinition);
-        $this->providerPlugin->shareIfNeeded($normalizedClass, $provisionedObject);
+        $this->providerPlugin->shareIfNeeded($normalizedClass, $provisionedObject, $this->classConstructorChain);
         $this->prepareInstance($normalizedClass, $provisionedObject);
-        $this->unguardAgainstCyclicDependency($normalizedClass);
+        $this->unguardAgainstCyclicDependency();
+
         return $provisionedObject;
     }
 
@@ -96,6 +107,11 @@ class AurynInjector implements Injector {
      * @return mixed Returns the invocation result from the generated executable
      */
     public function execute($callableOrMethodArr, array $invocationArgs = array(), $makeAccessible = FALSE) {
+        $this->resetClassConstructorChain();
+        return $this->executeInternal($callableOrMethodArr, $invocationArgs, $makeAccessible);
+    }
+
+    private function executeInternal($callableOrMethodArr, array $invocationArgs = array(), $makeAccessible = FALSE) {
         $executable = $this->getExecutable($callableOrMethodArr, $makeAccessible);
         $reflectionFunction = $executable->getCallableReflection();
         $args = $this->generateInvocationArgs($reflectionFunction, $invocationArgs);
@@ -103,7 +119,7 @@ class AurynInjector implements Injector {
         return call_user_func_array(array($executable, '__invoke'), $args);
     }
 
-
+    
     /**
      * Generate and provision an executable object from any PHP callable or class/method string array
      *
@@ -160,7 +176,7 @@ class AurynInjector implements Injector {
     }
 
     private function prepareInstance($normalizedClass, $obj) {
-        $preparer = $this->providerPlugin->getPrepareDefine($normalizedClass);
+        $preparer = $this->providerPlugin->getPrepareDefine($normalizedClass, $this->classConstructorChain);
         if ($preparer) {
             $exe = $this->getExecutable($preparer);
             $exe($obj, $this);
@@ -203,26 +219,23 @@ class AurynInjector implements Injector {
 
 
     private function guardAgainstCyclicDependency($className, $normalizedClass) {
-        if (isset($this->beingProvisioned[$normalizedClass])) {
+        if (in_array($normalizedClass, $this->classConstructorChain)) {
             throw new CyclicDependencyException(
                 $className,
                 sprintf(self::$errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
                 self::E_CYCLIC_DEPENDENCY
             );
         }
-
-        $this->beingProvisioned[$normalizedClass] = TRUE;
+        $this->classConstructorChain[] = $normalizedClass;
     }
 
-
-    private function unguardAgainstCyclicDependency($normalizedClass) {
-        unset($this->beingProvisioned[$normalizedClass]);
+    private function unguardAgainstCyclicDependency() {
+        array_pop($this->classConstructorChain);
     }
-
 
     private function provisionFromDelegate($className) {
-        list($delegate, $args) = $this->providerPlugin->getDelegated($className);
-        $provisionedObject = $this->execute($delegate, $args);
+        list($delegate, $args) = $this->providerPlugin->getDelegated($className, $this->classConstructorChain);
+        $provisionedObject = $this->executeInternal($delegate, $args);
 
         if (!$provisionedObject instanceof $className) {
             throw new InjectionException(
@@ -241,8 +254,6 @@ class AurynInjector implements Injector {
             $injectionDefinition = $this->selectClassDefinition($className, $customDefinition);
             return $this->getInjectedInstance($className, $injectionDefinition);
         } catch (CyclicDependencyException $e) {
-            $normalizedClass = $this->providerPlugin->normalizeClassName($className);
-            unset($this->beingProvisioned[$normalizedClass]);
             $cycleDetector = $e->getCycleDetector();
 
             throw new CyclicDependencyException(
@@ -256,7 +267,7 @@ class AurynInjector implements Injector {
 
 
     private function selectClassDefinition($className, $customDefinition) {
-        $definitions = $this->selectParentDefinition($className, $this->providerPlugin->getDefinition($className));
+        $definitions = $this->selectParentDefinition($className, $this->providerPlugin->getDefinition($className, $this->classConstructorChain));
 
         return array_merge($definitions, $customDefinition);
     }
@@ -269,7 +280,7 @@ class AurynInjector implements Injector {
 
             return $parent
                 ? $this->selectParentDefinition($parent->getName(), $childDefinition)
-                : array_merge($this->providerPlugin->getDefinition($className), $childDefinition);
+                : array_merge($this->providerPlugin->getDefinition($className, $this->classConstructorChain), $childDefinition);
 
         } catch (\ReflectionException $e) {
             throw new InjectionException(
@@ -305,7 +316,7 @@ class AurynInjector implements Injector {
             $callableRefl = $this->reflectionStorage->getFunction($stringExecutable);
             $executableArr = array($callableRefl, NULL);
         } elseif (method_exists($stringExecutable, '__invoke')) {
-            $invocationObj = $this->make($stringExecutable);
+            $invocationObj = $this->makeInternal($stringExecutable);
             $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
             $executableArr = array($callableRefl, $invocationObj);
         } elseif (strpos($stringExecutable, '::') !== FALSE) {
@@ -335,7 +346,7 @@ class AurynInjector implements Injector {
 
         return $reflectionMethod->isStatic()
             ? array($reflectionMethod, NULL)
-            : array($reflectionMethod, $this->make($class));
+            : array($reflectionMethod, $this->makeInternal($class));
     }
 
 
@@ -349,7 +360,7 @@ class AurynInjector implements Injector {
             $rawParamKey = self::RAW_INJECTION_PREFIX . $param->name;
 
             if (isset($definition[$param->name])) {
-                $argument = $this->make($definition[$param->name]);
+                $argument = $this->makeInternal($definition[$param->name]);
             } elseif (array_key_exists($rawParamKey, $definition)) {
                 $argument = $definition[$rawParamKey];
             } elseif (!$argument = $this->buildArgumentFromTypeHint($function, $param)) {
@@ -365,8 +376,8 @@ class AurynInjector implements Injector {
 
     private function buildArgumentFromReflectionParameter(\ReflectionParameter $param) {
         
-        if ($this->providerPlugin->isParamDefined($param->name)) {
-            list(, $argument) = $this->providerPlugin->getParamDefine($param->name);
+        if ($this->providerPlugin->isParamDefined($param->name, $this->classConstructorChain)) {
+            list(, $argument) = $this->providerPlugin->getParamDefine($param->name, $this->classConstructorChain);
         } elseif ($param->isDefaultValueAvailable()) {
             $argument = $param->getDefaultValue();
         } else {
@@ -411,21 +422,20 @@ class AurynInjector implements Injector {
         } elseif ($param->isDefaultValueAvailable()) {
             $object = $param->getDefaultValue();
         } else {
-            $object = $this->make($typeHint);
+            $object = $this->makeInternal($typeHint);
         }
 
         return $object;
     }
-
 
     private function makeClass($className, $normalizedClass, array $customDefinition) {
         // isset() is used specifically here instead of $this->isShared() because classes may be
         // marked as "shared" before an instance is stored. In these cases the class is "shared,"
         // but it has a NULL value and instantiation is needed.
 
-        if ($provisionedObject = $this->providerPlugin->getShared($normalizedClass)){
+        if ($provisionedObject = $this->providerPlugin->getShared($normalizedClass, $this->classConstructorChain)){
             //nothing to do.
-        } elseif ($this->providerPlugin->isDelegated($normalizedClass)) {
+        } elseif ($this->providerPlugin->isDelegated($normalizedClass, $this->classConstructorChain)) {
             $provisionedObject = $this->provisionFromDelegate($className);
         } else {
             $provisionedObject = $this->provisionInstance($className, $customDefinition);

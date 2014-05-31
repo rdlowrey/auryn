@@ -11,8 +11,10 @@ interface ProviderPlugin {
      *
      * @param string $className The class whose instantiation we wish to define
      * @param array $injectionDefinition An array mapping parameter names to classes and/or raw values
+     * @param array $classConstructorChain
+     * @return
      */
-    public function define($className, array $injectionDefinition);
+    public function define($className, array $injectionDefinition, array $classConstructorChain = array());
 
     /**
      * Assign a global default value for all parameters named $paramName
@@ -22,8 +24,10 @@ interface ProviderPlugin {
      *
      * @param string $paramName The parameter name for which this value applies
      * @param mixed $value The value to inject for this parameter name
+     * @param array $classConstructorChain
+     * @return
      */
-    public function defineParam($paramName, $value);
+    public function defineParam($paramName, $value, array $classConstructorChain = array());
 
     /**
      * Defines an alias class for all occurrences of a given typehint
@@ -32,8 +36,10 @@ interface ProviderPlugin {
      *
      * @param string $originalTypehint The typehint to replace
      * @param string $aliasClassName The implementation class name
+     * @param array $classConstructorChain
+     * @return
      */
-    public function alias($originalTypehint, $aliasClassName);
+    public function alias($originalTypehint, $aliasClassName, array $classConstructorChain = array());
 
     /**
      * Delegates the creation of $className instances to $callable
@@ -41,8 +47,10 @@ interface ProviderPlugin {
      * @param string $className
      * @param callable $callable
      * @param array $args
+     * @param array $classConstructorChain
+     * @return
      */
-    public function delegate($className, $callable, array $args = array());
+    public function delegate($className, $callable, array $args = array(), array $classConstructorChain = array());
 
     /**
      * Register a mutator callable to modify (prepare) objects after instantiation
@@ -52,16 +60,20 @@ interface ProviderPlugin {
      *
      * @param string $classInterfaceOrTraitName
      * @param mixed $executable Any callable or provisionable executable method
+     * @param array $classConstructorChain
+     * @return
      */
-    public function prepare($classInterfaceOrTraitName, $executable);
+    public function prepare($classInterfaceOrTraitName, $executable, array $classConstructorChain = array());
 
 
     /**
      * Shares the specified class across the Injector context
      *
      * @param mixed $classNameOrInstance The class or object to share
+     * @param array $classConstructorChain
+     * @return
      */
-    public function share($classNameOrInstance);
+    public function share($classNameOrInstance, array $classConstructorChain = array());
 
 
 

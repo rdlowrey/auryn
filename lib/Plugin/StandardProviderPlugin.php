@@ -7,7 +7,7 @@ use Auryn\BadArgumentException;
 use Auryn\InjectionException;
 use Auryn\AurynInjector;
 
-class StandardProviderPlugin implements ProviderInjectionPlugin {
+class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin {
 
     private $aliases = array();
     private $prepares = array();
@@ -15,7 +15,6 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
     private $delegatedClasses = array();
     private $paramDefinitions = array();
     private $injectionDefinitions = array();
-
 
     private function validateInjectionDefinition(array $injectionDefinition) {
         foreach ($injectionDefinition as $paramName => $value) {
@@ -54,10 +53,10 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
      *
      * @param string $className
      * @param array $injectionDefinition An associative array matching constructor params to values
-     * @throws \Auryn\BadArgumentException On missing raw injection prefix
+     * @param array $classConstructorChain
      * @return \Auryn\Provider Returns the current instance
      */
-    public function define($className, array $injectionDefinition) {
+    public function define($className, array $injectionDefinition, array $classConstructorChain = array()) {
         $this->validateInjectionDefinition($injectionDefinition);
         $normalizedClass = $this->normalizeClassName($className);
         $this->injectionDefinitions[$normalizedClass] = $injectionDefinition;
@@ -73,37 +72,39 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
      *
      * @param string $paramName The parameter name for which this value applies
      * @param mixed $value The value to inject for this parameter name
+     * @param array $classConstructorChain
      * @return \Auryn\Provider Returns the current instance
      */
-    public function defineParam($paramName, $value) {
+    public function defineParam($paramName, $value, array $classConstructorChain = array()) {
         $this->paramDefinitions[$paramName] = $value;
 
         return $this;
     }
 
-    function isParamDefined($paramName) {
+    function isParamDefined($paramName, array $classConstructorChain) {
         return array_key_exists($paramName, $this->paramDefinitions);
     }
 
-    function getParamDefine($paramName) {
+    function getParamDefine($paramName, array $classConstructorChain) {
         if (array_key_exists($paramName, $this->paramDefinitions)) {
             return array(true, $this->paramDefinitions[$paramName]);
         }
 
         return array(false, null);
     }
-    
+
 
     /**
      * Defines an alias class name for all occurrences of a given typehint
      *
      * @param string $typehintToReplace
      * @param string $alias
-     * @throws InjectionException
-     * @throws BadArgumentException On non-empty string argument
+     * @param array $classConstructorChain
+     * @throws \Auryn\InjectionException
+     * @throws \Auryn\BadArgumentException
      * @return \Auryn\Provider Returns the current instance
      */
-    public function alias($typehintToReplace, $alias) {
+    public function alias($typehintToReplace, $alias, array $classConstructorChain = array()) {
         if (empty($typehintToReplace) || !is_string($typehintToReplace)) {
             throw new BadArgumentException(
                 AurynInjector::$errorMessages[AurynInjector::E_NON_EMPTY_STRING_ALIAS],
@@ -150,15 +151,15 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
      * class it's instance will be stored and shared.
      *
      * @param mixed $classNameOrInstance
-     * @throws InjectionException
-     * @throws BadArgumentException
+     * @param array $classConstructorChain
+     * @throws \Auryn\BadArgumentException
      * @return \Auryn\Provider Returns the current instance
      */
-    public function share($classNameOrInstance) {
+    public function share($classNameOrInstance, array $classConstructorChain = array()) {
         if (is_string($classNameOrInstance)) {
-            $this->shareClass($classNameOrInstance);
+            $this->shareClass($classNameOrInstance, $classConstructorChain);
         } elseif (is_object($classNameOrInstance)) {
-            $this->shareObject($classNameOrInstance);
+            $this->shareObject($classNameOrInstance, $classConstructorChain);
         } else {
             throw new BadArgumentException(
                 sprintf(AurynInjector::$errorMessages[AurynInjector::E_SHARE_ARGUMENT], __CLASS__, gettype($classNameOrInstance)),
@@ -213,10 +214,11 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
      * @param string $className
      * @param callable $callable
      * @param array $args [optional]
-     * @throws BadArgumentException
+     * @param array $classConstructorChain
+     * @throws \Auryn\BadArgumentException
      * @return \Auryn\Provider Returns the current instance
      */
-    public function delegate($className, $callable, array $args = array()) {
+    public function delegate($className, $callable, array $args = array(), array $classConstructorChain = array()) {
         if ($this->canExecute($callable)) {
             $delegate = array($callable, $args);
         } else {
@@ -226,17 +228,17 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
             );
         }
 
-        $normalizedClass =$this->normalizeClassName($className);
+        $normalizedClass = $this->normalizeClassName($className);
         $this->delegatedClasses[$normalizedClass] = $delegate;
 
         return $this;
     }
 
-    function isDelegated($normalizedClass) {
+    function isDelegated($normalizedClass, array $classConstructorChain) {
         return isset($this->delegatedClasses[$normalizedClass]);
     }
 
-    function getDelegated($className) {
+    function getDelegated($className, array $classConstructorChain) {
         $normalizedName = $this->normalizeClassName($className);
         return $this->delegatedClasses[$normalizedName];
     }
@@ -246,10 +248,11 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
      *
      * @param string $classInterfaceOrTraitName
      * @param mixed $executable Any callable or provisionable executable method
+     * @param array $classConstructorChain
      * @throws \Auryn\BadArgumentException
      * @return \Auryn\Provider Returns the current instance
      */
-    public function prepare($classInterfaceOrTraitName, $executable) {
+    public function prepare($classInterfaceOrTraitName, $executable, array $classConstructorChain = array()) {
         if (!$this->canExecute($executable)) {
             throw new BadArgumentException(
                 AurynInjector::$errorMessages[AurynInjector::E_CALLABLE],
@@ -264,7 +267,7 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
     }
 
 
-    public function getPrepareDefine($classInterfaceOrTraitName) {
+    public function getPrepareDefine($classInterfaceOrTraitName, array $classConstructorChain) {
         $normalizedName = $this->normalizeClassName($classInterfaceOrTraitName);
         
         if (array_key_exists($normalizedName, $this->prepares)) {
@@ -283,7 +286,7 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
     }
     
 
-    public function getDefinition($className) {
+    public function getDefinition($className, array $classConstructorChain) {
         $normalizedClass = $this->normalizeClassName($className);
 
         return $this->isDefined($normalizedClass)
@@ -306,14 +309,14 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
     }
 
 
-    public function shareIfNeeded($normalizedClass, $provisionedObject) {
+    public function shareIfNeeded($normalizedClass, $provisionedObject, array $classConstructorChain) {
         if ($this->isShared($normalizedClass)) {
             $this->sharedClasses[$normalizedClass] = $provisionedObject;
         }
     }
 
-    private function shareClass($classNameOrInstance) {
-        list(, $normalizedClass) = $this->resolveAlias($classNameOrInstance);
+    private function shareClass($classNameOrInstance, array $classConstructorChain) {
+        list(, $normalizedClass) = $this->resolveAlias($classNameOrInstance, $classConstructorChain);
 
         $this->sharedClasses[$normalizedClass] = isset($this->sharedClasses[$normalizedClass])
             ? $this->sharedClasses[$normalizedClass]
@@ -321,7 +324,7 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
     }
 
 
-    private function shareObject($classNameOrInstance) {
+    private function shareObject($classNameOrInstance, array $classConstructorChain) {
         $normalizedClass = $this->normalizeClassName(get_class($classNameOrInstance));
         if (isset($this->aliases[$normalizedClass])) {
             // You cannot share an instance of a class that has already been aliased to another class.
@@ -333,7 +336,7 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
         $this->sharedClasses[$normalizedClass] = $classNameOrInstance;
     }
 
-    public function getShared($normalizedClass) {
+    public function getShared($normalizedClass, array $classConstructorChain) {
         if (array_key_exists($normalizedClass, $this->sharedClasses) == true) {
             if ($this->sharedClasses == null) {
                 return $normalizedClass;
@@ -345,7 +348,7 @@ class StandardProviderPlugin implements ProviderInjectionPlugin {
         return null;
     }
 
-    public function resolveAlias($className) {
+    public function resolveAlias($className, array $classConstructorChain) {
         $normalizedClass = $this->normalizeClassName($className);
 
         if (isset($this->aliases[$normalizedClass])) {
