@@ -919,4 +919,11 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $this->assertSame(42, $obj->testProp);
     }
+
+    public function testExecutableAliasing() {
+        $provider = new Provider();
+        $provider->alias('BaseExecutableClass', 'ExtendsExecutableClass');
+        $result = $provider->execute(['BaseExecutableClass', 'foo']);
+        $this->assertEquals('This is the ExtendsExecutableClass', $result);
+    }
 }
