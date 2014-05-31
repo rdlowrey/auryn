@@ -25,7 +25,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_NEEDS_DEFINITION
+     * @expectedExceptionCode \Auryn\AurynInjector::E_NEEDS_DEFINITION
      */
     public function testMakeThrowsExceptionOnInterfaceWithoutAlias() {
         $provider = new Provider(new ReflectionPool);
@@ -34,7 +34,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_NEEDS_DEFINITION
+     * @expectedExceptionCode \Auryn\AurynInjector::E_NEEDS_DEFINITION
      */
     public function testMakeThrowsExceptionOnNonConcreteCtorParamWithoutImplementation() {
         $provider = new Provider(new ReflectionPool);
@@ -116,7 +116,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_UNDEFINED_PARAM
+     * @expectedExceptionCode \Auryn\AurynInjector::E_UNDEFINED_PARAM
      */
     public function testMakeThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefault() {
         $provider  = new Provider(new ReflectionPool);
@@ -126,7 +126,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_UNDEFINED_PARAM
+     * @expectedExceptionCode \Auryn\AurynInjector::E_UNDEFINED_PARAM
      */
     public function testMakeThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefaultThroughAliasedTypehint() {
         $provider  = new Provider(new ReflectionPool);
@@ -728,7 +728,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      /**
      * @dataProvider provideCyclicDependencies
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_CYCLIC_DEPENDENCY
+     * @expectedExceptionCode \Auryn\AurynInjector::E_CYCLIC_DEPENDENCY
      */
     public function testCyclicDependencies($class) {
         $provider = new Provider;
@@ -744,7 +744,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_ALIASED_CANNOT_SHARE
+     * @expectedExceptionCode \Auryn\AurynInjector::E_ALIASED_CANNOT_SHARE
      */
     public function testShareAfterAliasException() {
         $provider = new Provider();
@@ -784,7 +784,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_SHARED_CANNOT_ALIAS
+     * @expectedExceptionCode \Auryn\AurynInjector::E_SHARED_CANNOT_ALIAS
      */
     public function testAliasAfterShareException() {
         $provider = new Provider();
@@ -811,7 +811,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_NON_PUBLIC_CONSTRUCTOR
+     * @expectedExceptionCode \Auryn\AurynInjector::E_NON_PUBLIC_CONSTRUCTOR
      */
     public function testAppropriateExceptionThrownOnNonPublicConstructor() {
         $provider = new Provider();
@@ -820,7 +820,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Provider::E_NON_PUBLIC_CONSTRUCTOR
+     * @expectedExceptionCode \Auryn\AurynInjector::E_NON_PUBLIC_CONSTRUCTOR
      */
     public function testAppropriateExceptionThrownOnNonPublicConstructorWithArgs() {
         $provider = new Provider();
@@ -829,7 +829,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\BadArgumentException
-     * @expectedExceptionCode \Auryn\Provider::E_CALLABLE
+     * @expectedExceptionCode \Auryn\AurynInjector::E_CALLABLE
      */
     public function testNonExistentFunction() {
         $provider = new Provider();
@@ -838,7 +838,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\BadArgumentException
-     * @expectedExceptionCode \Auryn\Provider::E_CALLABLE
+     * @expectedExceptionCode \Auryn\AurynInjector::E_CALLABLE
      */
     public function testNonExistentMethod() {
         $provider = new Provider();
@@ -848,7 +848,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\BadArgumentException
-     * @expectedExceptionCode \Auryn\Provider::E_CALLABLE
+     * @expectedExceptionCode \Auryn\AurynInjector::E_CALLABLE
      */
     public function testClassWithoutInvoke() {
         $provider = new Provider();
@@ -868,7 +868,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     /**
      * @expectedException \Auryn\BadArgumentException
-     * @expectedExceptionCode \Auryn\Provider::E_NON_EMPTY_STRING_ALIAS
+     * @expectedExceptionCode \Auryn\AurynInjector::E_NON_EMPTY_STRING_ALIAS
      */
     public function testBadAlias() {
         $provider = new Provider();
@@ -902,7 +902,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     public function testInstancePrepare() {
         $provider = new Provider();
-        $provider->prepare('\StdClass', function($obj, Provider $injector) {
+        $provider->prepare('\StdClass', function($obj, \Auryn\AurynInjector $injector) {
             $obj->testval = 42;
         });
         $obj = $provider->make('StdClass');
@@ -912,7 +912,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     public function testInterfacePrepare() {
         $provider = new Provider();
-        $provider->prepare('SomeInterface', function($obj, Provider $injector) {
+        $provider->prepare('SomeInterface', function($obj, \Auryn\AurynInjector $injector) {
             $obj->testProp = 42;
         });
         $obj = $provider->make('PreparesImplementationTest');
