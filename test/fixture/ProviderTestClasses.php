@@ -402,3 +402,22 @@ class SimpleNoTypehintClass {
     }
 
 }
+
+
+class ClassWithDefaultParamInConstructor {
+    
+    public $foo;
+    
+    function __construct($foo = 5) {
+        $this->foo = $foo;
+    }
+}
+
+class ClassRequiresClassWithDefaultParamInConstructor {
+    
+    public $obj;
+    
+    function __construct(ClassWithDefaultParamInConstructor $obj) {
+        $this->obj = $obj;
+    }
+}
