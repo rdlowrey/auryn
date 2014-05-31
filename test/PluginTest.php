@@ -61,7 +61,10 @@ class PluginTest extends PHPUnit_Framework_TestCase {
 
         //The logger shared above doesn't match the new chainClassConstructors, so a new
         //instance will be made.
-        $provider->make('RequiresLogger2');
+        $newLogger = $provider->make('RequiresLogger2');
+        
+        $this->assertNotSame($warningLogger, $newLogger);
+        
     }
 
     public function testClassConstructorChainDefine2() {
@@ -167,6 +170,24 @@ class PluginTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals('warn', $requiresLogger1->requiresLoggerDependency1->logger->getLogLevel());
         $this->assertEquals('info', $requiresLogger2->requiresLoggerDependency2->logger->getLogLevel());
     }
+
+    public function testClassConstructorChainDefine() {
+
+        $providerPlugin = new \Auryn\Plugin\ClassConstructorChainProviderPlugin();
+        $provider = new AurynInjector($providerPlugin);
+
+        $providerPlugin->define('LoggerTest', [':logLevel' => 'warn']);
+        $providerPlugin->define('LoggerTest', [':logLevel' => 'info'], ['RequiresLogger2']);
+
+        $requiresLogger1 = $provider->make('RequiresLogger1');
+        $requiresLogger2 = $provider->make('RequiresLogger2');
+
+        $this->assertEquals('warn', $requiresLogger1->requiresLoggerDependency1->logger->getLogLevel());
+        $this->assertEquals('info', $requiresLogger2->requiresLoggerDependency2->logger->getLogLevel());
+    }
+    
+    
+    
 }
 
 

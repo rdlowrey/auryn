@@ -118,7 +118,7 @@ class ClassConstructorChainProviderPlugin implements ProviderPlugin, ProviderInj
             $paramProviderInfo = $this->paramDefinitions[$paramName]->getBestMatchingInfo($chainClassConstructors, $isSet);
 
             if ($isSet != null) {
-                $value = $paramProviderInfo->getValue();
+                $value = $paramProviderInfo->getInformation();
                 return array(true, $value);
             }
         }
@@ -343,7 +343,7 @@ class ClassConstructorChainProviderPlugin implements ProviderPlugin, ProviderInj
         if (isset($this->injectionDefinitions[$normalizedClass])) {
             $providerInfo = $this->injectionDefinitions[$normalizedClass]->getBestMatchingInfo($chainClassConstructors);
             if ($providerInfo != null) {
-                return $providerInfo->getValue();
+                return $providerInfo->getInformation();
             }
         }
 
@@ -356,7 +356,7 @@ class ClassConstructorChainProviderPlugin implements ProviderPlugin, ProviderInj
             $sharedProviderInfo = $this->sharedClasses[$normalizedClass]->getExactMatchingInfo($chainClassConstructors);
 
             if ($sharedProviderInfo != null) {
-                $sharedProviderInfo->setValue($provisionedObject);
+                $sharedProviderInfo->setInformation($provisionedObject);
             }
         }
     }
@@ -394,7 +394,7 @@ class ClassConstructorChainProviderPlugin implements ProviderPlugin, ProviderInj
             $sharedInstanceInfo = $this->sharedClasses[$normalizedClass]->getBestMatchingInfo($chainClassConstructors);
 
             if ($sharedInstanceInfo != null) {
-                $sharedInstance = $sharedInstanceInfo->getValue();
+                $sharedInstance = $sharedInstanceInfo->getInformation();
                 return $sharedInstance;
             }
         }

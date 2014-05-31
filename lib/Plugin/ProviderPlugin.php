@@ -75,8 +75,6 @@ interface ProviderPlugin {
      */
     public function share($classNameOrInstance, array $chainClassConstructors = array());
 
-
-
     
     /**
      * Unshares the specified class or the class of the specified instance
@@ -85,6 +83,7 @@ interface ProviderPlugin {
      */
     public function unshare($classNameOrInstance);
 
+    
     /**
      * Forces re-instantiation of a shared class the next time it is requested
      *

@@ -12,11 +12,15 @@ namespace Auryn\Plugin;
  */
 class ProviderInfo {
 
-    private $value;
+    /** @var $value - The information being stored. */
+    private $information;
+    
+    /** @var array - The chain of class constructors that the information held should
+     * be applied to. */
     private $chainClassConstructors;
 
-    function __construct($value, array $chainClassConstructors) {
-        $this->value = $value;
+    function __construct($info, array $chainClassConstructors) {
+        $this->information = $info;
         $this->chainClassConstructors = $chainClassConstructors;
     }
 
@@ -52,12 +56,12 @@ class ProviderInfo {
         return $score;
     }
 
-    function setValue($value) {
-        $this->value = $value;
+    function setInformation($value) {
+        $this->information = $value;
     }
 
-    function getValue() {
-        return $this->value;
+    function getInformation() {
+        return $this->information;
     }
 
     function getChainClassConstructors() {

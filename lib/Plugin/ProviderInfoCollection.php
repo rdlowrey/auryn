@@ -11,17 +11,21 @@ class ProviderInfoCollection {
      */
     protected $providerInfoArray = array();
 
-    function __construct($value, array $chainClassConstructors) {
-        $this->addInfo($value, $chainClassConstructors);
+    /**
+     * @param $information - The information to be held by the first 'providerInfo'
+     * @param array $chainClassConstructors - The chain of class constructors it should be used for.
+     */
+    function __construct($information, array $chainClassConstructors) {
+        $this->addInfo($information, $chainClassConstructors);
     }
 
     /** Sets a value to use when the specified chainClassConstructors match the
      * chainClassConstructors from the classes being created.
-     * @param $value
+     * @param $information
      * @param array $chainClassConstructors
      */
-    function addInfo($value, array $chainClassConstructors) {
-        $this->providerInfoArray[] = new ProviderInfo($value, $chainClassConstructors);
+    function addInfo($information, array $chainClassConstructors) {
+        $this->providerInfoArray[] = new ProviderInfo($information, $chainClassConstructors);
     }
 
     /**
