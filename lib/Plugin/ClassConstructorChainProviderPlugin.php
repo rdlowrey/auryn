@@ -1,19 +1,37 @@
 <?php
 
-
 namespace Auryn\Plugin;
 
 use Auryn\BadArgumentException;
 use Auryn\InjectionException;
 use Auryn\AurynInjector;
 
-class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin {
+class ClassConstructorChainProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin {
 
+    //TODO - these are not dependent on the CCC yet.
     private $aliases = array();
+
+    //TODO - these are not dependent on the CCC yet.
     private $prepares = array();
+    
+    /**
+     * @var ProviderInfoCollection[]
+     */
     private $sharedClasses = array();
+
+    /**
+     * @var ProviderInfoCollection[]
+     */
     private $delegatedClasses = array();
-    private $paramDefinitions = array();
+
+    /**
+     * @var ProviderInfoCollection[]
+     */
+    protected $paramDefinitions = array();
+
+    /**
+     * @var ProviderInfoCollection[]
+     */
     private $injectionDefinitions = array();
 
     private function validateInjectionDefinition(array $injectionDefinition) {
@@ -26,7 +44,6 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
             }
         }
     }
-
 
     private function canExecute($exe) {
         if (is_callable($exe)) {
@@ -59,7 +76,12 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
     public function define($className, array $injectionDefinition, array $chainClassConstructors = array()) {
         $this->validateInjectionDefinition($injectionDefinition);
         $normalizedClass = $this->normalizeClassName($className);
-        $this->injectionDefinitions[$normalizedClass] = $injectionDefinition;
+        if (array_key_exists($normalizedClass, $this->injectionDefinitions) == false) {
+            $this->injectionDefinitions[$normalizedClass] = new ProviderInfoCollection($injectionDefinition, $chainClassConstructors);
+        }
+        else{
+            $this->injectionDefinitions[$normalizedClass]->addInfo($injectionDefinition, $chainClassConstructors);
+        }
 
         return $this;
     }
@@ -76,8 +98,13 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
      * @return \Auryn\Provider Returns the current instance
      */
     public function defineParam($paramName, $value, array $chainClassConstructors = array()) {
-        $this->paramDefinitions[$paramName] = $value;
-
+        if (array_key_exists($paramName, $this->paramDefinitions) == false) {
+            $this->paramDefinitions[$paramName] = new ProviderInfoCollection($value, $chainClassConstructors);
+        }
+        else{
+            $this->paramDefinitions[$paramName]->addInfo($value, $chainClassConstructors);
+        }
+        
         return $this;
     }
 
@@ -87,7 +114,13 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
 
     function getParamDefine($paramName, array $chainClassConstructors) {
         if (array_key_exists($paramName, $this->paramDefinitions)) {
-            return array(true, $this->paramDefinitions[$paramName]);
+            $isSet = false;
+            $paramProviderInfo = $this->paramDefinitions[$paramName]->getBestMatchingInfo($chainClassConstructors, $isSet);
+
+            if ($isSet != null) {
+                $value = $paramProviderInfo->getValue();
+                return array(true, $value);
+            }
         }
 
         return array(false, null);
@@ -229,18 +262,36 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
         }
 
         $normalizedClass = $this->normalizeClassName($className);
-        $this->delegatedClasses[$normalizedClass] = $delegate;
+
+        if (array_key_exists($normalizedClass, $this->delegatedClasses) == false) {
+            $this->delegatedClasses[$normalizedClass] = new ProviderInfoCollection($delegate, $chainClassConstructors);
+        }
+        else{
+            $this->delegatedClasses[$normalizedClass]->addInfo($delegate, $chainClassConstructors);
+        }
 
         return $this;
     }
 
     function isDelegated($normalizedClass, array $chainClassConstructors) {
-        return isset($this->delegatedClasses[$normalizedClass]);
+        if (isset($this->delegatedClasses[$normalizedClass])) {
+            $delegateProviderInfo = $this->delegatedClasses[$normalizedClass]->getBestMatchingInfo($chainClassConstructors);
+            if ($delegateProviderInfo) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function getDelegated($className, array $chainClassConstructors) {
         $normalizedName = $this->normalizeClassName($className);
-        return $this->delegatedClasses[$normalizedName];
+
+        if (isset($this->delegatedClasses[$normalizedName])) {
+            return $this->delegatedClasses[$normalizedName]->getBestMatchingInfo($chainClassConstructors);
+        }
+
+        return null;
     }
 
     /**
@@ -290,7 +341,10 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
         $normalizedClass = $this->normalizeClassName($className);
 
         if (isset($this->injectionDefinitions[$normalizedClass])) {
-            return $this->injectionDefinitions[$normalizedClass];
+            $providerInfo = $this->injectionDefinitions[$normalizedClass]->getBestMatchingInfo($chainClassConstructors);
+            if ($providerInfo != null) {
+                return $providerInfo->getValue();
+            }
         }
 
         return array();
@@ -299,20 +353,24 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
 
     public function shareIfNeeded($normalizedClass, $provisionedObject, array $chainClassConstructors) {
         if (array_key_exists($normalizedClass, $this->sharedClasses)) {
-            $this->sharedClasses[$normalizedClass] = $provisionedObject;
+            $sharedProviderInfo = $this->sharedClasses[$normalizedClass]->getExactMatchingInfo($chainClassConstructors);
+
+            if ($sharedProviderInfo != null) {
+                $sharedProviderInfo->setValue($provisionedObject);
+            }
         }
     }
 
-    private function shareClass($classNameOrInstance, array $chainClassConstructors) {
+    public function shareClass($classNameOrInstance, array $chainClassConstructors) {
         list(, $normalizedClass) = $this->resolveAlias($classNameOrInstance, $chainClassConstructors);
 
-        $this->sharedClasses[$normalizedClass] = isset($this->sharedClasses[$normalizedClass])
-            ? $this->sharedClasses[$normalizedClass]
-            : NULL;
+        if (array_key_exists($normalizedClass, $this->sharedClasses) == FALSE){
+            $this->sharedClasses[$normalizedClass] = new ProviderInfoCollection(null, $chainClassConstructors);
+        }
     }
 
 
-    private function shareObject($provisionedObject, array $chainClassConstructors) {
+    public function shareObject($provisionedObject, array $chainClassConstructors = array()) {
         $normalizedClass = $this->normalizeClassName(get_class($provisionedObject));
         if (isset($this->aliases[$normalizedClass])) {
             // You cannot share an instance of a class that has already been aliased to another class.
@@ -321,18 +379,25 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
                 AurynInjector::E_ALIASED_CANNOT_SHARE
             );
         }
-        $this->sharedClasses[$normalizedClass] = $provisionedObject;
+
+        if (array_key_exists($normalizedClass, $this->sharedClasses) == false) {
+            $this->sharedClasses[$normalizedClass] = new ProviderInfoCollection($provisionedObject, $chainClassConstructors);
+        }
+        else{
+            $this->sharedClasses[$normalizedClass]->addInfo($provisionedObject, $chainClassConstructors);
+        }
+
     }
 
     public function getShared($normalizedClass, array $chainClassConstructors) {
-        if (array_key_exists($normalizedClass, $this->sharedClasses) == true) {
-            if ($this->sharedClasses == null) {
-                return $normalizedClass;
-            }
-            return $this->sharedClasses[$normalizedClass];
-        }
-        
+        if (array_key_exists($normalizedClass, $this->sharedClasses)) {
+            $sharedInstanceInfo = $this->sharedClasses[$normalizedClass]->getBestMatchingInfo($chainClassConstructors);
 
+            if ($sharedInstanceInfo != null) {
+                $sharedInstance = $sharedInstanceInfo->getValue();
+                return $sharedInstance;
+            }
+        }
         return null;
     }
 

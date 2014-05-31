@@ -6,14 +6,14 @@ interface ProviderInjectionPlugin {
 
     public function normalizeClassName($className);
     public function getInterfacePrepares($interfacesImplemented);
-    public function resolveAlias($className, array $classConstructorChain);
-    public function getShared($normalizedClass, array $classConstructorChain);
-    public function isDelegated($className, array $classConstructorChain);
-    public function getParamDefine($paramName, array $classConstructorChain);
-    public function isParamDefined($paramName, array $classConstructorChain);
-    public function getDefinition($className, array $classConstructorChain);
-    public function getDelegated($className, array $classConstructorChain);
-    public function shareIfNeeded($normalizedClass, $provisionedObject, array $classConstructorChain);
-    public function getPrepareDefine($classInterfaceOrTraitName, array $classConstructorChain);
+    public function resolveAlias($className, array $chainClassConstructors);
+    public function getShared($normalizedClass, array $chainClassConstructors);
+    public function isDelegated($className, array $chainClassConstructors);
+    public function getParamDefine($paramName, array $chainClassConstructors);
+    public function isParamDefined($paramName, array $chainClassConstructors);
+    public function getDefinition($className, array $chainClassConstructors);
+    public function getDelegated($className, array $chainClassConstructors);
+    public function shareIfNeeded($normalizedClass, $provisionedObject, array $chainClassConstructors);
+    public function getPrepareDefine($classInterfaceOrTraitName, array $chainClassConstructors);
 }
  
