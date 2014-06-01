@@ -919,4 +919,16 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $this->assertSame(42, $obj->testProp);
     }
+
+    public function testClassDependencyWithTypeHintAndDefault() {
+        $provider = new Provider();
+        $obj = $provider->make('DependencyClassHasDefault');
+        $this->assertInstanceOf('DependencyClass', $obj->dependencyClass);
+    }
+
+    public function testInterfaceDependencyWithDefault() {
+        $provider = new Provider();
+        $obj = $provider->make('DependencyInterfaceHasDefault');
+        $this->assertNull($obj->dependencyInterface);
+    }
 }
