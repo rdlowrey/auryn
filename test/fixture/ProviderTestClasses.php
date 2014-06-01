@@ -60,6 +60,22 @@ class NotSharedClass implements SharedAliasedInterface {
     function foo(){}
 }
 
+
+class DependencyWithDefinedParam {
+    public $foo;
+    function __construct($foo) {
+        $this->foo = $foo;
+    }
+}
+
+class RequiresDependencyWithDefinedParam {
+    public $obj;
+    function __construct(DependencyWithDefinedParam $obj) {
+        $this->obj = $obj;
+    }
+}
+
+
 class ClassWithAliasAsParameter {
 
     public $sharedClass;

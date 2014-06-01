@@ -919,4 +919,18 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $this->assertSame(42, $obj->testProp);
     }
+
+
+
+    /**
+     * Test that custom definitions are not passed through to dependencies. 
+     * Surprising things would happen if this did occur.
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\AurynInjector::E_UNDEFINED_PARAM
+     */
+    public function testCustomDefinitionNotPassedThrough() {
+        $provider = new Provider();
+        $provider->share('DependencyWithDefinedParam');
+        $provider->make('RequiresDependencyWithDefinedParam', [':foo' => 5]);
+    }
 }

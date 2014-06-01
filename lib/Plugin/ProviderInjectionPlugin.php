@@ -8,7 +8,7 @@ interface ProviderInjectionPlugin {
     public function getInterfacePrepares($interfacesImplemented);
     public function resolveAlias($className, array $chainClassConstructors);
     public function getShared($normalizedClass, array $chainClassConstructors);
-    public function isDelegated($className, array $chainClassConstructors);
+    public function isDelegated($normalizedClass, array $chainClassConstructors);
     public function getParamDefine($paramName, array $chainClassConstructors);
     public function isParamDefined($paramName, array $chainClassConstructors);
     public function getDefinition($className, array $chainClassConstructors);
