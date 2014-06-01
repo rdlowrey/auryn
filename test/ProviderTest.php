@@ -900,7 +900,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($classA->tested, $classB->tested);
     }
 
-    public function defaultParamBehaviour() {
+    public function testDefaultParamBehaviour() {
 
         $provider = new Provider();
         
