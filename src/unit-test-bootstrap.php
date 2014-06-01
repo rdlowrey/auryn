@@ -14,5 +14,6 @@ spl_autoload_register(function($class) {
 
 define('FIXTURE_DIR', __DIR__ . '/../test/fixture');
 
+require __DIR__ . '/../test/fixture/PluginTestClasses.php';
 require __DIR__ . '/../test/fixture/ProviderTestClasses.php';
 require __DIR__ . '/../test/fixture/NamespacedClass.php';
