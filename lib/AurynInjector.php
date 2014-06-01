@@ -51,7 +51,7 @@ class AurynInjector implements Injector {
         self::E_CALLABLE => 'Invalid executable: callable, invokable class name or array in the form [className, methodName] required',
         self::E_BAD_IMPLEMENTATION => 'Bad implementation: %s does not implement %s',
         self::E_BAD_PARAM_IMPLEMENTATION => 'Bad implementation definition encountered while attempting to provision non-concrete parameter %s of type %s',
-        self::E_UNDEFINED_PARAM => 'No definition available while attempting to provision typeless non-concrete parameter %s(%s)',
+        self::E_UNDEFINED_PARAM => 'No definition available while attempting to provision typeless non-concrete parameter for %s(%s)',
         self::E_NEEDS_DEFINITION => 'Injection definition/implementation required for non-concrete parameter $%s of type %s',
         self::E_CYCLIC_DEPENDENCY => "Detected a cyclic dependency while provisioning %s",
         self::E_ALIASED_CANNOT_SHARE => 'Cannot share class %s, it has already been aliased to %s',
@@ -381,9 +381,27 @@ class AurynInjector implements Injector {
         } elseif ($param->isDefaultValueAvailable()) {
             $argument = $param->getDefaultValue();
         } else {
-            $declaringClass = $param->getDeclaringClass()->getName();
+
+            $declaringContext = 'Unknown';
+ 
+            if ($declaringClass = $param->getDeclaringClass()) {
+                $declaringContext = sprintf( 
+                    "%s::%s",
+                    $declaringClass->getName(),
+                    $param->getDeclaringFunction()->getName()
+                );
+            }
+            else if ($declaringFunction = $param->getDeclaringFunction()) {
+                $declaringContext = sprintf(
+                    "`function %s file %s line %s`",
+                    $declaringFunction->getName(),
+                    $declaringFunction->getFileName(),
+                    $declaringFunction->getStartLine()
+                );
+            }
+
             throw new InjectionException(
-                sprintf(self::$errorMessages[self::E_UNDEFINED_PARAM], $declaringClass, $param->name),
+                sprintf(self::$errorMessages[self::E_UNDEFINED_PARAM], $declaringContext, $param->name),
                 self::E_UNDEFINED_PARAM
             );
         }

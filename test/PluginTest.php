@@ -43,7 +43,7 @@ class PluginTest extends PHPUnit_Framework_TestCase {
         $this->setExpectedException(
             'Auryn\\InjectionException',
             sprintf(\Auryn\AurynInjector::$errorMessages[
-            \Auryn\AurynInjector::E_UNDEFINED_PARAM], 'WidgetWithParams', 'name'),
+            \Auryn\AurynInjector::E_UNDEFINED_PARAM], 'WidgetWithParams::__construct', 'name'),
             \Auryn\AurynInjector::E_UNDEFINED_PARAM
         );
 
