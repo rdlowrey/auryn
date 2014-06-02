@@ -622,6 +622,11 @@ class Provider implements Injector {
             $argument = $this->paramDefinitions[$param->name];
         } elseif ($param->isDefaultValueAvailable()) {
             $argument = $param->getDefaultValue();
+        } elseif ($param->isOptional()) {
+            // This branch is required to work around PHP bugs where a parameter is optional
+            // but has no default value available through reflection. Specifically, PDO exhibits
+            // this behavior.
+            $argument = NULL;
         } else {
             $declaringClass = $param->getDeclaringClass()->getName();
             throw new InjectionException(
