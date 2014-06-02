@@ -292,7 +292,7 @@ class Provider implements Injector {
      * @return mixed Returns the invocation result from the generated executable
      */
     public function execute($callableOrMethodArr, array $invocationArgs = array(), $makeAccessible = FALSE) {
-        $executable = $this->getExecutable($callableOrMethodArr, $makeAccessible);
+        $executable = $this->buildExecutable($callableOrMethodArr, $makeAccessible);
         $reflectionFunction = $executable->getCallableReflection();
         $args = $this->generateInvocationArgs($reflectionFunction, $invocationArgs);
 
@@ -309,7 +309,7 @@ class Provider implements Injector {
      * @throws \Auryn\InjectionException
      * @return \Auryn\Executable Returns an executable object
      */
-    public function getExecutable($callableOrMethodArr, $makeAccessible = FALSE) {
+    public function buildExecutable($callableOrMethodArr, $makeAccessible = FALSE) {
         $makeAccessible = (bool)$makeAccessible;
         $executableArr = $this->generateExecutableReflection($callableOrMethodArr);
         list($reflectionFunction, $invocationObject) = $executableArr;
@@ -376,7 +376,7 @@ class Provider implements Injector {
     private function prepareInstance($obj, $normalizedClass) {
         if (isset($this->prepares[$normalizedClass])) {
             $preparer = $this->prepares[$normalizedClass];
-            $exe = $this->getExecutable($preparer);
+            $exe = $this->buildExecutable($preparer);
             $exe($obj, $this);
         }
 
@@ -384,7 +384,7 @@ class Provider implements Injector {
             $interfacesImplemented = array_flip(array_map(array($this, 'normalizeClassName'), $interfacesImplemented));
             $interfacePrepares = array_intersect_key($this->prepares, $interfacesImplemented);
             foreach ($interfacePrepares as $preparer) {
-                $exe = $this->getExecutable($preparer);
+                $exe = $this->buildExecutable($preparer);
                 $exe($obj, $this);
             }
         }

@@ -538,7 +538,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     public function testStaticStringExecutableWithArgument() {
         $provider = new Auryn\Provider;
-        $exe = $provider->getExecutable('ClassWithStaticMethodThatTakesArg::doSomething');
+        $exe = $provider->buildExecutable('ClassWithStaticMethodThatTakesArg::doSomething');
         $this->assertEquals(42, $exe(41));
 
     }
@@ -626,7 +626,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      */
     public function testGetExecutableMakesMethodsAccessible($toInvoke, $expectedResult) {
         $provider = new Auryn\Provider();
-        $executable = $provider->getExecutable($toInvoke, $setAccessible = TRUE);
+        $executable = $provider->buildExecutable($toInvoke, $setAccessible = TRUE);
         $this->assertSame($expectedResult, $executable());
     }
 

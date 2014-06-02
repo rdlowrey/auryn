@@ -1,3 +1,8 @@
+#### master
+
+- Renamed `Injector::getExecutable()` -> `Injector::buildExecutable()`
+
+
 v0.13.0
 ================================================================================
 
