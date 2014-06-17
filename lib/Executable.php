@@ -4,7 +4,7 @@ namespace Auryn;
 
 class Executable {
     private $callableReflection;
-    private $methodInvocationObject;
+    private $invocationObject;
     private $isMethod;
 
     public function __construct(\ReflectionFunctionAbstract $reflection, $invocationObject = NULL) {
@@ -20,7 +20,7 @@ class Executable {
     private function setMethodCallable(\ReflectionMethod $reflection, $invocationObject) {
         if (is_object($invocationObject)) {
             $this->callableReflection = $reflection;
-            $this->methodInvocationObject = $invocationObject;
+            $this->invocationObject = $invocationObject;
         } elseif ($reflection->isStatic()) {
             $this->callableReflection = $reflection;
         } else {
@@ -35,14 +35,14 @@ class Executable {
     }
 
     public function getInvocationObject() {
-        return $this->methodInvocationObject;
+        return $this->invocationObject;
     }
 
     public function __invoke() {
         $args = func_get_args();
 
         return $this->isMethod
-            ? $this->callableReflection->invokeArgs($this->methodInvocationObject, $args)
+            ? $this->callableReflection->invokeArgs($this->invocationObject, $args)
             : $this->callableReflection->invokeArgs($args);
     }
 }
