@@ -189,21 +189,21 @@ class ProvTestNoDefinitionNullDefaultClass {
 
 interface TestNoExplicitDefine {}
 
-class ProviderTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine {
+class InjectorTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine {
     public $val = 42;
     public function __construct($val) {
         $this->val = $val;
     }
 }
 
-class ProviderTestCtorParamWithNoTypehintOrDefaultDependent {
+class InjectorTestCtorParamWithNoTypehintOrDefaultDependent {
     private $param;
     function __construct(TestNoExplicitDefine $param) {
         $this->param = $param;
     }
 }
 
-class ProviderTestRawCtorParams {
+class InjectorTestRawCtorParams {
     public $string;
     public $obj;
     public $int;
@@ -223,14 +223,14 @@ class ProviderTestRawCtorParams {
     }
 }
 
-class ProviderTestParentClass
+class InjectorTestParentClass
 {
     public function __construct($arg1) {
         $this->arg1 = $arg1;
     }
 }
 
-class ProviderTestChildClass extends ProviderTestParentClass
+class InjectorTestChildClass extends InjectorTestParentClass
 {
     public function __construct($arg1, $arg2) {
         parent::__construct($arg1);
@@ -240,15 +240,7 @@ class ProviderTestChildClass extends ProviderTestParentClass
 }
 
 class CallableMock {
-    function __invoke() {
-
-    }
-}
-
-class CallableMockWithArgs {
-    function __invoke($arg1, $arg2) {
-
-    }
+    function __invoke() {}
 }
 
 class StringStdClassDelegateMock {
