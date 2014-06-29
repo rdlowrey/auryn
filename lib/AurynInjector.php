@@ -145,6 +145,11 @@ class AurynInjector implements Injector {
     }
 
 
+    /**
+     * @param $className
+     * @param array $definition
+     * @return mixed
+     */
     protected function getInjectedInstance($className, array $definition) {
         try {
             $ctorMethod = $this->reflectionStorage->getConstructor($className);
@@ -248,6 +253,11 @@ class AurynInjector implements Injector {
     }
 
 
+    /**
+     * @param $className
+     * @param array $customDefinition
+     * @return mixed
+     */
     private function provisionInstance($className, array $customDefinition) {
         
         try {
@@ -381,6 +391,9 @@ class AurynInjector implements Injector {
         
         if ($this->providerPlugin->isParamDefined($param->name, $this->classConstructorChain)) {
             list(, $argument) = $this->providerPlugin->getParamDefine($param->name, $this->classConstructorChain);
+        } elseif ($delegation = $this->providerPlugin->getParamDelegation($param->name, $this->classConstructorChain)) {
+            list($delegate, $args) = $delegation;
+            $argument = $this->executeInternal($delegate, $args);
         } elseif ($param->isDefaultValueAvailable()) {
             $argument = $param->getDefaultValue();
         } else {

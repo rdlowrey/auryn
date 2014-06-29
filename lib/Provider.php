@@ -63,6 +63,13 @@ class Provider {
         return $this;
     }
 
+    public function delegateParam($className, $callable, array $args = array()) {
+        $this->plugin->delegateParam($className, $callable, [], $args);
+        
+        return $this;
+    }
+    
+
     public function prepare($classInterfaceOrTraitName, $executable) {
         $this->plugin->prepare($classInterfaceOrTraitName, $executable);
 

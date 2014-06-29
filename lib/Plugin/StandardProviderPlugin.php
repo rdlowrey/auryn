@@ -13,6 +13,7 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
     private $prepares = array();
     private $sharedClasses = array();
     private $delegatedClasses = array();
+    protected $delegatedParams = array();
     private $paramDefinitions = array();
     private $injectionDefinitions = array();
 
@@ -25,23 +26,6 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
                 );
             }
         }
-    }
-
-
-    private function canExecute($exe) {
-        if (is_callable($exe)) {
-            return TRUE;
-        }
-
-        if (is_string($exe) && method_exists($exe, '__invoke')) {
-            return TRUE;
-        }
-
-        if (is_array($exe) && isset($exe[0], $exe[1]) && method_exists($exe[0], $exe[1])) {
-            return TRUE;
-        }
-
-        return FALSE;
     }
 
     public function normalizeClassName($className) {
@@ -84,6 +68,8 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
     function isParamDefined($paramName, array $chainClassConstructors) {
         return array_key_exists($paramName, $this->paramDefinitions);
     }
+
+
 
     function getParamDefine($paramName, array $chainClassConstructors) {
         if (array_key_exists($paramName, $this->paramDefinitions)) {
@@ -219,20 +205,20 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
      * @return \Auryn\Provider Returns the current instance
      */
     public function delegate($className, $callable, array $args = array(), array $chainClassConstructors = array()) {
-        if ($this->canExecute($callable)) {
-            $delegate = array($callable, $args);
-        } else {
-            throw new BadArgumentException(
-                sprintf(AurynInjector::$errorMessages[AurynInjector::E_DELEGATE_ARGUMENT], __CLASS__),
-                AurynInjector::E_DELEGATE_ARGUMENT
-            );
-        }
-
+        $delegate = array($callable, $args);
         $normalizedClass = $this->normalizeClassName($className);
         $this->delegatedClasses[$normalizedClass] = $delegate;
 
         return $this;
     }
+
+    public function delegateParam($paramName, $callable, array $classConstructorChain, array $args = array()) {
+        $delegate = array($callable, $args);
+        $this->delegatedParams[$paramName] = $delegate;
+
+        return $this;
+    }
+    
 
     function isDelegated($normalizedClass, array $chainClassConstructors) {
         return isset($this->delegatedClasses[$normalizedClass]);
@@ -243,6 +229,15 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
         return $this->delegatedClasses[$normalizedName];
     }
 
+    function getParamDelegation($paramName, array $classConstructorChain) {
+        if (array_key_exists($paramName, $this->delegatedParams)) {
+            return $this->delegatedParams[$paramName];      
+        }
+
+        return null;
+    }
+    
+    
     /**
      * Register a mutator callable to modify objects after instantiation
      *
@@ -253,13 +248,6 @@ class StandardProviderPlugin implements ProviderPlugin, ProviderInjectionPlugin 
      * @return \Auryn\Provider Returns the current instance
      */
     public function prepare($classInterfaceOrTraitName, $executable, array $chainClassConstructors = array()) {
-        if (!$this->canExecute($executable)) {
-            throw new BadArgumentException(
-                AurynInjector::$errorMessages[AurynInjector::E_CALLABLE],
-                AurynInjector::E_CALLABLE
-            );
-        }
-
         $normalizedName = $this->normalizeClassName($classInterfaceOrTraitName);
         $this->prepares[$normalizedName] = $executable;
 

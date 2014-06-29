@@ -24,6 +24,9 @@ class ClassConstructorChainProviderPlugin implements ProviderPlugin, ProviderInj
      */
     private $delegatedClasses = array();
 
+    //TODO - these are not dependent on the CCC yet.
+    protected $delegatedParams = array();
+    
     /**
      * @var ProviderInfoCollection[]
      */
@@ -45,21 +48,6 @@ class ClassConstructorChainProviderPlugin implements ProviderPlugin, ProviderInj
         }
     }
 
-    private function canExecute($exe) {
-        if (is_callable($exe)) {
-            return TRUE;
-        }
-
-        if (is_string($exe) && method_exists($exe, '__invoke')) {
-            return TRUE;
-        }
-
-        if (is_array($exe) && isset($exe[0], $exe[1]) && method_exists($exe[0], $exe[1])) {
-            return TRUE;
-        }
-
-        return FALSE;
-    }
 
     public function normalizeClassName($className) {
         return ltrim(strtolower($className), '\\');
@@ -289,6 +277,14 @@ class ClassConstructorChainProviderPlugin implements ProviderPlugin, ProviderInj
 
         if (isset($this->delegatedClasses[$normalizedName])) {
             return $this->delegatedClasses[$normalizedName]->getBestMatchingInfo($chainClassConstructors);
+        }
+
+        return null;
+    }
+
+    function getParamDelegation($paramName, array $classConstructorChain) {
+        if (array_key_exists($paramName, $this->delegatedParams)) {
+            return $this->delegatedParams[$paramName];
         }
 
         return null;

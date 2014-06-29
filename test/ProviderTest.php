@@ -366,23 +366,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('Auryn\Provider', $provider->alias('DepInterface', 'DepImplementation'));
     }
 
-    public function provideInvalidDelegates() {
-        return array(
-            array(new StdClass),
-            array(42),
-            array(true)
-        );
-    }
-
-    /**
-     * @dataProvider provideInvalidDelegates
-     * @expectedException Auryn\BadArgumentException
-     */
-    public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate) {
-        $provider = new Provider(new ReflectionPool);
-        $provider->delegate('TestDependency', $badDelegate);
-    }
-
     public function testDelegateInstantiatesCallableClassString() {
         $provider = new Provider;
         $provider->delegate('MadeByDelegate', 'CallableDelegateClassTest');
@@ -963,6 +946,17 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider();
         $obj = $provider->make('DependencyInterfaceHasDefault');
         $this->assertNull($obj->dependencyInterface);
+    }
 
+    public function testParamDelegation() {
+        $provider = new Provider();
+
+        $randomGenerator = function() {
+            return 4;
+        };
+
+        $provider->delegateParam('random', $randomGenerator);
+        $object = $provider->make('RequiresNonTypeHintedParam');
+        $this->assertEquals(4, $object->random);
     }
 }

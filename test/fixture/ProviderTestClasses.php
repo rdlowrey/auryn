@@ -451,3 +451,11 @@ class ClassRequiresClassWithDefaultParamInConstructor {
     }
 }
 
+
+class RequiresNonTypeHintedParam {
+    public $random;
+
+    function __construct($random) {
+        $this->random = $random;
+    }
+}

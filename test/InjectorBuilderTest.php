@@ -129,31 +129,6 @@ class InjectorBuilderTest extends PHPUnit_Framework_TestCase
         )), $provider);
     }
 
-    /**
-     * @dataProvider provideBadDelegates
-     * @expectedException \Auryn\BuilderException
-     * @expectedExeptionCode \Auryn\InjectorBuilder::E_INVALID_DELEGATE
-     */
-    public function testFromArrayThrowsExceptionOnBadDelegate($badDelegate) {
-        $configArray = array('delegates' => array(
-            'ClassName' => $badDelegate
-        ));
-        $this->builder->fromArray($configArray);
-    }
-
-    public function provideBadDelegates() {
-        return array(
-            array(
-                new StdClass // not callable
-            ),
-            array(
-                'ClassWithoutMagicInvoke' // not a class with __invoke
-            ),
-            array(
-                array('ClassWithoutMagicInvoke', '__invoke') // two item array that looks callable but isn't
-            )
-        );
-    }
 
     public function testFromFilePopulatesProviderFromPhpConfig() {
         $file = FIXTURE_DIR . '/valid_config.php';
