@@ -1,5 +1,5 @@
 {
-  "name": "rdlowrey/auryn",
+  "name": "danack/auryn",
   "homepage": "https://github.com/rdlowrey/Auryn",
   "description": "Auryn is a dependency injector for bootstrapping object-oriented PHP applications.",
   "keywords": ["dependency injection", "dic", "ioc"],
