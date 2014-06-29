@@ -161,4 +161,21 @@ class RequiresLogger2{
     }
 }
 
+class DependencyClass {}
 
+class DependencyClassHasDefault {
+    public $dependencyClass;
+    function __construct(DependencyClass $dependencyClass = null) {
+        $this->dependencyClass = $dependencyClass;
+    }
+}
+
+
+interface DependencyInterface {}
+
+class DependencyInterfaceHasDefault {
+    public $dependencyInterface;
+    function __construct(DependencyInterface $dependencyInterface = null) {
+        $this->dependencyInterface = $dependencyInterface;
+    }
+}

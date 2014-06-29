@@ -952,4 +952,17 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $result = $provider->execute(['BaseExecutableClass', 'foo']);
         $this->assertEquals('This is the ExtendsExecutableClass', $result);
     }
+
+    public function testClassDependencyWithTypeHintAndDefault() {
+        $provider = new Provider();
+        $obj = $provider->make('DependencyClassHasDefault');
+        $this->assertInstanceOf('DependencyClass', $obj->dependencyClass);
+    }
+
+    public function testInterfaceDependencyWithDefault() {
+        $provider = new Provider();
+        $obj = $provider->make('DependencyInterfaceHasDefault');
+        $this->assertNull($obj->dependencyInterface);
+
+    }
 }

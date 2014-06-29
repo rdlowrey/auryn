@@ -439,14 +439,36 @@ class AurynInjector implements Injector {
         $typeHint = $this->reflectionStorage->getParamTypeHint($function, $param);
 
         if (!$typeHint) {
-            $object = NULL;
-        } elseif ($param->isDefaultValueAvailable()) {
-            $object = $param->getDefaultValue();
-        } else {
-            $object = $this->makeInternal($typeHint);
+            return NULL;
         }
 
-        return $object;
+        if ($param->isDefaultValueAvailable()) {
+            $normalizedClassname = $this->providerPlugin->normalizeClassName($typeHint);
+
+            //If it's already been shared to an instance, return that
+            $object = $this->providerPlugin->getShared($normalizedClassname, $this->classConstructorChain);
+
+            if ($object) {
+                return $object;
+            }
+            
+            //If it's a concrete class (i.e. not an interface) Auryn can always make it
+            If (class_exists($typeHint) == true) {
+                return $this->makeInternal($typeHint);
+            }
+
+            //If interface has been aliased to another class, then attempt to make it
+            list($aliasClassName, $normalizedAliasClass) = $this->providerPlugin->resolveAlias($typeHint, $this->classConstructorChain);
+
+            if (strcmp($normalizedAliasClass, $normalizedClassname) !== 0) {
+                return $this->makeInternal($typeHint);
+            }
+
+            return $param->getDefaultValue();
+        } else {
+            return $this->makeInternal($typeHint);
+        }
+    
     }
 
     private function makeClass($className, $normalizedClass, array $customDefinition) {
