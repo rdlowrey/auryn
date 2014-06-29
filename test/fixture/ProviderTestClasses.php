@@ -420,6 +420,7 @@ class SimpleNoTypehintClass {
 }
 
 
+
 class BaseExecutableClass {
     function foo() {
         return 'This is the BaseExecutableClass';
@@ -431,3 +432,22 @@ class ExtendsExecutableClass extends BaseExecutableClass {
         return 'This is the ExtendsExecutableClass';
     }
 }
+
+class ClassWithDefaultParamInConstructor {
+    
+    public $foo;
+    
+    function __construct($foo = 5) {
+        $this->foo = $foo;
+    }
+}
+
+class ClassRequiresClassWithDefaultParamInConstructor {
+    
+    public $obj;
+    
+    function __construct(ClassWithDefaultParamInConstructor $obj) {
+        $this->obj = $obj;
+    }
+}
+

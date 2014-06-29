@@ -900,6 +900,19 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($classA->tested, $classB->tested);
     }
 
+    public function testDefaultParamBehaviour() {
+
+        $provider = new Provider();
+        
+        $provider->defineParam('foo', 10);
+        
+        $baseObj = $provider->make('ClassWithDefaultParamInConstructor');
+        $this->assertEquals($baseObj->foo, 10);
+        
+        $extendsObj = $provider->make('ClassRequiresClassWithDefaultParamInConstructor');
+        $this->assertEquals($extendsObj->obj->foo, 10);
+    }
+    
     public function testInstancePrepare() {
         $provider = new Provider();
         $provider->prepare('\StdClass', function($obj, \Auryn\AurynInjector $injector) {
