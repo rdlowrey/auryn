@@ -921,7 +921,6 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
 
 
-
     /**
      * Test that custom definitions are not passed through to dependencies. 
      * Surprising things would happen if this did occur.
@@ -932,5 +931,12 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider = new Provider();
         $provider->share('DependencyWithDefinedParam');
         $provider->make('RequiresDependencyWithDefinedParam', [':foo' => 5]);
+    }
+
+    public function testExecutableAliasing() {
+        $provider = new Provider();
+        $provider->alias('BaseExecutableClass', 'ExtendsExecutableClass');
+        $result = $provider->execute(['BaseExecutableClass', 'foo']);
+        $this->assertEquals('This is the ExtendsExecutableClass', $result);
     }
 }

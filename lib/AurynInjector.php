@@ -299,7 +299,10 @@ class AurynInjector implements Injector {
             $callableRefl = $this->reflectionStorage->getMethod($classOrObj, $method);
             $executableArr = array($callableRefl, $classOrObj);
         } elseif (is_string($classOrObj)) {
-            $executableArr = $this->generateStringClassMethodCallable($classOrObj, $method);
+            list($className, $normalizedClass) = $this->providerPlugin->resolveAlias(
+                $classOrObj, $this->classConstructorChain
+            );
+            $executableArr = $this->generateStringClassMethodCallable($className, $method);
         } else {
             throw new BadArgumentException(
                 self::$errorMessages[self::E_CALLABLE],
