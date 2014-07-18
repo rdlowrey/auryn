@@ -187,6 +187,25 @@ class ProviderTestCtorParamWithNoTypehintOrDefaultDependent {
     }
 }
 
+class ConcreteDependentClass {
+    function __construct($paramWhichIsNotDefined) {
+        $this->paramWhichIsNotDefined = $paramWhichIsNotDefined;
+    }
+}
+
+class ExtendsConcreteDependentClass extends ConcreteDependentClass {
+    public function __construct() {
+        //This is creatable
+    }
+}
+
+class RequiresClassDependency {
+    public $dependency;
+    function __construct(ConcreteDependentClass $dependency = null) {
+        $this->dependency = $dependency;
+    }
+}
+
 class ProviderTestRawCtorParams {
     public $string;
     public $obj;

@@ -41,6 +41,24 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $provider->make('RequiresInterface');
     }
 
+    public function testParamWithDefaultIsClass() {
+        $injector = new Auryn\Provider(new Auryn\ReflectionPool);
+        $testClass = $injector->make('RequiresClassDependency');
+        $this->assertNull($testClass->dependency);
+    }
+
+
+    public function testParamWithDefaultIsClassAliasedClass() {
+        $injector = new Auryn\Provider(new Auryn\ReflectionPool);
+        $injector->alias('ConcreteDependentClass', 'ExtendsConcreteDependentClass');
+        $testClass = $injector->make('RequiresClassDependency');
+        $this->assertInstanceOf(
+            'ExtendsConcreteDependentClass',
+            $testClass->dependency
+        );
+    }
+
+
     public function testMakeBuildsNonConcreteCtorParamWithAlias() {
         $provider = new Provider(new ReflectionPool);
         $provider->alias('DepInterface', 'DepImplementation');
