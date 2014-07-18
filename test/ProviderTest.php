@@ -46,18 +46,13 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $testClass = $injector->make('RequiresClassDependency');
         $this->assertNull($testClass->dependency);
     }
-
-
+    
     public function testParamWithDefaultIsClassAliasedClass() {
         $injector = new Auryn\Provider(new Auryn\ReflectionPool);
         $injector->alias('ConcreteDependentClass', 'ExtendsConcreteDependentClass');
         $testClass = $injector->make('RequiresClassDependency');
-        $this->assertInstanceOf(
-            'ExtendsConcreteDependentClass',
-            $testClass->dependency
-        );
+        $this->assertNull($testClass->dependency);
     }
-
 
     public function testMakeBuildsNonConcreteCtorParamWithAlias() {
         $provider = new Provider(new ReflectionPool);
