@@ -470,23 +470,12 @@ class AurynInjector implements Injector {
                 return $object;
             }
             
-            //If it's a concrete class (i.e. not an interface) Auryn can always make it
-            If (class_exists($typeHint) == true) {
-                return $this->makeInternal($typeHint);
-            }
-
-            //If interface has been aliased to another class, then attempt to make it
-            list($aliasClassName, $normalizedAliasClass) = $this->providerPlugin->resolveAlias($typeHint, $this->classConstructorChain);
-
-            if (strcmp($normalizedAliasClass, $normalizedClassname) !== 0) {
-                return $this->makeInternal($typeHint);
-            }
+            //TODO - add if aliased then use that otherwise default.
 
             return $param->getDefaultValue();
         } else {
             return $this->makeInternal($typeHint);
         }
-    
     }
 
     private function makeClass($className, $normalizedClass, array $customDefinition) {

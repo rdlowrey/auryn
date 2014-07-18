@@ -952,7 +952,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     public function testClassDependencyWithTypeHintAndDefault() {
         $provider = new Provider();
         $obj = $provider->make('DependencyClassHasDefault');
-        $this->assertInstanceOf('DependencyClass', $obj->dependencyClass);
+        $this->assertNull($obj->dependencyClass);
     }
 
     public function testInterfaceDependencyWithDefault() {
