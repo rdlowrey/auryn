@@ -1,6 +1,15 @@
 #### master
 
+- n/a
+
+v0.14.0
+================================================================================
+
 - Renamed `Injector::getExecutable()` -> `Injector::buildExecutable()`
+- Fix Issue #60: default value for compiled class ctor param not used in the
+  absence of parameter definition.
+- Use PSR-4 directory structure
+- Other miscellaneous updates
 
 
 v0.13.0
