@@ -972,4 +972,11 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $object = $provider->make('RequiresNonTypeHintedParam');
         $this->assertEquals(4, $object->random);
     }
+    
+    public function testClassReturnsCallable() {
+        $class = new ReturnsCallable();
+        $callable = $class->getCallable();
+        $provider = new Provider();
+        $provider->execute($callable);
+    }
 }
