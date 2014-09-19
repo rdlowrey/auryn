@@ -402,3 +402,15 @@ class SimpleNoTypehintClass {
     }
 
 }
+
+class ReturnsCallable {
+    private $random = 4;
+
+    function getCallable() {
+        $callable = function () {
+            echo $this->random;
+        };
+
+        return $callable;
+    }
+}
