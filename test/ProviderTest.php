@@ -534,7 +534,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
     public function testStaticStringExecutableWithArgument() {
         $provider = new Auryn\Provider;
-        $exe = $provider->getExecutable('ClassWithStaticMethodThatTakesArg::doSomething');
+        $exe = $provider->buildExecutable('ClassWithStaticMethodThatTakesArg::doSomething');
         $this->assertEquals(42, $exe(41));
 
     }
@@ -622,7 +622,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
      */
     public function testGetExecutableMakesMethodsAccessible($toInvoke, $expectedResult) {
         $provider = new Auryn\Provider();
-        $executable = $provider->getExecutable($toInvoke, $setAccessible = TRUE);
+        $executable = $provider->buildExecutable($toInvoke, $setAccessible = TRUE);
         $this->assertSame($expectedResult, $executable());
     }
 
@@ -929,7 +929,7 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
         $this->assertSame(42, $obj->testProp);
     }
 
-
+    
     /**
      * Test that custom definitions are not passed through to dependencies. 
      * Surprising things would happen if this did occur.
@@ -974,9 +974,12 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
     
     public function testClassReturnsCallable() {
-        $class = new ReturnsCallable();
+        $value = 123;
+        $class = new ReturnsCallable($value);
         $callable = $class->getCallable();
+        $callable(); //Check the callable is callable.
         $provider = new Provider();
-        $provider->execute($callable);
+        $result = $provider->execute($callable);
+        $this->assertEquals($value, $result);
     }
 }

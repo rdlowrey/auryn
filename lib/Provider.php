@@ -10,6 +10,7 @@ namespace Auryn;
  * implementation and delegation rules for injecting and automatically provisioning deeply nested
  * class dependencies.
  */
+
 class Provider {
 
     /**
@@ -30,7 +31,7 @@ class Provider {
     public function make($className, array $customDefinition = []) {
         return $this->injector->make($className, $customDefinition);
     }
-
+    
     public function execute($callableOrMethodArr, array $invocationArgs = array(), $makeAccessible = FALSE) {
         return $this->injector->execute($callableOrMethodArr, $invocationArgs, $makeAccessible);
     }
@@ -38,6 +39,7 @@ class Provider {
     public function getExecutable($callableOrMethodArr, $makeAccessible = FALSE) {
         return $this->injector->getExecutable($callableOrMethodArr, $makeAccessible);
     }
+
 
     public function define($className, array $injectionDefinition) {
         $this->plugin->define($className, $injectionDefinition);
@@ -58,6 +60,7 @@ class Provider {
     }
 
     public function delegate($className, $callable, array $args = array()) {
+
         $this->plugin->delegate($className, $callable, $args);
         
         return $this;
@@ -65,14 +68,14 @@ class Provider {
 
     public function delegateParam($className, $callable, array $args = array()) {
         $this->plugin->delegateParam($className, $callable, [], $args);
-        
+
         return $this;
     }
     
 
     public function prepare($classInterfaceOrTraitName, $executable) {
         $this->plugin->prepare($classInterfaceOrTraitName, $executable);
-
+        
         return $this;
     }
 

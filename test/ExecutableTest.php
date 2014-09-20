@@ -1,6 +1,7 @@
 <?php
 
 use Auryn\Executable;
+use Auryn\ReflectionMethodExecutable;
 
 class ExecutableTest extends PHPUnit_Framework_TestCase {
 
@@ -15,7 +16,7 @@ class ExecutableTest extends PHPUnit_Framework_TestCase {
     function testConstructorThrowsOnInstanceMethodCallableWithoutInvocationObject() {
         $reflectionFunction = new \ReflectionMethod('ArrayObject::count');
         $invocationObj = NULL;
-        $exe = new Executable($reflectionFunction, $invocationObj);
+        $exe = new ReflectionMethodExecutable($reflectionFunction, $invocationObj);
     }
 
     function testGetters() {
@@ -23,7 +24,7 @@ class ExecutableTest extends PHPUnit_Framework_TestCase {
         $invocationObj = NULL;
         $exe = new Executable($reflectionFunction, $invocationObj);
 
-        $this->assertSame($reflectionFunction, $exe->getCallableReflection());
+        $this->assertSame($reflectionFunction, $exe->getReflection());
         $this->assertSame($invocationObj, $exe->getInvocationObject());
     }
 
