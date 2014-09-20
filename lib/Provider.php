@@ -63,11 +63,9 @@ class Provider implements Injector {
     );
 
 
-    public function __construct(
-        ReflectionStorage $reflectionStorage = NULL,
-        ExecutableFactory $executableFactory = NULL) {
+    public function __construct(ReflectionStorage $reflectionStorage = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
-        $this->executableFactory = $executableFactory ?: new ExecutableFactory($this, $this->reflectionStorage);
+        $this->executableFactory = new ExecutableFactory($this, $this->reflectionStorage);
     }
 
 
