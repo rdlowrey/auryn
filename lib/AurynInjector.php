@@ -36,6 +36,9 @@ class AurynInjector implements Injector {
     /** @var ReflectionStorage */
     private $reflectionStorage;
 
+    /** @var ExecutableFactory  */
+    private $executableFactory;
+
     /** @var array List of the typename of the objects being created, in hierarchy */
     private $classConstructorChain = array();
 
@@ -60,9 +63,13 @@ class AurynInjector implements Injector {
     );
 
 
-    public function __construct(\Auryn\Plugin\ProviderInjectionPlugin $providerPlugin, ReflectionStorage $reflectionStorage = NULL) {
+    public function __construct(
+        \Auryn\Plugin\ProviderInjectionPlugin $providerPlugin, 
+        ReflectionStorage $reflectionStorage = NULL,
+        ExecutableFactory $executableFactory = NULL) {
         $this->providerPlugin = $providerPlugin;
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
+        $this->executableFactory = $executableFactory ?: new ExecutableFactory($this, $this->reflectionStorage);
     }
 
     private function resetClassConstructorChain() {
@@ -112,8 +119,8 @@ class AurynInjector implements Injector {
     }
 
     private function executeInternal($callableOrMethodArr, array $invocationArgs = array(), $makeAccessible = FALSE) {
-        $executable = $this->getExecutable($callableOrMethodArr, $makeAccessible);
-        $reflectionFunction = $executable->getCallableReflection();
+        $executable = $this->buildExecutable($callableOrMethodArr, $makeAccessible);
+        $reflectionFunction = $executable->getReflection();
         $args = $this->generateInvocationArgs($reflectionFunction, $invocationArgs);
 
         return call_user_func_array(array($executable, '__invoke'), $args);
@@ -129,19 +136,13 @@ class AurynInjector implements Injector {
      * @throws \Auryn\InjectionException
      * @return \Auryn\Executable Returns an executable object
      */
-    public function getExecutable($callableOrMethodArr, $makeAccessible = FALSE) {
+    public function buildExecutable($callableOrMethodArr, $makeAccessible = FALSE) {
         $makeAccessible = (bool)$makeAccessible;
-        $executableArr = $this->generateExecutableReflection($callableOrMethodArr);
-        list($reflectionFunction, $invocationObject) = $executableArr;
-
-        if ($makeAccessible
-            && $reflectionFunction instanceof \ReflectionMethod
-            && !$reflectionFunction->isPublic()
-        ) {
-            $reflectionFunction->setAccessible(TRUE);
-        }
-
-        return new Executable($reflectionFunction, $invocationObject);
+        
+        return $this->executableFactory->generateExecutableReflection(
+            $callableOrMethodArr, 
+            $makeAccessible
+        );
     }
 
 
@@ -183,14 +184,14 @@ class AurynInjector implements Injector {
     private function prepareInstance($normalizedClass, $obj) {
         $preparer = $this->providerPlugin->getPrepareDefine($normalizedClass, $this->classConstructorChain);
         if ($preparer) {
-            $exe = $this->getExecutable($preparer);
+            $exe = $this->buildExecutable($preparer);
             $exe($obj, $this);
         }
 
         if ($interfacesImplemented = class_implements($obj)) {
             $interfacePrepares = $this->providerPlugin->getInterfacePrepares($interfacesImplemented);
             foreach ($interfacePrepares as $preparer) {
-                $exe = $this->getExecutable($preparer);
+                $exe = $this->buildExecutable($preparer);
                 $exe($obj, $this);
             }
         }

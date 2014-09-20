@@ -36,8 +36,8 @@ class Provider {
         return $this->injector->execute($callableOrMethodArr, $invocationArgs, $makeAccessible);
     }
 
-    public function getExecutable($callableOrMethodArr, $makeAccessible = FALSE) {
-        return $this->injector->getExecutable($callableOrMethodArr, $makeAccessible);
+    public function buildExecutable($callableOrMethodArr, $makeAccessible = FALSE) {
+        return $this->injector->buildExecutable($callableOrMethodArr, $makeAccessible);
     }
 
 

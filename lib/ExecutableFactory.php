@@ -33,8 +33,8 @@ class ExecutableFactory {
         }
 
         throw new BadArgumentException(
-            \Auryn\Provider::$errorMessages[\Auryn\Provider::E_CALLABLE],
-            \Auryn\Provider::E_CALLABLE
+            \Auryn\AurynInjector::$errorMessages[\Auryn\AurynInjector::E_CALLABLE],
+            \Auryn\AurynInjector::E_CALLABLE
         );
     }
 
@@ -54,7 +54,9 @@ class ExecutableFactory {
             return new ReflectionMethodExecutable($reflectionMethod, null);
         }
         else {
-            return new ReflectionMethodExecutable($reflectionMethod, $this->injector->make($class));
+            $instance = $this->injector->make($class);
+            $reflectionMethod = $this->reflectionStorage->getMethod($instance, $method);
+            return new ReflectionMethodExecutable($reflectionMethod, $instance);
         }
     }
     
@@ -76,8 +78,8 @@ class ExecutableFactory {
             $executable = $this->generateExecutableFromArray($exeCallable);
         } else {
             throw new BadArgumentException(
-                \Auryn\Provider::$errorMessages[\Auryn\Provider::E_CALLABLE],
-                \Auryn\Provider::E_CALLABLE
+                \Auryn\AurynInjector::$errorMessages[\Auryn\AurynInjector::E_CALLABLE],
+                \Auryn\AurynInjector::E_CALLABLE
             );
         }
 
@@ -102,8 +104,8 @@ class ExecutableFactory {
         } 
 
         throw new BadArgumentException(
-            \Auryn\Provider::$errorMessages[\Auryn\Provider::E_CALLABLE],
-            \Auryn\Provider::E_CALLABLE
+            \Auryn\AurynInjector::$errorMessages[\Auryn\AurynInjector::E_CALLABLE],
+            \Auryn\AurynInjector::E_CALLABLE
         );
     }
 }
