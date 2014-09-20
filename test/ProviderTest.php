@@ -919,4 +919,15 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
 
         $this->assertSame(42, $obj->testProp);
     }
+
+    public function testClassReturnsCallable() {
+        $value = 123;
+        $class = new ReturnsCallable($value);
+        $callable = $class->getCallable();
+        $callable(); //Check the callable is callable.
+        $provider = new Provider();
+        $result = $provider->execute($callable);
+        $this->assertEquals($value, $result);
+    }
+
 }
