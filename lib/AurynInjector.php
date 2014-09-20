@@ -65,11 +65,10 @@ class AurynInjector implements Injector {
 
     public function __construct(
         \Auryn\Plugin\ProviderInjectionPlugin $providerPlugin, 
-        ReflectionStorage $reflectionStorage = NULL,
-        ExecutableFactory $executableFactory = NULL) {
+        ReflectionStorage $reflectionStorage = NULL) {
         $this->providerPlugin = $providerPlugin;
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
-        $this->executableFactory = $executableFactory ?: new ExecutableFactory($this, $this->reflectionStorage);
+        $this->executableFactory = new ExecutableFactory($this, $this->reflectionStorage);
     }
 
     private function resetClassConstructorChain() {
@@ -196,34 +195,7 @@ class AurynInjector implements Injector {
             }
         }
     }
-
-
-    private function generateExecutableReflection($exeCallable) {
-        if (is_string($exeCallable)) {
-            $executableArr = $this->generateExecutableFromString($exeCallable);
-        } elseif ($exeCallable instanceof \Closure) {
-            $callableRefl = new \ReflectionFunction($exeCallable);
-            $executableArr = array($callableRefl, NULL);
-        } elseif (is_object($exeCallable) && is_callable($exeCallable)) {
-            $invocationObj = $exeCallable;
-            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
-            $executableArr = array($callableRefl, $invocationObj);
-        } elseif (is_array($exeCallable)
-            && isset($exeCallable[0], $exeCallable[1])
-            && count($exeCallable) === 2
-        ) {
-            $executableArr = $this->generateExecutableFromArray($exeCallable);
-        } else {
-            throw new BadArgumentException(
-                self::$errorMessages[self::E_CALLABLE],
-                self::E_CALLABLE
-            );
-        }
-
-        return $executableArr;
-    }
-
-
+    
     private function guardAgainstCyclicDependency($className, $normalizedClass) {
         if (in_array($normalizedClass, $this->classConstructorChain)) {
             throw new CyclicDependencyException(
@@ -323,29 +295,6 @@ class AurynInjector implements Injector {
 
         return $executableArr;
     }
-
-
-    private function generateExecutableFromString($stringExecutable) {
-        if (function_exists($stringExecutable)) {
-            $callableRefl = $this->reflectionStorage->getFunction($stringExecutable);
-            $executableArr = array($callableRefl, NULL);
-        } elseif (method_exists($stringExecutable, '__invoke')) {
-            $invocationObj = $this->makeInternal($stringExecutable);
-            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
-            $executableArr = array($callableRefl, $invocationObj);
-        } elseif (strpos($stringExecutable, '::') !== FALSE) {
-            list($class, $method) = explode('::', $stringExecutable, 2);
-            $executableArr = $this->generateStringClassMethodCallable($class, $method);
-        } else {
-            throw new BadArgumentException(
-                self::$errorMessages[self::E_CALLABLE],
-                self::E_CALLABLE
-            );
-        }
-
-        return $executableArr;
-    }
-
 
     private function generateStringClassMethodCallable($class, $method) {
         $relativeStaticMethodStartPos = strpos($method, 'parent::');
