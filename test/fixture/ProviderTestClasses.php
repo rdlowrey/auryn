@@ -404,11 +404,15 @@ class SimpleNoTypehintClass {
 }
 
 class ReturnsCallable {
-    private $random = 4;
+    private $value = 4;
 
+    function __construct($value) {
+        $this->value = $value;
+    }
+    
     function getCallable() {
         $callable = function () {
-            echo $this->random;
+            return $this->value;
         };
 
         return $callable;

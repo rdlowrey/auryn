@@ -921,11 +921,13 @@ class ProviderTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testClassReturnsCallable() {
-        $class = new ReturnsCallable();
+        $value = 123;
+        $class = new ReturnsCallable($value);
         $callable = $class->getCallable();
         $callable(); //Check the callable is callable.
         $provider = new Provider();
-        $provider->execute($callable);
+        $result = $provider->execute($callable);
+        $this->assertEquals($value, $result);
     }
 
 }

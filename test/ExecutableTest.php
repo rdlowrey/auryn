@@ -23,7 +23,7 @@ class ExecutableTest extends PHPUnit_Framework_TestCase {
         $invocationObj = NULL;
         $exe = new Executable($reflectionFunction, $invocationObj);
 
-        $this->assertSame($reflectionFunction, $exe->getCallableReflection());
+        $this->assertSame($reflectionFunction, $exe->getReflection());
         $this->assertSame($invocationObj, $exe->getInvocationObject());
     }
 

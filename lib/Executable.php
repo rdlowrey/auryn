@@ -30,7 +30,7 @@ class Executable {
         }
     }
 
-    public function getCallableReflection() {
+    public function getReflection() {
         return $this->callableReflection;
     }
 

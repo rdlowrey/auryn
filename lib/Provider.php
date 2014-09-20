@@ -31,6 +31,10 @@ class Provider implements Injector {
     const E_NOT_EXECUTABLE = 17;
 
     private $reflectionStorage;
+    /**
+     * @var ExecutableFactory
+     */
+    private $executableFactory;
     private $aliases = array();
     private $prepares = array();
     private $sharedClasses = array();
@@ -38,7 +42,7 @@ class Provider implements Injector {
     private $beingProvisioned = array();
     private $paramDefinitions = array();
     private $injectionDefinitions = array();
-    private $errorMessages = array(
+    public static $errorMessages = array(
         self::E_MAKE_FAILURE => "Could not make %s: %s",
         self::E_DELEGATION_FAILURE => 'Delegation failed while attempting to provision %s',
         self::E_INVALID_CLASS => 'Delegate callable must return an instance of %s; %s returned',
@@ -59,8 +63,11 @@ class Provider implements Injector {
     );
 
 
-    public function __construct(ReflectionStorage $reflectionStorage = NULL) {
+    public function __construct(
+        ReflectionStorage $reflectionStorage = NULL,
+        ExecutableFactory $executableFactory = NULL) {
         $this->reflectionStorage = $reflectionStorage ?: new ReflectionPool;
+        $this->executableFactory = $executableFactory ?: new ExecutableFactory($this, $this->reflectionStorage);
     }
 
 
@@ -131,12 +138,12 @@ class Provider implements Injector {
     public function alias($typehintToReplace, $alias) {
         if (empty($typehintToReplace) || !is_string($typehintToReplace)) {
             throw new BadArgumentException(
-                $this->errorMessages[self::E_NON_EMPTY_STRING_ALIAS],
+                self::$errorMessages[self::E_NON_EMPTY_STRING_ALIAS],
                 self::E_NON_EMPTY_STRING_ALIAS
             );
         } elseif (empty($alias) || !is_string($alias)) {
             throw new BadArgumentException(
-                $this->errorMessages[self::E_NON_EMPTY_STRING_ALIAS],
+                self::$errorMessages[self::E_NON_EMPTY_STRING_ALIAS],
                 self::E_NON_EMPTY_STRING_ALIAS
             );
         }
@@ -147,7 +154,7 @@ class Provider implements Injector {
         if (isset($this->sharedClasses[$normalizedTypehint])) {
             $sharedClassName = $this->normalizeClassName(get_class($this->sharedClasses[$normalizedTypehint]));
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_SHARED_CANNOT_ALIAS], $sharedClassName, $alias),
+                sprintf(self::$errorMessages[self::E_SHARED_CANNOT_ALIAS], $sharedClassName, $alias),
                 self::E_SHARED_CANNOT_ALIAS
             );
         } else {
@@ -186,7 +193,7 @@ class Provider implements Injector {
             $this->shareObject($classNameOrInstance);
         } else {
             throw new BadArgumentException(
-                sprintf($this->errorMessages[self::E_SHARE_ARGUMENT], __CLASS__, gettype($classNameOrInstance)),
+                sprintf(self::$errorMessages[self::E_SHARE_ARGUMENT], __CLASS__, gettype($classNameOrInstance)),
                 self::E_SHARE_ARGUMENT
             );
         }
@@ -246,7 +253,7 @@ class Provider implements Injector {
             $delegate = array($callable, $args);
         } else {
             throw new BadArgumentException(
-                sprintf($this->errorMessages[self::E_DELEGATE_ARGUMENT], __CLASS__),
+                sprintf(self::$errorMessages[self::E_DELEGATE_ARGUMENT], __CLASS__),
                 self::E_DELEGATE_ARGUMENT
             );
         }
@@ -269,7 +276,7 @@ class Provider implements Injector {
     public function prepare($classInterfaceOrTraitName, $executable) {
         if (!$this->canExecute($executable)) {
             throw new BadArgumentException(
-                $this->errorMessages[self::E_CALLABLE],
+                self::$errorMessages[self::E_CALLABLE],
                 self::E_CALLABLE
             );
         }
@@ -293,7 +300,7 @@ class Provider implements Injector {
      */
     public function execute($callableOrMethodArr, array $invocationArgs = array(), $makeAccessible = FALSE) {
         $executable = $this->buildExecutable($callableOrMethodArr, $makeAccessible);
-        $reflectionFunction = $executable->getCallableReflection();
+        $reflectionFunction = $executable->getReflection();
         $args = $this->generateInvocationArgs($reflectionFunction, $invocationArgs);
 
         return call_user_func_array(array($executable, '__invoke'), $args);
@@ -311,17 +318,12 @@ class Provider implements Injector {
      */
     public function buildExecutable($callableOrMethodArr, $makeAccessible = FALSE) {
         $makeAccessible = (bool)$makeAccessible;
-        $executableArr = $this->generateExecutableReflection($callableOrMethodArr);
-        list($reflectionFunction, $invocationObject) = $executableArr;
-
-        if ($makeAccessible
-            && $reflectionFunction instanceof \ReflectionMethod
-            && !$reflectionFunction->isPublic()
-        ) {
-            $reflectionFunction->setAccessible(TRUE);
-        }
-
-        return new Executable($reflectionFunction, $invocationObject);
+        $executable = $this->executableFactory->generateExecutableReflection(
+            $callableOrMethodArr,
+            $makeAccessible
+        );
+        
+        return $executable;
     }
 
 
@@ -333,7 +335,7 @@ class Provider implements Injector {
                 $object = $this->buildWithoutConstructorParams($className);
             } elseif (!$ctorMethod->isPublic()) {
                 throw new InjectionException(
-                    sprintf($this->errorMessages[self::E_NON_PUBLIC_CONSTRUCTOR], $className),
+                    sprintf(self::$errorMessages[self::E_NON_PUBLIC_CONSTRUCTOR], $className),
                     self::E_NON_PUBLIC_CONSTRUCTOR
                 );
             } elseif ($ctorParams = $this->reflectionStorage->getConstructorParameters($className)) {
@@ -348,7 +350,7 @@ class Provider implements Injector {
 
         } catch (\ReflectionException $e) {
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_MAKE_FAILURE], $className, $e->getMessage()),
+                sprintf(self::$errorMessages[self::E_MAKE_FAILURE], $className, $e->getMessage()),
                 self::E_MAKE_FAILURE,
                 $e
             );
@@ -395,7 +397,7 @@ class Provider implements Injector {
         foreach ($injectionDefinition as $paramName => $value) {
             if ($paramName[0] !== self::RAW_INJECTION_PREFIX && !is_string($value)) {
                 throw new BadArgumentException(
-                    sprintf($this->errorMessages[self::E_RAW_PREFIX], $paramName, $paramName),
+                    sprintf(self::$errorMessages[self::E_RAW_PREFIX], $paramName, $paramName),
                     self::E_RAW_PREFIX
                 );
             }
@@ -403,37 +405,12 @@ class Provider implements Injector {
     }
 
 
-    private function generateExecutableReflection($exeCallable) {
-        if (is_string($exeCallable)) {
-            $executableArr = $this->generateExecutableFromString($exeCallable);
-        } elseif ($exeCallable instanceof \Closure) {
-            $callableRefl = new \ReflectionFunction($exeCallable);
-            $executableArr = array($callableRefl, NULL);
-        } elseif (is_object($exeCallable) && is_callable($exeCallable)) {
-            $invocationObj = $exeCallable;
-            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
-            $executableArr = array($callableRefl, $invocationObj);
-        } elseif (is_array($exeCallable)
-            && isset($exeCallable[0], $exeCallable[1])
-            && count($exeCallable) === 2
-        ) {
-            $executableArr = $this->generateExecutableFromArray($exeCallable);
-        } else {
-            throw new BadArgumentException(
-                $this->errorMessages[self::E_CALLABLE],
-                self::E_CALLABLE
-            );
-        }
-
-        return $executableArr;
-    }
-
 
     private function guardAgainstCyclicDependency($className, $normalizedClass) {
         if (isset($this->beingProvisioned[$normalizedClass])) {
             throw new CyclicDependencyException(
                 $className,
-                sprintf($this->errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
+                sprintf(self::$errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
                 self::E_CYCLIC_DEPENDENCY
             );
         }
@@ -456,7 +433,7 @@ class Provider implements Injector {
 
         if (!$provisionedObject instanceof $className) {
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_INVALID_CLASS], $className, get_class($provisionedObject)),
+                sprintf(self::$errorMessages[self::E_INVALID_CLASS], $className, get_class($provisionedObject)),
                 self::E_INVALID_CLASS
             );
         }
@@ -478,7 +455,7 @@ class Provider implements Injector {
 
             throw new CyclicDependencyException(
                 $cycleDetector,
-                sprintf($this->errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
+                sprintf(self::$errorMessages[self::E_CYCLIC_DEPENDENCY], $className),
                 self::E_CYCLIC_DEPENDENCY,
                 $e
             );
@@ -504,7 +481,7 @@ class Provider implements Injector {
 
         } catch (\ReflectionException $e) {
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_CLASS_NOT_FOUND], $className),
+                sprintf(self::$errorMessages[self::E_CLASS_NOT_FOUND], $className),
                 self::E_CLASS_NOT_FOUND,
                 $e
             );
@@ -533,65 +510,7 @@ class Provider implements Injector {
 
         return array_key_exists($normalizedClass, $this->sharedClasses);
     }
-
-
-    private function generateExecutableFromArray($arrayExecutable) {
-        list($classOrObj, $method) = $arrayExecutable;
-
-        if (is_object($classOrObj) && method_exists($classOrObj, $method)) {
-            $callableRefl = $this->reflectionStorage->getMethod($classOrObj, $method);
-            $executableArr = array($callableRefl, $classOrObj);
-        } elseif (is_string($classOrObj)) {
-            $executableArr = $this->generateStringClassMethodCallable($classOrObj, $method);
-        } else {
-            throw new BadArgumentException(
-                $this->errorMessages[self::E_CALLABLE],
-                self::E_CALLABLE
-            );
-        }
-
-        return $executableArr;
-    }
-
-
-    private function generateExecutableFromString($stringExecutable) {
-        if (function_exists($stringExecutable)) {
-            $callableRefl = $this->reflectionStorage->getFunction($stringExecutable);
-            $executableArr = array($callableRefl, NULL);
-        } elseif (method_exists($stringExecutable, '__invoke')) {
-            $invocationObj = $this->make($stringExecutable);
-            $callableRefl = $this->reflectionStorage->getMethod($invocationObj, '__invoke');
-            $executableArr = array($callableRefl, $invocationObj);
-        } elseif (strpos($stringExecutable, '::') !== FALSE) {
-            list($class, $method) = explode('::', $stringExecutable, 2);
-            $executableArr = $this->generateStringClassMethodCallable($class, $method);
-        } else {
-            throw new BadArgumentException(
-                $this->errorMessages[self::E_CALLABLE],
-                self::E_CALLABLE
-            );
-        }
-
-        return $executableArr;
-    }
-
-
-    private function generateStringClassMethodCallable($class, $method) {
-        $relativeStaticMethodStartPos = strpos($method, 'parent::');
-
-        if ($relativeStaticMethodStartPos === 0) {
-            $childReflection = $this->reflectionStorage->getClass($class);
-            $class = $childReflection->getParentClass()->name;
-            $method = substr($method, $relativeStaticMethodStartPos + 8);
-        }
-
-        $reflectionMethod = $this->reflectionStorage->getMethod($class, $method);
-
-        return $reflectionMethod->isStatic()
-            ? array($reflectionMethod, NULL)
-            : array($reflectionMethod, $this->make($class));
-    }
-
+    
 
     private function generateInvocationArgs(\ReflectionFunctionAbstract $function, array $definition) {
         $invocationArgs = array();
@@ -630,7 +549,7 @@ class Provider implements Injector {
         } else {
             $declaringClass = $param->getDeclaringClass()->getName();
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_UNDEFINED_PARAM], $declaringClass, $param->name),
+                sprintf(self::$errorMessages[self::E_UNDEFINED_PARAM], $declaringClass, $param->name),
                 self::E_UNDEFINED_PARAM
             );
         }
@@ -646,7 +565,7 @@ class Provider implements Injector {
             $reflectionClass = $this->reflectionStorage->getClass($className);
             $type = $reflectionClass->isInterface() ? 'interface' : 'abstract';
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_NEEDS_DEFINITION], $type, $className),
+                sprintf(self::$errorMessages[self::E_NEEDS_DEFINITION], $type, $className),
                 self::E_NEEDS_DEFINITION
             );
         }
@@ -735,7 +654,7 @@ class Provider implements Injector {
         if (isset($this->aliases[$normalizedClass])) {
             // You cannot share an instance of a class that has already been aliased to another class.
             throw new InjectionException(
-                sprintf($this->errorMessages[self::E_ALIASED_CANNOT_SHARE], $normalizedClass, $this->aliases[$normalizedClass]),
+                sprintf(self::$errorMessages[self::E_ALIASED_CANNOT_SHARE], $normalizedClass, $this->aliases[$normalizedClass]),
                 self::E_ALIASED_CANNOT_SHARE
             );
         }
