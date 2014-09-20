@@ -1,5 +1,7 @@
 <?php
 
+namespace Auryn\Test;
+
 class InaccessibleExecutableClassMethod {
     private function doSomethingPrivate() {
         return 42;
@@ -52,7 +54,7 @@ interface SharedAliasedInterface {
     function foo();
 }
 
-class SharedClass implements SharedAliasedInterface {    
+class SharedClass implements SharedAliasedInterface {
     function foo(){}
 }
 
@@ -211,7 +213,7 @@ class InjectorTestRawCtorParams {
     public $float;
     public $bool;
     public $null;
-    
+
     public function __construct($string, $obj, $int, $array, $float, $bool, $null) {
         $this->string = $string;
         $this->obj = $obj;
@@ -248,7 +250,7 @@ class StringStdClassDelegateMock {
         return $this->make();
     }
     private function make() {
-        $obj = new StdClass;
+        $obj = new \StdClass;
         $obj->test = 42;
         return $obj;
     }
@@ -337,8 +339,8 @@ class RequiresDelegatedInterface {
 }
 
 class TestMissingDependency {
- 
-    function __construct(TypoInTypehint $class) {        
+
+    function __construct(TypoInTypehint $class) {
     }
 }
 
@@ -386,9 +388,9 @@ class ClassWithCtor {
 class TestDependencyWithProtectedConstructor {
 
     protected function __construct() {
-        
+
     }
-    
+
     public static function create(){
         return new self();
     }
@@ -410,3 +412,5 @@ class SimpleNoTypehintClass {
     }
 
 }
+
+class SomeClassName {}
