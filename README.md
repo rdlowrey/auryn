@@ -356,7 +356,7 @@ instantiate it.
 
 Sometimes applications may reuse the same value everywhere. However, it can be a hassle to manually
 specify definitions for this sort of thing everywhere it might be used in the app. Auryn mitigates
-this problem by exposing the `Injector::defineParam()` method. Consider the following example ...
+this problem by exposing the `Injector::bindParam()` method. Consider the following example ...
 
 ```php
 <?php
@@ -370,7 +370,7 @@ class MyClass {
 }
 
 $injector = new Auryn\Provider;
-$injector->defineParam('myValue', $myUniversalValue);
+$injector->bindParam('myValue', $myUniversalValue);
 $obj = $injector->make('MyClass');
 var_dump($obj->myValue === 42); // bool(true)
 ```
@@ -496,7 +496,7 @@ class MyComplexClass {
 $complexClassFactory = function() {
     $obj = new MyComplexClass;
     $obj->doSomethingAfterInstantiation();
-    
+
     return $obj;
 };
 
@@ -634,7 +634,7 @@ var_dump($injector->execute('Example::myMethod', $args = [':arg' => 42]));
 
 ## Example Use Cases
 
-Dependency Injection Containers (DIC) are generally misunderstood in the PHP community. One of the 
+Dependency Injection Containers (DIC) are generally misunderstood in the PHP community. One of the
 primary culprits is the misuse of such containers in the mainstream application frameworks. Often,
 these frameworks warp their DICs into Service Locator anti-patterns. This is a shame because a
 good DIC should be the exact opposite of a Service Locator.
@@ -651,11 +651,11 @@ really are. A `House` object depends on `Door` and `Window` objects. A `House` o
 on an instance of `ServiceLocator` regardless of whether the `ServiceLocator` can provide `Door` and
 `Window` objects.
 
-In real life you wouldn't build a house by transporting the entire hardware store (hopefully) to 
-the construction site so you can access any parts you need. Instead, the foreman (`__construct()`) 
+In real life you wouldn't build a house by transporting the entire hardware store (hopefully) to
+the construction site so you can access any parts you need. Instead, the foreman (`__construct()`)
 asks for the specific parts that will be needed (`Door` and `Window`) and goes about procuring them.
 Your objects should function in the same way; they should ask only for the specific dependencies
-required to do their jobs. Giving the `House` access to the entire hardware store is at best poor 
+required to do their jobs. Giving the `House` access to the entire hardware store is at best poor
 OOP style and at worst a maintainability nightmare. The takeaway here is this:
 
 > **IMPORTANT:** do not use Auryn like a Service Locator!
@@ -680,23 +680,23 @@ class HouseMapper {
     }
     public function find($houseId) {
         $query = 'SELECT * FROM houses WHERE houseId = :houseId';
-        
+
         $stmt = $this->pdo->prepare($query);
         $stmt->bindValue(':houseId', $houseId);
-        
-        $stmt->setFetchMode(PDO::FETCH_CLASS, 'Model\\Entities\\House'); 
+
+        $stmt->setFetchMode(PDO::FETCH_CLASS, 'Model\\Entities\\House');
         $stmt->execute();
         $house = $stmt->fetch(PDO::FETCH_CLASS);
-        
+
         if (false === $house) {
             throw new RecordNotFoundException(
                 'No houses exist for the specified ID'
             );
         }
-        
+
         return $house;
     }
-    
+
     // more data mapper methods here ...
 }
 
@@ -795,16 +795,16 @@ try {
     if (!$controllerClass = $router->route($requestUri, $requestMethod)) {
         throw new NoRouteMatchException();
     }
-    
+
     $controller = $injector->make($controllerClass);
     $callableController = array($controller, $requestMethod);
-    
+
     if (!is_callable($callableController)) {
         throw new MethodNotAllowedException();
     } else {
         $callableController();
     }
-    
+
 } catch (NoRouteMatchException $e) {
     // send 404 response
 } catch (MethodNotAllowedException $e) {
@@ -836,7 +836,7 @@ class WidgetController {
 }
 ```
 
-In the above example the Auryn DIC allows us to write fully testable, fully OO controllers that ask 
+In the above example the Auryn DIC allows us to write fully testable, fully OO controllers that ask
 for their dependencies. Because the DIC recursively instantiates the dependencies of objects it
 creates we have no need to pass around a Service Locator. Additionally, this example shows how we can
 eliminate evil Singletons using the sharing capabilities of the Auryn DIC. In the front controller
