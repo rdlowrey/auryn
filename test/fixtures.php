@@ -245,6 +245,20 @@ class CallableMock {
     function __invoke() {}
 }
 
+class ProviderTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine {
+    public $val = 42;
+    public function __construct($val) {
+        $this->val = $val;
+    }
+}
+
+class ProviderTestCtorParamWithNoTypehintOrDefaultDependent {
+    private $param;
+    function __construct(TestNoExplicitDefine $param) {
+        $this->param = $param;
+    }
+}
+
 class StringStdClassDelegateMock {
     function __invoke() {
         return $this->make();

@@ -30,6 +30,7 @@ class Injector {
     private $shares = array();
     private $mutators = array();
     private $delegates = array();
+    private $paramDefinitions = array();
     private $inProgress = array();
     private static $errorMessages = array(
         self::E_NON_EMPTY_STRING_ALIAS => 'Invalid alias: non-empty string required at both Argument 1 and Argument 2',
@@ -45,7 +46,7 @@ class Injector {
         self::E_CYCLIC_DEPENDENCY => "Detected a cyclic dependency while provisioning %s",
     );
 
-    public function __construct(Reflector $reflector = NULL) {
+    public function __construct(Reflector $reflector = null) {
         $this->reflector = $reflector ?: new CachingReflector;
     }
 
@@ -59,6 +60,22 @@ class Injector {
     public function bind($name, array $args) {
         $normalizedName = end($this->resolveAlias($name));
         $this->bindings[$normalizedName] = $args;
+
+        return $this;
+    }
+
+    /**
+     * Assign a global default value for all parameters named $paramName
+     *
+     * Global parameter definitions are only used for parameters with no typehint, pre-defined or
+     * call-time definition.
+     *
+     * @param string $paramName The parameter name for which this value applies
+     * @param mixed $value The value to inject for this parameter name
+     * @return self
+     */
+    public function bindParam($paramName, $value) {
+        $this->paramDefinitions[$paramName] = $value;
 
         return $this;
     }
@@ -101,7 +118,7 @@ class Injector {
 
         if (array_key_exists($originalNormalized, $this->shares)) {
             $aliasNormalized = $this->normalizeName($alias);
-            $this->shares[$aliasNormalized] = NULL;
+            $this->shares[$aliasNormalized] = null;
             unset($this->shares[$originalNormalized]);
         }
 
@@ -143,7 +160,7 @@ class Injector {
         list(, $normalizedName) = $this->resolveAlias($nameOrInstance);
         $this->shares[$normalizedName] = isset($this->shares[$normalizedName])
             ? $this->shares[$normalizedName]
-            : NULL;
+            : null;
     }
 
     private function resolveAlias($name) {
@@ -183,7 +200,7 @@ class Injector {
      * @return self
      */
     public function mutate($name, $callableOrMethodStr) {
-        if ($this->isInvokable($callableOrMethodStr) === FALSE) {
+        if ($this->isInvokable($callableOrMethodStr) === false) {
             throw new InjectorException(
                 self::$errorMessages[self::E_INVOKABLE],
                 self::E_INVOKABLE
@@ -198,18 +215,18 @@ class Injector {
 
     private function isInvokable($exe) {
         if (is_callable($exe)) {
-            return TRUE;
+            return true;
         }
 
         if (is_string($exe) && method_exists($exe, '__invoke')) {
-            return TRUE;
+            return true;
         }
 
         if (is_array($exe) && isset($exe[0], $exe[1]) && method_exists($exe[0], $exe[1])) {
-            return TRUE;
+            return true;
         }
 
-        return FALSE;
+        return false;
     }
 
     /**
@@ -220,7 +237,7 @@ class Injector {
      * @return self
      */
     public function delegate($name, $callableOrMethodStr) {
-        if ($this->isInvokable($callableOrMethodStr) === FALSE) {
+        if ($this->isInvokable($callableOrMethodStr) === false) {
             throw new InjectorException(
                 sprintf(self::$errorMessages[self::E_DELEGATE_ARGUMENT], __CLASS__),
                 self::E_DELEGATE_ARGUMENT
@@ -242,9 +259,9 @@ class Injector {
      * @param int $typeFilter A bitmask of Injector::* type constant flags
      * @return array
      */
-    public function inspect($nameFilter = NULL, $typeFilter = NULL) {
+    public function inspect($nameFilter = null, $typeFilter = null) {
         $result = array();
-        $name = $nameFilter ? $this->normalizeName($nameFilter) : NULL;
+        $name = $nameFilter ? $this->normalizeName($nameFilter) : null;
 
         if (empty($typeFilter)) {
             $typeFilter = self::I_ALL;
@@ -299,10 +316,10 @@ class Injector {
             );
         }
 
-        $this->inProgress[$normalizedClass] = TRUE;
+        $this->inProgress[$normalizedClass] = true;
 
         // isset() is used specifically here because classes may be marked as "shared" before an
-        // instance is stored. In these cases the class is "shared," but it has a NULL value and
+        // instance is stored. In these cases the class is "shared," but it has a null value and
         // instantiation is needed.
         if (isset($this->shares[$normalizedClass])) {
             unset($this->inProgress[$normalizedClass]);
@@ -427,7 +444,7 @@ class Injector {
     }
 
     private function buildArgFromDelegate($paramName, $callableOrMethodStr) {
-        if ($this->isInvokable($callableOrMethodStr) === FALSE) {
+        if ($this->isInvokable($callableOrMethodStr) === false) {
             throw new InjectorException(
                 self::$errorMessages[self::E_INVOKABLE],
                 self::E_INVOKABLE
@@ -443,7 +460,7 @@ class Injector {
         $typeHint = $this->reflector->getParamTypeHint($reflFunc, $reflParam);
 
         if (!$typeHint) {
-            $obj = NULL;
+            $obj = null;
         } elseif ($reflParam->isDefaultValueAvailable()) {
             $obj = $reflParam->getDefaultValue();
         } else {
@@ -454,13 +471,15 @@ class Injector {
     }
 
     private function buildArgFromReflParam(\ReflectionParameter $reflParam) {
-        if ($reflParam->isDefaultValueAvailable()) {
+        if (array_key_exists($reflParam->name, $this->paramDefinitions)) {
+            $arg = $this->paramDefinitions[$reflParam->name];
+        } elseif ($reflParam->isDefaultValueAvailable()) {
             $arg = $reflParam->getDefaultValue();
         } elseif ($reflParam->isOptional()) {
             // This branch is required to work around PHP bugs where a parameter is optional
             // but has no default value available through reflection. Specifically, PDO exhibits
             // this behavior.
-            $arg = NULL;
+            $arg = null;
         } else {
             $reflFunc = $reflParam->getDeclaringFunction();
             $classWord = ($reflFunc instanceof \ReflectionMethod)
@@ -532,7 +551,7 @@ class Injector {
             $invokableArr = $this->generateInvokablesFromString($callableOrMethodStr);
         } elseif ($callableOrMethodStr instanceof \Closure) {
             $callableRefl = new \ReflectionFunction($callableOrMethodStr);
-            $invokableArr = array($callableRefl, NULL);
+            $invokableArr = array($callableRefl, null);
         } elseif (is_object($callableOrMethodStr) && is_callable($callableOrMethodStr)) {
             $invocationObj = $callableOrMethodStr;
             $callableRefl = $this->reflector->getMethod($invocationObj, '__invoke');
@@ -555,12 +574,12 @@ class Injector {
     private function generateInvokablesFromString($stringInvokable) {
         if (function_exists($stringInvokable)) {
             $callableRefl = $this->reflector->getFunction($stringInvokable);
-            $invokableArr = array($callableRefl, NULL);
+            $invokableArr = array($callableRefl, null);
         } elseif (method_exists($stringInvokable, '__invoke')) {
             $invocationObj = $this->makeInstance($stringInvokable);
             $callableRefl = $this->reflector->getMethod($invocationObj, '__invoke');
             $invokableArr = array($callableRefl, $invocationObj);
-        } elseif (strpos($stringInvokable, '::') !== FALSE) {
+        } elseif (strpos($stringInvokable, '::') !== false) {
             list($class, $method) = explode('::', $stringInvokable, 2);
             $invokableArr = $this->generateStringClassMethodCallable($class, $method);
         } else {
@@ -585,7 +604,7 @@ class Injector {
         $reflectionMethod = $this->reflector->getMethod($class, $method);
 
         return $reflectionMethod->isStatic()
-            ? array($reflectionMethod, NULL)
+            ? array($reflectionMethod, null)
             : array($reflectionMethod, $this->makeInstance($class));
     }
 

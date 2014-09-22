@@ -139,6 +139,22 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $obj = $injector->makeInstance('Auryn\Test\RequiresInterface');
     }
 
+    public function testTypelessDefineForDependency() {
+        $thumbnailSize = 128;
+        $injector = new Injector;
+        $injector->bindParam('thumbnailSize', $thumbnailSize);
+        $testClass = $injector->makeInstance('Auryn\Test\RequiresDependencyWithTypelessParameters');
+        $this->assertEquals($thumbnailSize, $testClass->getThumbnailSize(), 'Typeless define was not injected correctly.');
+    }
+
+    public function testTypelessDefineForAliasedDependency() {
+        $injector = new Injector;
+        $injector->bindParam('val', 42);
+
+        $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefault');
+        $obj = $injector->makeInstance('Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
+    }
+
     public function testMakeInstanceInjectsRawParametersDirectly() {
         $injector = new Injector;
         $injector->bind('Auryn\Test\InjectorTestRawCtorParams', array(
