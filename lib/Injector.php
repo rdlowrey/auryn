@@ -303,7 +303,7 @@ class Injector {
      * @param array $args
      * @return mixed
      */
-    public function makeInstance($name, array $args = array()) {
+    public function make($name, array $args = array()) {
         list($className, $normalizedClass) = $this->resolveAlias($name);
 
         if (isset($this->inProgress[$normalizedClass])) {
@@ -408,7 +408,7 @@ class Injector {
                 $arg = $definition[$name];
             } elseif (($prefix = self::A_CLASS . $name) && isset($definition[$prefix])) {
                 // interpret the param as a class name to be instantiated
-                $arg = $this->makeInstance($definition[$prefix]);
+                $arg = $this->make($definition[$prefix]);
             } elseif (($prefix = self::A_DELEGATE . $name) && isset($definition[$prefix])) {
                 // interpret the param as an invokable delegate
                 $arg = $this->buildArgFromDelegate($name, $definition[$prefix]);
@@ -440,7 +440,7 @@ class Injector {
 
         list($class, $definition) = $definition;
 
-        return $this->makeInstance($class, $definition);
+        return $this->make($class, $definition);
     }
 
     private function buildArgFromDelegate($paramName, $callableOrMethodStr) {
@@ -464,7 +464,7 @@ class Injector {
         } elseif ($reflParam->isDefaultValueAvailable()) {
             $obj = $reflParam->getDefaultValue();
         } else {
-            $obj = $this->makeInstance($typeHint);
+            $obj = $this->make($typeHint);
         }
 
         return $obj;
@@ -576,7 +576,7 @@ class Injector {
             $callableRefl = $this->reflector->getFunction($stringInvokable);
             $invokableArr = array($callableRefl, null);
         } elseif (method_exists($stringInvokable, '__invoke')) {
-            $invocationObj = $this->makeInstance($stringInvokable);
+            $invocationObj = $this->make($stringInvokable);
             $callableRefl = $this->reflector->getMethod($invocationObj, '__invoke');
             $invokableArr = array($callableRefl, $invocationObj);
         } elseif (strpos($stringInvokable, '::') !== false) {
@@ -605,7 +605,7 @@ class Injector {
 
         return $reflectionMethod->isStatic()
             ? array($reflectionMethod, null)
-            : array($reflectionMethod, $this->makeInstance($class));
+            : array($reflectionMethod, $this->make($class));
     }
 
     private function generateInvokablesFromArray($arrayInvokable) {
