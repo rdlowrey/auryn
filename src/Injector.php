@@ -61,7 +61,8 @@ class Injector
      */
     public function bind($name, array $args)
     {
-        $normalizedName = end($this->resolveAlias($name));
+        $end = $this->resolveAlias($name);
+        $normalizedName = end($end);
         $this->bindings[$normalizedName] = $args;
 
         return $this;
@@ -218,7 +219,8 @@ class Injector
             );
         }
 
-        $normalizedName = end($this->resolveAlias($name));
+        $end = $this->resolveAlias($name);
+        $normalizedName = end($end);
         $this->mutators[$normalizedName] = $callableOrMethodStr;
 
         return $this;

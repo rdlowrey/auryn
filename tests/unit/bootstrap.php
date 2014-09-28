@@ -1,6 +1,6 @@
 <?php
 
-dl('auryn.so');
+#dl('auryn.so');
 define('START_TIME', microtime(true));
 define('ROOT_PATH', dirname(dirname(__FILE__)));
 error_reporting(E_ALL);
