@@ -9,7 +9,9 @@ function bench()
         'Peak memory in KB' => number_format(memory_get_peak_usage() / 1024, 2),
         'Included files' => count(get_included_files()),
     ));
-    echo "\n<script>console.log($data);</script>";
+    echo "\n$data\n";
+    print_r(get_included_files());
+    echo "\n";
 }
 
 /**
@@ -20,9 +22,8 @@ function d()
     $string = '';
     foreach(func_get_args() as $value)
     {
-        $string .= '<pre>';
         $string .= $value === NULL ? 'NULL' : (is_scalar($value) ? $value : print_r($value, TRUE));
-        $string .= "</pre>\n";
+        $string .= "\n";
     }
     echo $string;
     bench();
@@ -37,9 +38,8 @@ function dump()
     $string = '';
     foreach(func_get_args() as $value)
     {
-        $string .= '<pre>';
         $string .= $value === NULL ? 'NULL' : (is_scalar($value) ? $value : print_r($value, TRUE));
-        $string .= "</pre>\n";
+        $string .= "\n";
     }
     echo $string;
 }

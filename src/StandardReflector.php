@@ -2,7 +2,7 @@
 
 namespace Auryn;
 
-class StandardReflector implements Reflector
+class StandardReflector implements ReflectorInterface
 {
     public function getClass($className)
     {

@@ -28,7 +28,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Auryn\\": "src/"
+            "Auryn\\": "src/",
+            "Sbux\\": "src2/"
         }
     },
     "autoload-dev": {

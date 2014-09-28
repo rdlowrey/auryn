@@ -235,90 +235,63 @@
           array (
             0 => 
             array (
-              'type' => 'let',
-              'assignments' => 
+              'type' => 'if',
+              'expr' => 
+              array (
+                'type' => 'greater',
+                'left' => 
+                array (
+                  'type' => 'variable',
+                  'value' => 'seconds',
+                  'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                  'line' => 20,
+                  'char' => 20,
+                ),
+                'right' => 
+                array (
+                  'type' => 'int',
+                  'value' => '0',
+                  'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                  'line' => 20,
+                  'char' => 24,
+                ),
+                'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                'line' => 20,
+                'char' => 24,
+              ),
+              'statements' => 
               array (
                 0 => 
                 array (
-                  'assign-type' => 'object-property',
-                  'operator' => 'assign',
-                  'variable' => 'this',
-                  'property' => 'timeToLive',
-                  'expr' => 
+                  'type' => 'let',
+                  'assignments' => 
                   array (
-                    'type' => 'ternary',
-                    'left' => 
+                    0 => 
                     array (
-                      'type' => 'list',
-                      'left' => 
-                      array (
-                        'type' => 'greater',
-                        'left' => 
-                        array (
-                          'type' => 'variable',
-                          'value' => 'seconds',
-                          'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                          'line' => 20,
-                          'char' => 41,
-                        ),
-                        'right' => 
-                        array (
-                          'type' => 'int',
-                          'value' => '0',
-                          'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                          'line' => 20,
-                          'char' => 44,
-                        ),
-                        'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                        'line' => 20,
-                        'char' => 44,
-                      ),
-                      'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 20,
-                      'char' => 46,
-                    ),
-                    'right' => 
-                    array (
-                      'type' => 'variable',
-                      'value' => 'seconds',
-                      'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 20,
-                      'char' => 56,
-                    ),
-                    'extra' => 
-                    array (
-                      'type' => 'property-access',
-                      'left' => 
+                      'assign-type' => 'object-property',
+                      'operator' => 'assign',
+                      'variable' => 'this',
+                      'property' => 'timeToLive',
+                      'expr' => 
                       array (
                         'type' => 'variable',
-                        'value' => 'this',
+                        'value' => 'seconds',
                         'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                        'line' => 20,
-                        'char' => 63,
-                      ),
-                      'right' => 
-                      array (
-                        'type' => 'variable',
-                        'value' => 'timeToLive',
-                        'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                        'line' => 20,
-                        'char' => 74,
+                        'line' => 21,
+                        'char' => 43,
                       ),
                       'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 20,
-                      'char' => 74,
+                      'line' => 21,
+                      'char' => 43,
                     ),
-                    'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 20,
-                    'char' => 74,
                   ),
                   'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                  'line' => 20,
-                  'char' => 74,
+                  'line' => 22,
+                  'char' => 9,
                 ),
               ),
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 21,
+              'line' => 23,
               'char' => 14,
             ),
             1 => 
@@ -329,11 +302,11 @@
                 'type' => 'variable',
                 'value' => 'this',
                 'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                'line' => 21,
+                'line' => 23,
                 'char' => 20,
               ),
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 22,
+              'line' => 24,
               'char' => 5,
             ),
           ),
@@ -365,7 +338,7 @@
             'char' => 5,
           ),
           'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-          'line' => 24,
+          'line' => 26,
           'char' => 10,
         ),
         2 => 
@@ -387,7 +360,7 @@
               'mandatory' => 1,
               'reference' => 0,
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 24,
+              'line' => 26,
               'char' => 38,
             ),
           ),
@@ -403,12 +376,12 @@
                 array (
                   'variable' => 'localData',
                   'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                  'line' => 26,
+                  'line' => 28,
                   'char' => 22,
                 ),
               ),
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 27,
+              'line' => 29,
               'char' => 11,
             ),
             1 => 
@@ -432,7 +405,7 @@
                         'type' => 'variable',
                         'value' => 'this',
                         'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                        'line' => 27,
+                        'line' => 29,
                         'char' => 30,
                       ),
                       'right' => 
@@ -440,11 +413,11 @@
                         'type' => 'variable',
                         'value' => 'localCache',
                         'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                        'line' => 27,
+                        'line' => 29,
                         'char' => 42,
                       ),
                       'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 27,
+                      'line' => 29,
                       'char' => 42,
                     ),
                     'name' => 'fetch',
@@ -458,25 +431,25 @@
                           'type' => 'variable',
                           'value' => 'key',
                           'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                          'line' => 27,
+                          'line' => 29,
                           'char' => 52,
                         ),
                         'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                        'line' => 27,
+                        'line' => 29,
                         'char' => 52,
                       ),
                     ),
                     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 27,
+                    'line' => 29,
                     'char' => 53,
                   ),
                   'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                  'line' => 27,
+                  'line' => 29,
                   'char' => 53,
                 ),
               ),
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 29,
+              'line' => 31,
               'char' => 10,
             ),
             2 => 
@@ -484,18 +457,11 @@
               'type' => 'if',
               'expr' => 
               array (
-                'type' => 'not',
-                'left' => 
-                array (
-                  'type' => 'variable',
-                  'value' => 'localData',
-                  'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                  'line' => 29,
-                  'char' => 23,
-                ),
+                'type' => 'variable',
+                'value' => 'localData',
                 'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                'line' => 29,
-                'char' => 23,
+                'line' => 31,
+                'char' => 22,
               ),
               'statements' => 
               array (
@@ -507,85 +473,8 @@
                     'type' => 'variable',
                     'value' => 'localData',
                     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 30,
-                    'char' => 29,
-                  ),
-                  'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                  'line' => 31,
-                  'char' => 9,
-                ),
-              ),
-              'else_statements' => 
-              array (
-                0 => 
-                array (
-                  'type' => 'return',
-                  'expr' => 
-                  array (
-                    'type' => 'ternary',
-                    'left' => 
-                    array (
-                      'type' => 'fcall',
-                      'name' => 'apc_exists',
-                      'call-type' => 1,
-                      'parameters' => 
-                      array (
-                        0 => 
-                        array (
-                          'parameter' => 
-                          array (
-                            'type' => 'variable',
-                            'value' => 'key',
-                            'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                            'line' => 32,
-                            'char' => 34,
-                          ),
-                          'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                          'line' => 32,
-                          'char' => 34,
-                        ),
-                      ),
-                      'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 32,
-                      'char' => 36,
-                    ),
-                    'right' => 
-                    array (
-                      'type' => 'fcall',
-                      'name' => 'apc_fetch',
-                      'call-type' => 1,
-                      'parameters' => 
-                      array (
-                        0 => 
-                        array (
-                          'parameter' => 
-                          array (
-                            'type' => 'variable',
-                            'value' => 'key',
-                            'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                            'line' => 32,
-                            'char' => 51,
-                          ),
-                          'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                          'line' => 32,
-                          'char' => 51,
-                        ),
-                      ),
-                      'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 32,
-                      'char' => 53,
-                    ),
-                    'extra' => 
-                    array (
-                      'type' => 'bool',
-                      'value' => 'false',
-                      'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 32,
-                      'char' => 60,
-                    ),
-                    'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
                     'line' => 32,
-                    'char' => 60,
+                    'char' => 29,
                   ),
                   'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
                   'line' => 33,
@@ -593,12 +482,96 @@
                 ),
               ),
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 34,
+              'line' => 35,
+              'char' => 10,
+            ),
+            3 => 
+            array (
+              'type' => 'if',
+              'expr' => 
+              array (
+                'type' => 'fcall',
+                'name' => 'apc_exists',
+                'call-type' => 1,
+                'parameters' => 
+                array (
+                  0 => 
+                  array (
+                    'parameter' => 
+                    array (
+                      'type' => 'variable',
+                      'value' => 'key',
+                      'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                      'line' => 35,
+                      'char' => 26,
+                    ),
+                    'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                    'line' => 35,
+                    'char' => 26,
+                  ),
+                ),
+                'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                'line' => 35,
+                'char' => 28,
+              ),
+              'statements' => 
+              array (
+                0 => 
+                array (
+                  'type' => 'return',
+                  'expr' => 
+                  array (
+                    'type' => 'fcall',
+                    'name' => 'apc_fetch',
+                    'call-type' => 1,
+                    'parameters' => 
+                    array (
+                      0 => 
+                      array (
+                        'parameter' => 
+                        array (
+                          'type' => 'variable',
+                          'value' => 'key',
+                          'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                          'line' => 36,
+                          'char' => 33,
+                        ),
+                        'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                        'line' => 36,
+                        'char' => 33,
+                      ),
+                    ),
+                    'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                    'line' => 36,
+                    'char' => 34,
+                  ),
+                  'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                  'line' => 37,
+                  'char' => 9,
+                ),
+              ),
+              'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+              'line' => 39,
+              'char' => 14,
+            ),
+            4 => 
+            array (
+              'type' => 'return',
+              'expr' => 
+              array (
+                'type' => 'bool',
+                'value' => 'false',
+                'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+                'line' => 39,
+                'char' => 21,
+              ),
+              'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
+              'line' => 40,
               'char' => 5,
             ),
           ),
           'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-          'line' => 36,
+          'line' => 42,
           'char' => 10,
         ),
         3 => 
@@ -620,7 +593,7 @@
               'mandatory' => 1,
               'reference' => 0,
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 36,
+              'line' => 42,
               'char' => 38,
             ),
             1 => 
@@ -632,7 +605,7 @@
               'mandatory' => 0,
               'reference' => 0,
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 36,
+              'line' => 42,
               'char' => 48,
             ),
           ),
@@ -652,7 +625,7 @@
                     'type' => 'variable',
                     'value' => 'this',
                     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 38,
+                    'line' => 44,
                     'char' => 14,
                   ),
                   'right' => 
@@ -660,11 +633,11 @@
                     'type' => 'variable',
                     'value' => 'localCache',
                     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 38,
+                    'line' => 44,
                     'char' => 26,
                   ),
                   'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                  'line' => 38,
+                  'line' => 44,
                   'char' => 26,
                 ),
                 'name' => 'store',
@@ -678,11 +651,11 @@
                       'type' => 'variable',
                       'value' => 'key',
                       'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 38,
+                      'line' => 44,
                       'char' => 36,
                     ),
                     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 38,
+                    'line' => 44,
                     'char' => 36,
                   ),
                   1 => 
@@ -692,20 +665,20 @@
                       'type' => 'variable',
                       'value' => 'data',
                       'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 38,
+                      'line' => 44,
                       'char' => 42,
                     ),
                     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 38,
+                    'line' => 44,
                     'char' => 42,
                   ),
                 ),
                 'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                'line' => 38,
+                'line' => 44,
                 'char' => 43,
               ),
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 39,
+              'line' => 45,
               'char' => 17,
             ),
             1 => 
@@ -725,11 +698,11 @@
                       'type' => 'variable',
                       'value' => 'key',
                       'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 39,
+                      'line' => 45,
                       'char' => 22,
                     ),
                     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 39,
+                    'line' => 45,
                     'char' => 22,
                   ),
                   1 => 
@@ -739,11 +712,11 @@
                       'type' => 'variable',
                       'value' => 'data',
                       'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 39,
+                      'line' => 45,
                       'char' => 28,
                     ),
                     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 39,
+                    'line' => 45,
                     'char' => 28,
                   ),
                   2 => 
@@ -756,7 +729,7 @@
                         'type' => 'variable',
                         'value' => 'this',
                         'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                        'line' => 39,
+                        'line' => 45,
                         'char' => 35,
                       ),
                       'right' => 
@@ -764,24 +737,24 @@
                         'type' => 'variable',
                         'value' => 'timeToLive',
                         'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                        'line' => 39,
+                        'line' => 45,
                         'char' => 46,
                       ),
                       'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                      'line' => 39,
+                      'line' => 45,
                       'char' => 46,
                     ),
                     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                    'line' => 39,
+                    'line' => 45,
                     'char' => 46,
                   ),
                 ),
                 'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                'line' => 39,
+                'line' => 45,
                 'char' => 47,
               ),
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 40,
+              'line' => 46,
               'char' => 14,
             ),
             2 => 
@@ -792,11 +765,11 @@
                 'type' => 'variable',
                 'value' => 'this',
                 'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                'line' => 40,
+                'line' => 46,
                 'char' => 20,
               ),
               'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-              'line' => 41,
+              'line' => 47,
               'char' => 5,
             ),
           ),
@@ -813,31 +786,31 @@
                   'type' => 'variable',
                   'value' => 'ReflectionCacheInterface',
                   'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                  'line' => 37,
+                  'line' => 43,
                   'char' => 5,
                 ),
                 'collection' => 0,
                 'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-                'line' => 37,
+                'line' => 43,
                 'char' => 5,
               ),
             ),
             'void' => 0,
             'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-            'line' => 37,
+            'line' => 43,
             'char' => 5,
           ),
           'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-          'line' => 42,
+          'line' => 48,
           'char' => 1,
         ),
       ),
       'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-      'line' => 42,
+      'line' => 48,
       'char' => 1,
     ),
     'file' => '/web/vendor/Auryn/ext/auryn/reflectioncacheapc.zep',
-    'line' => 43,
+    'line' => 49,
     'char' => 0,
   ),
 );

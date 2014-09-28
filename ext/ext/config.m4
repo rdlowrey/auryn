@@ -10,6 +10,7 @@ if test "$PHP_AURYN" = "yes"; then
 	auryn/reflectioncacheapc.zep.c
 	auryn/reflectioncachearray.zep.c
 	auryn/reflectioncacheinterface.zep.c
+	auryn/reflectioncachememcached.zep.c
 	auryn/reflectorinterface.zep.c
 	auryn/standardreflector.zep.c "
 	PHP_NEW_EXTENSION(auryn, $auryn_sources, $ext_shared)

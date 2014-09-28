@@ -12,6 +12,7 @@
 #include "auryn/reflectioncacheapc.zep.h"
 #include "auryn/reflectioncachearray.zep.h"
 #include "auryn/reflectioncacheinterface.zep.h"
+#include "auryn/reflectioncachememcached.zep.h"
 #include "auryn/reflectorinterface.zep.h"
 #include "auryn/standardreflector.zep.h"
 

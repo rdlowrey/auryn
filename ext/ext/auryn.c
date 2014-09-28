@@ -33,6 +33,7 @@ zend_class_entry *auryn_injectorexception_ce;
 zend_class_entry *auryn_invokable_ce;
 zend_class_entry *auryn_reflectioncacheapc_ce;
 zend_class_entry *auryn_reflectioncachearray_ce;
+zend_class_entry *auryn_reflectioncachememcached_ce;
 zend_class_entry *auryn_standardreflector_ce;
 
 ZEND_DECLARE_MODULE_GLOBALS(auryn)
@@ -208,6 +209,7 @@ static PHP_MINIT_FUNCTION(auryn)
 	ZEPHIR_INIT(Auryn_Invokable);
 	ZEPHIR_INIT(Auryn_ReflectionCacheApc);
 	ZEPHIR_INIT(Auryn_ReflectionCacheArray);
+	ZEPHIR_INIT(Auryn_ReflectionCacheMemcached);
 	ZEPHIR_INIT(Auryn_StandardReflector);
 
 #if PHP_VERSION_ID < 50500

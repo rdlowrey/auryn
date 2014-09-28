@@ -2,7 +2,7 @@
 
 namespace Auryn;
 
-interface Reflector
+interface ReflectorInterface
 {
     /**
      * Retrieves ReflectionClass instances, caching them for future retrieval
