@@ -1,43 +1,63 @@
-<phpunit backupGlobals="false"
-         backupStaticAttributes="false"
-         colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         processIsolation="false"
-         stopOnFailure="false"
-         syntaxCheck="false"
-         bootstrap="vendor/autoload.php"
-        >
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    backupGlobals="false"
+    backupStaticAttributes="false"
+    bootstrap="tests/unit/bootstrap.php"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    printsummary="true"
+    processIsolation="false"
+    stopOnFailure="false"
+    strict="false"
+    syntaxCheck="true"
+    timeoutForSmallTests="5"
+    verbose="true"
+>
+
+    <formatter todir="reports" type="xml" outfile="build/coverage/coverage.xml" />
+
     <testsuites>
         <testsuite name="Unit-Tests">
-            <directory>./test</directory>
+            <directory suffix="Test.php">./tests/unit/src</directory>
         </testsuite>
     </testsuites>
+
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">
-            <directory>./lib</directory>
+            <directory suffix=".php">./src</directory>
+            <exclude>
+                <group>exceptions</group>
+                <file>src/autoload.php</file>
+            </exclude>
         </whitelist>
     </filter>
-    
+
     <logging>
-        <log
-            type="coverage-text"
-            target="php://stdout"
-            lowUpperBound="35"
-            highLowerBound="75"
-        />
-        <!-- uncomment below to generate HTML code coverage reports in ./test/coverage -->
-        <!--
-        <log
-            type="coverage-html"
-            target="./test/coverage"
-            charset="UTF-8"
-            yui="true"
-            lowUpperBound="35"
-            highLowerBound="70"
-            showUncoveredFiles="true"
-        />
-        -->
+        <log type="coverage-text" target="php://stdout" lowUpperBound="35" highLowerBound="75"/>
+
+        <log type="coverage-html" target="build/coverage" title="sbux.http" charset="UTF-8" yui="true" highlight="true" lowUpperBound="35" highLowerBound="70"/>
+        <log type="coverage-clover" target="build/logs/clover.xml"/>
+        <log type="coverage-crap4j" target="build/logs/crap4j.xml"/>
+        <log type="junit" target="build/logs/junit.xml" logIncompleteSkipped="false"/>
+        <log type="metrics-xml" target="build/logs/metrics.xml"/>
+        <log type="pmd-xml" target="build/logs/pmd.xml" cpdMinLines="5" cpdMinMatches="70"/>
+        <log type="testdox-html" target="build/logs/testdox.html"/>
+
+        <pmd>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Project_CRAP" threshold="5,30"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Class_DepthOfInheritanceTree" threshold="6"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Class_EfferentCoupling" threshold="20"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Class_ExcessiveClassLength" threshold="1000"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Class_ExcessivePublicCount" threshold="45"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Class_TooManyFields" threshold="15"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Function_CodeCoverage" threshold="35,70"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Function_CRAP" threshold="30"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Function_CyclomaticComplexity" threshold="20"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Function_ExcessiveMethodLength" threshold="100"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Function_ExcessiveParameterList" threshold="10"/>
+            <rule class="PHPUnit_Util_Log_PMD_Rule_Function_NPathComplexity" threshold="200"/>
+        </pmd>
     </logging>
 </phpunit>

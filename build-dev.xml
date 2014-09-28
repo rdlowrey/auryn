@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="sbux.http" default="build">
+    <target name="build" depends="vendor-install,lint-modified,phpab,phpunit"/>
+
+    <target name="vendor-install" description="Install vendors.">
+        <exec executable="composer">
+            <env key="HTTP_PROXY" path="http://10.9.19.12:6588"/>
+            <env key="HTTPS_PROXY" path="https://10.9.19.12:6588"/>
+            <arg value="install"/>
+        </exec>
+    </target>
+
+    <!--
+        More faster : lint only modified files
+
+        We create a new target to retrieve a list of modified files
+        If there is modified files, execute the lint target, else skip
+        with the `if="modifiedFiles"` option.
+
+        The list of modified files is stored in ${files.modified}, one file per line.
+
+        Feel free to reuse the checkModified target to execute other tasks only on
+        newly modified .php files
+    -->
+
+    <!-- A new target to search for modified files -->
+    <target name="checkModified" description="Check for modified php files">
+        <echo message="Searching for newly modified files" />
+
+        <path id="editedfiles">
+            <fileset dir="${basedir}/src">
+                <!-- Search only for modified files -->
+                <modified />
+
+                <!-- Search only for files with .php extension -->
+                <include name="**/*.php" />
+
+                <!-- Exclude vendor directory -->
+                <exclude name="**/vendor/**" />
+            </fileset>
+
+            <fileset dir="${basedir}/tests">
+                <!-- Search only for modified files -->
+                <modified />
+
+                <!-- Search only for files with .php extension -->
+                <include name="**/*.php" />
+
+                <!-- Exclude vendor directory -->
+                <exclude name="**/vendor/**" />
+            </fileset>
+        </path>
+
+        <pathconvert pathsep="${line.separator}" property="files.modified" refid="editedfiles" />
+
+        <condition property="modifiedFiles">
+            <not>
+                <equals arg1="${files.modified}" arg2="" />
+            </not>
+        </condition>
+    </target>
+
+    <!-- The Php Lint target. Will only execute if and only if there is some modified files -->
+    <target name="lint-modified" depends="checkModified" description="Perform syntax check of sourcecode files" if="modifiedFiles">
+        <echo message="Linting php files" />
+        <exec executable="bash" failonerror="true">
+            <arg value="-c" />
+            <arg value="echo '${files.modified}' | xargs -n 1 -P 4 php -l" />
+        </exec>
+    </target>
+
+    <!-- Just lint all files in parallel. If you want to lint all files, not only on modified one -->
+    <target name="lint-all" description="Perform syntax check of sourcecode files">
+        <exec executable="bash" failonerror="true">
+            <arg value="-c" />
+            <arg value="find -L ${basedir}/src -name '*.php' -print0 | xargs -0 -n 1 -P 4 php -l" />
+        </exec>
+    </target>
+
+    <target name="phpab" description="Generate autoloader scripts">
+        <exec executable="phpab">
+            <arg value="--basedir" />
+            <arg value="${basedir}/src" />
+            <arg value="--output" />
+            <arg path="${basedir}/src/autoload.php" />
+            <arg path="${basedir}/src" />
+        </exec>
+
+        <exec executable="phpab">
+            <arg value="--output" />
+            <arg path="${basedir}/tests/autoload.php" />
+            <arg path="${basedir}/tests" />
+        </exec>
+    </target>
+
+    <target name="phpunit" description="Run unit tests with PHPUnit">
+        <copy todir="${basedir}/build/php.d">
+            <fileset dir="/sbux/users/rwad/etc/php5/conf.d"/>
+        </copy>
+
+        <move file="${basedir}/build/php.d/xdebug.ini.disabled" tofile="${basedir}/build/php.d/xdebug.ini"/>
+
+        <!-- xml formatting intentional, don’t want whitespace at start of line -->
+        <echo file="${basedir}/build/php.d/coverage.ini">memory_limit = 1536M</echo>
+
+        <exec executable="/sbux/users/rwad/usr/bin/php" failonerror="true">
+            <env key="PHP_INI_SCAN_DIR" path="${basedir}/build/php.d"/>
+            <arg line="/sbux/users/rwad/usr/bin/phpunit --configuration ${basedir}/phpunit.xml" />
+        </exec>
+    </target>
+
+    <target name="phpcb" description="Aggregate tool output with PHP_CodeBrowser">
+        <exec executable="phpcb">
+            <arg value="--log" />
+            <arg path="${basedir}/build/logs" />
+            <arg value="--source" />
+            <arg path="${basedir}/src" />
+            <arg value="--output" />
+            <arg path="${basedir}/build/code-browser" />
+        </exec>
+    </target>
+</project>

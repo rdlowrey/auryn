@@ -28,13 +28,14 @@
     },
     "autoload": {
         "psr-4": {
-            "Auryn\\": "lib/"
+            "Auryn\\": "src/",
+            "Sbux\\": "src2/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Auryn\\Test\\": "test/"
+            "Auryn\\Test\\": "tests/unit/src"
         },
-        "files": ["test/fixtures.php"]
+        "files": ["tests/unit/src/fixtures.php"]
     }
 }

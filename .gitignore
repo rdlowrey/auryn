@@ -1,3 +1,5 @@
+build/
 vendor/
 composer.lock
 .idea
+sftp-config.json
