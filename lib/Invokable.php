@@ -32,10 +32,15 @@ class Invokable {
 
     public function __invoke() {
         $args = func_get_args();
+        $reflection = $this->callableReflection;
 
-        return $this->isInstanceMethod
-            ? $this->reflFunc->invokeArgs($this->invokeObj, $args)
-            : $this->reflFunc->invokeArgs($args);
+        if ($this->isMethod) {
+            return $reflection->invokeArgs($this->invocationObject, $args);
+        }
+
+        return $this->callableReflection->isClosure()
+            ? call_user_func_array(\Closure::bind($reflection->getClosure(), $reflection->getClosureThis(), $reflection->getClosureScopeClass()->name), $args)
+            : $reflection->invokeArgs($args);
     }
 
     public function getCallableReflection() {
