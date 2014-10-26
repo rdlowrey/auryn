@@ -40,9 +40,14 @@ class Executable {
 
     public function __invoke() {
         $args = func_get_args();
+        $reflection = $this->callableReflection;
 
-        return $this->isMethod
-            ? $this->callableReflection->invokeArgs($this->invocationObject, $args)
-            : $this->callableReflection->invokeArgs($args);
+        if ($this->isMethod) {
+            return $reflection->invokeArgs($this->methodInvocationObject, $args);
+        }
+
+        return $this->callableReflection->isClosure()
+            ? call_user_func_array(\Closure::bind($reflection->getClosure(), $reflection->getClosureThis(), $reflection->getClosureScopeClass()->name), $args)
+            : $reflection->invokeArgs($args);
     }
 }
