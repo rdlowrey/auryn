@@ -2,6 +2,10 @@
 
 - n/a
 
+##### v0.14.1
+
+- Fix broken $this reference when invoking a ReflectionFunction with Closures
+
 v0.14.0
 ================================================================================
 
