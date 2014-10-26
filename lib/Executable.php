@@ -46,7 +46,7 @@ class Executable {
             return $reflection->invokeArgs($this->methodInvocationObject, $args);
         }
 
-        return $this->callableReflection->isClosure()
+        return $this->callableReflection->isClosure() && $reflection->getClosureScopeClass() !== null
             ? call_user_func_array(\Closure::bind($reflection->getClosure(), $reflection->getClosureThis(), $reflection->getClosureScopeClass()->name), $args)
             : $reflection->invokeArgs($args);
     }
