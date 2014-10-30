@@ -58,9 +58,13 @@ $ git clone git://github.com/rdlowrey/Auryn.git
 
 ###### Composer
 
-You may also use composer to include Auryn as a dependency in your projects. The relevant package is:
+You may also use composer to include Auryn as a dependency in your projects `composer.json`. The relevant package is `rdlowrey/auryn`.
 
-> rdlowrey/auryn
+Alternatively require the package using composer cli:
+
+```bash
+composer require rdlowrey/auryn "~0.14"
+```
 
 ##### Manual Download
 
