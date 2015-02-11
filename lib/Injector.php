@@ -23,6 +23,14 @@ interface Injector {
     public function define($className, array $injectionDefinition);
 
     /**
+     * Appends a custom injection definition to the specified class injection definitions
+     *
+     * @param string $className The class whose instantiation we wish to add defines to
+     * @param array $injectionDefinition An array mapping parameter names to classes and/or raw values
+     */
+    public function appendDefine($className, array $injectionDefinition);
+
+    /**
      * Assign a global default value for all parameters named $paramName
      *
      * Global parameter definitions are only used for parameters with no typehint, pre-defined or

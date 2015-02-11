@@ -103,6 +103,23 @@ class Provider implements Injector {
 
 
     /**
+     * Appends a custom injection definition to the specified class injection definitions
+     *
+     * @param string $className
+     * @param array $injectionDefinition An associative array matching constructor params to values
+     * @throws \Auryn\BadArgumentException On missing raw injection prefix
+     * @return \Auryn\Provider Returns the current instance
+     */
+    public function appendDefine($className, array $injectionDefinition) {
+        $this->validateInjectionDefinition($injectionDefinition);
+        $normalizedClass = $this->normalizeClassName($className);
+        $this->injectionDefinitions[$normalizedClass] = array_merge($this->injectionDefinitions[$normalizedClass], $injectionDefinition);
+
+        return $this;
+    }
+
+
+    /**
      * Assign a global default value for all parameters named $paramName
      *
      * Global parameter definitions are only used for parameters with no typehint, pre-defined or
