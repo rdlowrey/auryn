@@ -1,6 +1,6 @@
 # Auryn Injector
 
-Auryn is a flexible recursive dependency injector. Use Auryn to bootstrap and wire together
+Auryn is a recursive dependency injector. Use Auryn to bootstrap and wire together
 S.O.L.I.D., object-oriented PHP applications.
 
 ##### How It Works
