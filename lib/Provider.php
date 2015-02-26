@@ -11,7 +11,7 @@ namespace Auryn;
  * class dependencies.
  */
 
-class Provider {
+class Provider implements Injector {
 
     /**
      * @var AurynInjector
