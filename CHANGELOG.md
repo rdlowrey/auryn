@@ -1,6 +1,19 @@
 #### master
 
-- n/a
+- `Injector::buildExecutable()` and `Injector::execute()` no longer accept the
+  optional `$makeAccessible` parameter to allow invocation of protected/private
+  methods.
+- `Provider` class renamed -> `Injector`; `Injector` interface removed
+- Exceptions consolidated into single `InjectorException`
+- Indexed arrays may now be used for injection definitions
+- New delegate (`+`) and definition (`@`) prefixes added for one-offs
+- Removed `ProviderBuilder` class
+- Major internal refactoring
+- Miscellaneous bugfixes
+
+##### v0.14.2
+
+- Fix closure binding regression introduced in 0.14.1
 
 ##### v0.14.1
 

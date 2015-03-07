@@ -74,23 +74,23 @@ Archived tagged release versions are also available for manual download on the p
 
 ## Basic Usage
 
-To start using the injector, simply create a new instance of the `Auryn\Provider` ("the Provider")
+To start using the injector, simply create a new instance of the `Auryn\Injector` ("the Injector")
 class:
 
 ```php
 <?php
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 ```
 
 ### Basic Instantiation
 
 If a class doesn't specify any dependencies in its constructor signature there's little point in
-using the Provider to generate it. However, for the sake of completeness consider that you can do
+using the Injector to generate it. However, for the sake of completeness consider that you can do
 the following with equivalent results:
 
 ```php
 <?php
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 $obj1 = new SomeNamespace\MyClass;
 $obj2 = $injector->make('SomeNamespace\MyClass');
 
@@ -99,9 +99,9 @@ var_dump($obj2 instanceof SomeNamespace\MyClass); // true
 
 ###### Concrete Type-hinted Dependencies
 
-If a class only asks for concrete dependencies you can use the Provider to inject them without
+If a class only asks for concrete dependencies you can use the Injector to inject them without
 specifying any injection definitions. For example, in the following scenario you can use the
-Provider to automatically provision `MyClass` with the required `SomeDependency` and `AnotherDependency`
+Injector to automatically provision `MyClass` with the required `SomeDependency` and `AnotherDependency`
 class instances:
 
 ```php
@@ -119,7 +119,7 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 $myObj = $injector->make('MyClass');
 
 var_dump($myObj->dep1 instanceof SomeDependency); // true
@@ -128,9 +128,9 @@ var_dump($myObj->dep2 instanceof AnotherDependency); // true
 
 ###### Recursive Dependency Instantiation
 
-One of the Provider's key attributes is that it recursively traverses class dependency trees to
+One of the Injector's key attributes is that it recursively traverses class dependency trees to
 instantiate objects. This is just a fancy way of saying, "if you instantiate object A which asks for
-object B, the Provider will instantiate any of object B's dependencies so that B can be instantiated
+object B, the Injector will instantiate any of object B's dependencies so that B can be instantiated
 and provided to A". This is perhaps best understood with a simple example. Consider the following
 classes in which a `Car` asks for `Engine` and the `Engine` class has concrete dependencies of its
 own:
@@ -153,7 +153,7 @@ class Engine {
     }
 }
 
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 $car = $injector->make('Car');
 var_dump($car instanceof Car); // true
 ```
@@ -164,7 +164,7 @@ You may have noticed that the previous examples all demonstrated instantiation o
 explicit, type-hinted, concrete constructor parameters. Obviously, many of your classes won't fit
 this mold. Some classes will type-hint interfaces and abstract classes. Some will specify scalar
 parameters which offer no possibility of type-hinting in PHP. Still other parameters will be arrays,
-etc. In such cases we need to assist the Provider by telling it exactly what we want to inject.
+etc. In such cases we need to assist the Injector by telling it exactly what we want to inject.
 
 ###### Defining Class Names for Constructor Parameters
 
@@ -190,7 +190,7 @@ ahead of time:
 
 ```php
 <?php
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 $injector->define('Car', ['engine' => 'V8']);
 $car = $injector->make('Car');
 
@@ -221,7 +221,7 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 $injector->define('MyClass', ['arg2' => 'SomeImplementationClass']);
 
 $myObj = $injector->make('MyClass');
@@ -248,7 +248,7 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 $dependencyInstance = new SomeImplementation;
 $injector->define('MyClass', [':dependency' => $dependencyInstance]);
 
@@ -259,7 +259,7 @@ var_dump($myObj instanceof MyClass); // true
 
 ###### Specifying Injection Definitions On the Fly
 
-You may also specify injection definitions at call-time with `Auryn\Provider::make`. Consider:
+You may also specify injection definitions at call-time with `Auryn\Injector::make`. Consider:
 
 ```php
 <?php
@@ -274,24 +274,24 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 $myObj = $injector->make('MyClass', ['dependency' => 'SomeImplementation']);
 
 var_dump($myObj instanceof MyClass); // true
 ```
 
-The above code shows how even though we haven't called  the Provider's `define` method, the
+The above code shows how even though we haven't called  the Injector's `define` method, the
 call-time specification allows us to instantiate `MyClass`.
 
 > **NOTE:** on-the-fly instantiation definitions will override a pre-defined definition for the
-specified class, but only in the context of that particular call to `Auryn\Provider::make`.
+specified class, but only in the context of that particular call to `Auryn\Injector::make`.
 
 ### Type-Hint Aliasing
 
 Programming to interfaces is one of the most useful concepts in object-oriented design (OOD), and
 well-designed code should type-hint interfaces whenever possible. But does this mean we have to
 assign injection definitions for every class in our application to reap the benefits of abstracted
-dependencies? Thankfully the answer to this question is, "NO."  The Provider accommodates this goal
+dependencies? Thankfully the answer to this question is, "NO."  The Injector accommodates this goal
 by accepting "aliases". Consider:
 
 ```php
@@ -305,9 +305,9 @@ class Car {
     }
 }
 
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 
-// Tell the Provider class to inject an instance of V8 any time
+// Tell the Injector class to inject an instance of V8 any time
 // it encounters an Engine type-hint
 $injector->alias('Engine', 'V8');
 
@@ -316,7 +316,7 @@ var_dump($car instanceof Car); // bool(true)
 ```
 
 In this example we've demonstrated how to specify an alias class for any occurrence of a particular
-interface or abstract class type-hint. Once an implementation is assigned, the Provider will use it
+interface or abstract class type-hint. Once an implementation is assigned, the Injector will use it
 to provision any parameter with a matching type-hint.
 
 > **IMPORTANT:** If an injection definition is defined for a parameter covered by an implementation
@@ -324,21 +324,21 @@ assignment, the definition takes precedence over the implementation.
 
 ### Non-Class Parameters
 
-All of the previous examples have demonstrated how the Provider class instantiates parameters based
+All of the previous examples have demonstrated how the Injector class instantiates parameters based
 on type-hints, class name definitions and existing instances. But what happens if we want to inject
 a scalar or other non-object variable into a class? First, let's establish the following behavioral
 rule:
 
-> **IMPORTANT:** The Provider assumes all injection definitions are class names by default.
+> **IMPORTANT:** The Injector assumes all injection definitions are class names by default.
 
-If you want the Provider to treat a parameter definition as a "raw" value and not a class name, you
+If you want the Injector to treat a parameter definition as a "raw" value and not a class name, you
 must prefix the parameter name in your definition with a colon character `:`. For example, consider
-the following code in which we tell the Provider to share a `PDO` database connection instance and
+the following code in which we tell the Injector to share a `PDO` database connection instance and
 define its scalar constructor parameters:
 
 ```php
 <?php
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 $injector->share('PDO');
 $injector->define('PDO', [
     ':dsn' => 'mysql:dbname=testdb;host=127.0.0.1',
@@ -349,7 +349,7 @@ $injector->define('PDO', [
 $db = $injector->make('PDO');
 ```
 
-The colon character preceding the parameter names tells the Provider that the associated values ARE
+The colon character preceding the parameter names tells the Injector that the associated values ARE
 NOT class names. If the colons had been omitted above, Auryn would attempt to instantiate classes of
 the names specified in the string and an exception would result. Also, note that we could just as
 easily specified arrays or integers or any other data type in the above definitions. As long as the
@@ -373,7 +373,7 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 $injector->bindParam('myValue', $myUniversalValue);
 $obj = $injector->make('MyClass');
 var_dump($obj->myValue === 42); // bool(true)
@@ -396,7 +396,7 @@ One of the more ubiquitous plagues in modern OOP is the Singleton anti-pattern. 
 limit classes to a single instance often fall into the trap of using `static` Singleton
 implementations for things like configuration classes and database connections. While it's often
 necessary to prevent multiple instances of a class, the Singleton method spells death to testability
-and should generally be avoided. `Auryn\Provider` makes sharing class instances across contexts a
+and should generally be avoided. `Auryn\Injector` makes sharing class instances across contexts a
 triviality while allowing maximum testability and API transparency.
 
 Let's consider how a typical problem facing object-oriented web applications is easily solved by
@@ -422,7 +422,7 @@ class MyController {
 
 $db = new PDO('mysql:host=localhost;dbname=mydb', 'user', 'pass');
 
-$injector = new Auryn\Provider(new Auryn\ReflectionPool);
+$injector = new Auryn\Injector(new Auryn\ReflectionPool);
 $injector->share($db);
 
 $myController = $injector->make('MyController');
@@ -432,7 +432,7 @@ In the above code, the `DataMapper` instance will be provisioned with the same `
 connection instance we originally shared. This example is contrived and overly simple, but the
 implication should be clear:
 
-> By sharing an instance of a class, `Auryn\Provider` will always use that instance when
+> By sharing an instance of a class, `Auryn\Injector` will always use that instance when
 > provisioning classes that type-hint the shared class.
 
 ###### A Simpler Example
@@ -445,7 +445,7 @@ class Person {
     public $name = 'John Snow';
 }
 
-$injector = new Auryn\Provider(new Auryn\ReflectionPool);
+$injector = new Auryn\Injector(new Auryn\ReflectionPool);
 $injector->share('Person');
 
 $person = $injector->make('Person');
@@ -458,24 +458,24 @@ var_dump($anotherPerson->name); // Arya Stark
 var_dump($person === $anotherPerson); // bool(true) because it's the same instance!
 ```
 
-Defining an object as shared will store the provisioned instance in the Provider's shared cache and
+Defining an object as shared will store the provisioned instance in the Injector's shared cache and
 all future requests to the provider for an injected instance of that class will return the
 originally created object (unless you manually clear it from the cache). Note that in the above code
 we shared the class name (`Person`) instead of an actual instance. Sharing works with either a class
-name or an instance of a class. The difference is that when you specify a class name the Provider
+name or an instance of a class. The difference is that when you specify a class name the Injector
 will cache the shared instance the first time it is asked to create it.
 
-> **NOTE:** Once the Provider caches a shared instance, call-time definitions passed to
-`Auryn\Provider::make` will have no effect. Once shared, an instance will always be returned for
+> **NOTE:** Once the Injector caches a shared instance, call-time definitions passed to
+`Auryn\Injector::make` will have no effect. Once shared, an instance will always be returned for
 instantiations of its type until the object is un-shared or refreshed:
 
 ```php
 <?php
-// Clears shared instance from the Provider cache and unshares future StdClass instantiations
+// Clears shared instance from the Injector cache and unshares future StdClass instantiations
 $injector->unshare('StdClass');
 
 // Clears any currently shared StdClass instance, but maintains its status as a shared class.
-// A new StdClass will be created and cached the next time the Provider is asked to instantiate
+// A new StdClass will be created and cached the next time the Injector is asked to instantiate
 // an instance of StdClass.
 $injector->refresh('StdClass');
 ```
@@ -504,7 +504,7 @@ $complexClassFactory = function() {
     return $obj;
 };
 
-$injector = new Auryn\Provider(new Auryn\ReflectionPool);
+$injector = new Auryn\Injector(new Auryn\ReflectionPool);
 $injector->delegate('MyComplexClass', $complexClassFactory);
 
 $obj = $injector->make('MyComplexClass');
@@ -512,13 +512,13 @@ var_dump($obj->verification); // bool(true)
 ```
 
 In the above code we delegate instantiation of the `MyComplexClass` class to a closure,
-`$complexClassFactory`. Once this delegation is made, the Provider will return the results of the
+`$complexClassFactory`. Once this delegation is made, the Injector will return the results of the
 specified closure when asked to instantiate `MyComplexClass`.
 
 ###### Available Delegate Types
 
 Any valid PHP callable may be registered as a class instantiation delegate using
-`Auryn\Provider::delegate`. Additionally you may specify the name of a delegate class that
+`Auryn\Injector::delegate`. Additionally you may specify the name of a delegate class that
 specifies an `__invoke` method and it will be automatically provisioned and have its `__invoke`
 method called at delegation time. Instance methods from uninstantiated classes may also be specified
 using the `['NonStaticClassName', 'factoryMethod']` construction. For example:
@@ -552,7 +552,7 @@ $obj = $injector->make('SomeClassWithDelegatedInstantiation');
 var_dump($obj->value); // int(1)
 
 // This also works
-$injector->delegate('SomeClassWithDelegatedInstantiation', ['MyFactory', 'factoryMethod']);
+$injector->delegate('SomeClassWithDelegatedInstantiation', 'MyFactory::factoryMethod');
 $obj = $injector->make('SomeClassWithDelegatedInstantiation');
 $obj = $injector->make('SomeClassWithDelegatedInstantiation');
 var_dump($obj->value); // int(2)
@@ -591,6 +591,7 @@ The following examples all work:
 
 ```php
 <?php
+$injector = new Auryn\Injector;
 $injector->execute(function(){});
 $injector->execute([$objectInstance, 'methodName']);
 $injector->execute('globalFunctionName');
@@ -599,6 +600,7 @@ $injector->execute(['MyStaticClass', 'myStaticMethod']);
 $injector->execute(['MyChildStaticClass', 'parent::myStaticMethod']);
 $injector->execute('ClassThatHasMagicInvoke');
 $injector->execute($instanceOfClassThatHasMagicInvoke);
+$injector->execute('MyClass::myInstanceMethod');
 ```
 
 Additionally, you can pass in the name of a class for a non-static method and the injector will
@@ -611,27 +613,27 @@ class Dependency {}
 class AnotherDependency {}
 class Example {
     function __construct(Dependency $dep){}
-    function myMethod(AnotherDependency $anotherDep, $arg) {
-        return $arg;
+    function myMethod(AnotherDependency $arg1, $arg2) {
+        return $arg2;
     }
 }
 
-$injector = new Auryn\Provider;
+$injector = new Auryn\Injector;
 
 // outputs: int(42)
-var_dump($injector->execute('Example::myMethod', $args = [':arg' => 42]));
+var_dump($injector->execute('Example::myMethod', $args = [':arg2' => 42]));
 ```
 
 
 ### Dependency Resolution
 
-`Auryn\Provider` resolves dependencies in the following order:
+`Auryn\Injector` resolves dependencies in the following order:
 
 1. If a shared instance exists for the class in question, the shared instance will always be returned
 2. If a delegate callable is assigned for a class, its return result will always be used
-3. If a call-time definition is passed to `Auryn\Provider::make`, that definition will be used
+3. If a call-time definition is passed to `Auryn\Injector::make`, that definition will be used
 4. If a pre-defined definition exists, it will be used
-5. If a dependency is type-hinted, the Provider will recursively instantiate it subject to any implementations or definitions
+5. If a dependency is type-hinted, the Injector will recursively instantiate it subject to any implementations or definitions
 6. If no type-hint exists and the parameter has a default value, the default value is injected
 7. If a global parameter value is defined that value is used
 8. Throw an exception because you did something stupid
@@ -726,7 +728,7 @@ class SomeService {
 ```
 
 In our wiring/bootstrap code, we simply instantiate the `PDO` instance once and share it in the
-context of the `Provider`:
+context of the `Injector`:
 
 ```php
 <?php
@@ -734,7 +736,7 @@ $pdo = new PDO('sqlite:some_sqlite_file.db');
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $reflectionPool = new Auryn\ReflectionPool;
-$injector = new Auryn\Provider($reflectionPool);
+$injector = new Auryn\Injector($reflectionPool);
 
 $injector->share($pdo);
 $mapper = $injector->make('SomeService');
@@ -792,7 +794,7 @@ $requestUri = $request->getUri();
 $requestMethod = strtolower($request->getMethod());
 
 $reflectionCache = new Auryn\ReflectionPool();
-$injector = new Auryn\Provider($reflectionCache);
+$injector = new Auryn\Injector($reflectionCache);
 $injector->share($request);
 
 try {
@@ -844,6 +846,6 @@ In the above example the Auryn DIC allows us to write fully testable, fully OO c
 for their dependencies. Because the DIC recursively instantiates the dependencies of objects it
 creates we have no need to pass around a Service Locator. Additionally, this example shows how we can
 eliminate evil Singletons using the sharing capabilities of the Auryn DIC. In the front controller
-code, we share the request object so that any classes instantiated by the `Auryn\Provider` that ask
+code, we share the request object so that any classes instantiated by the `Auryn\Injector` that ask
 for a `Request` will receive the same instance. This feature not only helps eliminate Singletons,
 but also the need for hard-to-test `static` properties.
