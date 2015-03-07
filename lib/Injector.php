@@ -3,63 +3,62 @@
 namespace Auryn;
 
 class Injector {
-    const A_CLASS = ':';
+    const A_RAW = ':';
     const A_DELEGATE = '+';
     const A_DEFINE = '@';
     const I_BINDINGS = 1;
     const I_DELEGATES = 2;
-    const I_MUTATORS = 4;
+    const I_PREPARES = 4;
     const I_ALIASES = 8;
     const I_SHARES = 16;
     const I_ALL = 17;
+    
     const E_NON_EMPTY_STRING_ALIAS = 1;
+    const M_NON_EMPTY_STRING_ALIAS = "Invalid alias: non-empty string required at arguments 1 and 2";
     const E_SHARED_CANNOT_ALIAS = 2;
+    const M_SHARED_CANNOT_ALIAS = "Cannot alias class %s to %s because it is currently shared";
     const E_SHARE_ARGUMENT = 3;
+    const M_SHARE_ARGUMENT = "%s::share() requires a string class name or object instance at Argument 1; %s specified";
     const E_ALIASED_CANNOT_SHARE = 4;
+    const M_ALIASED_CANNOT_SHARE = "Cannot share class %s because it is currently aliased to %s";
     const E_INVOKABLE = 5;
+    const M_INVOKABLE = "Invalid invokable: callable or provisional string required";
     const E_NON_PUBLIC_CONSTRUCTOR = 6;
+    const M_NON_PUBLIC_CONSTRUCTOR = "Cannot instantiate protected/private constructor in class %s";
     const E_NEEDS_DEFINITION = 7;
+    const M_NEEDS_DEFINITION = "Injection definition required for non-concrete parameter $%s of type %s";
     const E_MAKE_FAILURE = 8;
+    const M_MAKE_FAILURE = "Could not make %s: %s";
     const E_UNDEFINED_PARAM = 9;
+    const M_UNDEFINED_PARAM = "No definition available to provision typeless parameter \$%s at position %d in %s()";
     const E_DELEGATE_ARGUMENT = 10;
+    const M_DELEGATE_ARGUMENT = "%s::delegate expects a valid callable or executable class::method string at Argument 2";
     const E_CYCLIC_DEPENDENCY = 11;
+    const M_CYCLIC_DEPENDENCY = "Detected a cyclic dependency while provisioning %s";
 
     private $reflector;
-    private $bindings = array();
+    private $classDefinitions = array();
+    private $paramDefinitions = array();
     private $aliases = array();
     private $shares = array();
-    private $mutators = array();
+    private $prepares = array();
     private $delegates = array();
-    private $paramDefinitions = array();
-    private $inProgress = array();
-    private static $errorMessages = array(
-        self::E_NON_EMPTY_STRING_ALIAS => 'Invalid alias: non-empty string required at both Argument 1 and Argument 2',
-        self::E_SHARED_CANNOT_ALIAS => 'Cannot alias class %s to %s: it is already shared',
-        self::E_SHARE_ARGUMENT => '%s::share() requires a string class name or object instance at Argument 1; %s specified',
-        self::E_ALIASED_CANNOT_SHARE => 'Cannot share class %s, it has already been aliased to %s',
-        self::E_INVOKABLE => 'Invalid invokable: callable or provisional string required',
-        self::E_NON_PUBLIC_CONSTRUCTOR => 'Cannot instantiate class %s; constructor method is protected/private',
-        self::E_NEEDS_DEFINITION => 'Injection definition/implementation required for non-concrete parameter $%s of type %s',
-        self::E_MAKE_FAILURE => "Could not make %s: %s",
-        self::E_UNDEFINED_PARAM => 'No definition available while attempting to provision typeless non-concrete parameter %s(%s)',
-        self::E_DELEGATE_ARGUMENT => '%s::delegate expects a valid callable or provisionable executable class or method reference at Argument 2',
-        self::E_CYCLIC_DEPENDENCY => "Detected a cyclic dependency while provisioning %s",
-    );
+    private $inProgressMakes = array();
 
     public function __construct(Reflector $reflector = null) {
         $this->reflector = $reflector ?: new CachingReflector;
     }
 
     /**
-     * Bind instantiation directives for the specified class
+     * Define instantiation directives for the specified class
      *
-     * @param string $name The class (or alias) whose constructor arguments we wish to bind
+     * @param string $name The class (or alias) whose constructor arguments we wish to define
      * @param array $args An array mapping parameter names to values/instructions
      * @return self
      */
-    public function bind($name, array $args) {
+    public function define($name, array $args) {
         $normalizedName = end($this->resolveAlias($name));
-        $this->bindings[$normalizedName] = $args;
+        $this->classDefinitions[$normalizedName] = $args;
 
         return $this;
     }
@@ -74,7 +73,7 @@ class Injector {
      * @param mixed $value The value to inject for this parameter name
      * @return self
      */
-    public function bindParam($paramName, $value) {
+    public function defineParam($paramName, $value) {
         $this->paramDefinitions[$paramName] = $value;
 
         return $this;
@@ -92,13 +91,13 @@ class Injector {
     public function alias($original, $alias) {
         if (empty($original) || !is_string($original)) {
             throw new InjectorException(
-                self::$errorMessages[self::E_NON_EMPTY_STRING_ALIAS],
+                self::M_NON_EMPTY_STRING_ALIAS,
                 self::E_NON_EMPTY_STRING_ALIAS
             );
         }
         if (empty($alias) || !is_string($alias)) {
             throw new InjectorException(
-                self::$errorMessages[self::E_NON_EMPTY_STRING_ALIAS],
+                self::M_NON_EMPTY_STRING_ALIAS,
                 self::E_NON_EMPTY_STRING_ALIAS
             );
         }
@@ -108,7 +107,7 @@ class Injector {
         if (isset($this->shares[$originalNormalized])) {
             throw new InjectorException(
                 sprintf(
-                    self::$errorMessages[self::E_SHARED_CANNOT_ALIAS],
+                    self::M_SHARED_CANNOT_ALIAS,
                     $this->normalizeName(get_class($this->shares[$originalNormalized])),
                     $alias
                 ),
@@ -145,7 +144,7 @@ class Injector {
         } else {
             throw new InjectorException(
                 sprintf(
-                    self::$errorMessages[self::E_SHARE_ARGUMENT],
+                    self::M_SHARE_ARGUMENT,
                     __CLASS__,
                     gettype($nameOrInstance)
                 ),
@@ -179,7 +178,7 @@ class Injector {
             // You cannot share an instance of a class name that is already aliased
             throw new InjectorException(
                 sprintf(
-                    self::$errorMessages[self::E_ALIASED_CANNOT_SHARE],
+                    self::M_ALIASED_CANNOT_SHARE,
                     $normalizedName,
                     $this->aliases[$normalizedName]
                 ),
@@ -190,7 +189,7 @@ class Injector {
     }
 
     /**
-     * Register a mutator callable to modify/prepare objects of type $name after instantiation
+     * Register a prepare callable to modify/prepare objects of type $name after instantiation
      *
      * Any callable or provisionable invokable may be specified. Preparers are passed two
      * arguments: the instantiated object to be mutated and the current Injector instance.
@@ -199,29 +198,27 @@ class Injector {
      * @param mixed $callableOrMethodStr Any callable or provisionable invokable method
      * @return self
      */
-    public function mutate($name, $callableOrMethodStr) {
-        if ($this->isInvokable($callableOrMethodStr) === false) {
+    public function prepare($name, $callableOrMethodStr) {
+        if ($this->isExecutable($callableOrMethodStr) === false) {
             throw new InjectorException(
-                self::$errorMessages[self::E_INVOKABLE],
+                self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
         }
 
         $normalizedName = end($this->resolveAlias($name));
-        $this->mutators[$normalizedName] = $callableOrMethodStr;
+        $this->prepares[$normalizedName] = $callableOrMethodStr;
 
         return $this;
     }
 
-    private function isInvokable($exe) {
+    private function isExecutable($exe) {
         if (is_callable($exe)) {
             return true;
         }
-
         if (is_string($exe) && method_exists($exe, '__invoke')) {
             return true;
         }
-
         if (is_array($exe) && isset($exe[0], $exe[1]) && method_exists($exe[0], $exe[1])) {
             return true;
         }
@@ -237,9 +234,9 @@ class Injector {
      * @return self
      */
     public function delegate($name, $callableOrMethodStr) {
-        if ($this->isInvokable($callableOrMethodStr) === false) {
+        if ($this->isExecutable($callableOrMethodStr) === false) {
             throw new InjectorException(
-                sprintf(self::$errorMessages[self::E_DELEGATE_ARGUMENT], __CLASS__),
+                sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__),
                 self::E_DELEGATE_ARGUMENT
             );
         }
@@ -253,7 +250,7 @@ class Injector {
     /**
      * Retrieve stored data for the specified definition type
      *
-     * Exposes introspection of existing binds/delegates/shares/etc. for decoration and composition.
+     * Exposes introspection of existing binds/delegates/shares/etc for decoration and composition.
      *
      * @param string $nameFilter An optional class name filter
      * @param int $typeFilter A bitmask of Injector::* type constant flags
@@ -267,14 +264,14 @@ class Injector {
             $typeFilter = self::I_ALL;
         }
 
-        if ($typeFilter & self::I_BINDINGS && ($elements = $this->filter($this->bindings, $name))) {
+        if ($typeFilter & self::I_BINDINGS && ($elements = $this->filter($this->classDefinitions, $name))) {
             $result[self::I_BINDINGS] = $elements;
         }
         if ($typeFilter & self::I_DELEGATES && ($elements = $this->filter($this->delegates, $name))) {
             $result[self::I_DELEGATES] = $elements;
         }
-        if ($typeFilter & self::I_MUTATORS && ($elements = $this->filter($this->mutators, $name))) {
-            $result[self::I_MUTATORS] = $elements;
+        if ($typeFilter & self::I_PREPARES && ($elements = $this->filter($this->prepares, $name))) {
+            $result[self::I_PREPARES] = $elements;
         }
         if ($typeFilter & self::I_ALIASES && ($elements = $this->filter($this->aliases, $name))) {
             $result[self::I_ALIASES] = $elements;
@@ -306,30 +303,30 @@ class Injector {
     public function make($name, array $args = array()) {
         list($className, $normalizedClass) = $this->resolveAlias($name);
 
-        if (isset($this->inProgress[$normalizedClass])) {
+        if (isset($this->inProgressMakes[$normalizedClass])) {
             throw new InjectorException(
                 sprintf(
-                    self::$errorMessages[self::E_CYCLIC_DEPENDENCY],
+                    self::M_CYCLIC_DEPENDENCY,
                     $className
                 ),
                 self::E_CYCLIC_DEPENDENCY
             );
         }
 
-        $this->inProgress[$normalizedClass] = true;
+        $this->inProgressMakes[$normalizedClass] = true;
 
         // isset() is used specifically here because classes may be marked as "shared" before an
         // instance is stored. In these cases the class is "shared," but it has a null value and
         // instantiation is needed.
         if (isset($this->shares[$normalizedClass])) {
-            unset($this->inProgress[$normalizedClass]);
+            unset($this->inProgressMakes[$normalizedClass]);
 
             return $this->shares[$normalizedClass];
         }
 
         if (isset($this->delegates[$normalizedClass])) {
-            $invokable = $this->makeInvokable($this->delegates[$normalizedClass]);
-            $obj = $invokable($className, $this);
+            $executable = $this->buildExecutable($this->delegates[$normalizedClass]);
+            $obj = $executable($className, $this);
         } else {
             $obj = $this->provisionInstance($className, $normalizedClass, $args);
         }
@@ -338,9 +335,9 @@ class Injector {
             $this->shares[$normalizedClass] = $obj;
         }
 
-        $this->mutateInstance($obj, $normalizedClass);
+        $this->prepareInstance($obj, $normalizedClass);
 
-        unset($this->inProgress[$normalizedClass]);
+        unset($this->inProgressMakes[$normalizedClass]);
 
         return $obj;
     }
@@ -353,13 +350,13 @@ class Injector {
                 $obj = $this->instantiateWithoutCtorParams($className);
             } elseif (!$ctor->isPublic()) {
                 throw new InjectorException(
-                    sprintf(self::$errorMessages[self::E_NON_PUBLIC_CONSTRUCTOR], $className),
+                    sprintf(self::M_NON_PUBLIC_CONSTRUCTOR, $className),
                     self::E_NON_PUBLIC_CONSTRUCTOR
                 );
             } elseif ($ctorParams = $this->reflector->getCtorParams($className)) {
                 $reflClass = $this->reflector->getClass($className);
-                $definition = isset($this->bindings[$normalizedClass])
-                    ? array_replace($this->bindings[$normalizedClass], $definition)
+                $definition = isset($this->classDefinitions[$normalizedClass])
+                    ? array_replace($this->classDefinitions[$normalizedClass], $definition)
                     : $definition;
                 $args = $this->provisionFuncArgs($ctor, $definition);
                 $obj = $reflClass->newInstanceArgs($args);
@@ -371,7 +368,7 @@ class Injector {
 
         } catch (\ReflectionException $e) {
             throw new InjectorException(
-                sprintf(self::$errorMessages[self::E_MAKE_FAILURE], $className, $e->getMessage()),
+                sprintf(self::M_MAKE_FAILURE, $className, $e->getMessage()),
                 self::E_MAKE_FAILURE,
                 $e
             );
@@ -384,7 +381,7 @@ class Injector {
         if (!$reflClass->isInstantiable()) {
             $type = $reflClass->isInterface() ? 'interface' : 'abstract';
             throw new InjectorException(
-                sprintf(self::$errorMessages[self::E_NEEDS_DEFINITION], $type, $className),
+                sprintf(self::M_NEEDS_DEFINITION, $type, $className),
                 self::E_NEEDS_DEFINITION
             );
         }
@@ -405,10 +402,11 @@ class Injector {
                 // indexed arguments take precedence over named parameters
                 $arg = $definition[$i];
             } elseif (isset($definition[$name]) || array_key_exists($name, $definition)) {
-                $arg = $definition[$name];
-            } elseif (($prefix = self::A_CLASS . $name) && isset($definition[$prefix])) {
                 // interpret the param as a class name to be instantiated
-                $arg = $this->make($definition[$prefix]);
+                $arg = $this->make($definition[$name]);
+            } elseif (($prefix = self::A_RAW . $name) && (isset($definition[$prefix]) || array_key_exists($prefix, $definition))) {
+                // interpret the param as a raw value to be injected
+                $arg = $definition[$prefix];
             } elseif (($prefix = self::A_DELEGATE . $name) && isset($definition[$prefix])) {
                 // interpret the param as an invokable delegate
                 $arg = $this->buildArgFromDelegate($name, $definition[$prefix]);
@@ -444,16 +442,16 @@ class Injector {
     }
 
     private function buildArgFromDelegate($paramName, $callableOrMethodStr) {
-        if ($this->isInvokable($callableOrMethodStr) === false) {
+        if ($this->isExecutable($callableOrMethodStr) === false) {
             throw new InjectorException(
-                self::$errorMessages[self::E_INVOKABLE],
+                self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
         }
 
-        $invokable = $this->makeInvokable($callableOrMethodStr);
+        $executable = $this->buildExecutable($callableOrMethodStr);
 
-        return $invokable($paramName, $this);
+        return $executable($paramName, $this);
     }
 
     private function buildArgFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam) {
@@ -485,13 +483,14 @@ class Injector {
             $classWord = ($reflFunc instanceof \ReflectionMethod)
                 ? $reflFunc->getDeclaringClass()->name . '::'
                 : '';
-            $funcWord = $reflFunc->name;
+            $funcWord = $classWord . $reflFunc->name;
 
             throw new InjectorException(
                 sprintf(
-                    self::$errorMessages[self::E_UNDEFINED_PARAM],
-                    $classWord . $funcWord,
-                    $reflParam->name
+                    self::M_UNDEFINED_PARAM,
+                    $reflParam->name,
+                    $reflParam->getPosition(),
+                    $funcWord
                 ),
                 self::E_UNDEFINED_PARAM
             );
@@ -500,99 +499,97 @@ class Injector {
         return $arg;
     }
 
-    private function mutateInstance($obj, $normalizedClass) {
-        if (isset($this->mutators[$normalizedClass])) {
-            $mutator = $this->mutators[$normalizedClass];
-            $invokable = $this->makeInvokable($mutator);
-            $invokable($obj, $this);
+    private function prepareInstance($obj, $normalizedClass) {
+        if (isset($this->prepares[$normalizedClass])) {
+            $prepare = $this->prepares[$normalizedClass];
+            $executable = $this->buildExecutable($prepare);
+            $executable($obj, $this);
         }
         if ($interfaces = class_implements($obj)) {
             $interfaces = array_flip(array_map(array($this, 'normalizeName'), $interfaces));
-            $mutators = array_intersect_key($this->mutators, $interfaces);
-            foreach ($mutators as $mutator) {
-                $invokable = $this->makeInvokable($mutator);
-                $invokable($obj, $this);
+            $prepares = array_intersect_key($this->prepares, $interfaces);
+            foreach ($prepares as $prepare) {
+                $executable = $this->buildExecutable($prepare);
+                $executable($obj, $this);
             }
         }
     }
 
     /**
-     * Provision an Invokable instance from any valid callable or class/method string
+     * Invoke the specified callable or class::method string, provisioning dependencies along the way
      *
      * @param mixed $callableOrMethodStr A valid PHP callable or a provisionable ClassName::methodName string
-     * @return Auryn\Invokable
+     * @param array $args Optional array specifying params with which to invoke the provisioned callable
+     * @throws \Auryn\InjectionException
+     * @return mixed Returns the invocation result returned from calling the generated executable
      */
-    public function makeInvokable($callableOrMethodStr) {
-        list($reflFunc, $invocationObj) = $this->generateInvokables($callableOrMethodStr);
+    public function execute($callableOrMethodStr, array $args = array()) {
+        list($reflFunc, $invocationObj) = $this->buildExecutableStruct($callableOrMethodStr);
+        $executable = new Executable($reflFunc, $invocationObj);
+        $args = $this->provisionFuncArgs($reflFunc, $args);
 
-        return new Invokable($reflFunc, $invocationObj);
+        return call_user_func_array(array($executable, '__invoke'), $args);
     }
 
     /**
-     * Provision arguments for the specified callable or class/method string
+     * Provision an Executable instance from any valid callable or class::method string
      *
-     * If $callableOrMethodStr is a provisioned Auryn\Invokable instance arguments is
-     * generated for the method/function underlying the invokable instance.
-     *
-     * @param mixed $callableOrMethodStr A callable or a provisionable ClassName::methodName string
-     * @param array $args Optional definition to use when provisioning args
-     * @return array An array of provisioned arguments to use for invocation
+     * @param mixed $callableOrMethodStr A valid PHP callable or a provisionable ClassName::methodName string
+     * @return Auryn\Executable
      */
-    public function makeArguments($callableOrMethodStr, array $args = array()) {
-        $reflFunc = ($callableOrMethodStr instanceof Invokable)
-            ? $callableOrMethodStr->getCallableReflection()
-            : current($this->generateInvokables($callableOrMethodStr));
+    public function buildExecutable($callableOrMethodStr) {
+        list($reflFunc, $invocationObj) = $this->buildExecutableStruct($callableOrMethodStr);
 
-        return $this->provisionFuncArgs($reflFunc, $args);
+        return new Executable($reflFunc, $invocationObj);
     }
 
-    private function generateInvokables($callableOrMethodStr) {
+    private function buildExecutableStruct($callableOrMethodStr) {
         if (is_string($callableOrMethodStr)) {
-            $invokableArr = $this->generateInvokablesFromString($callableOrMethodStr);
+            $executableStruct = $this->buildExecutableStructFromString($callableOrMethodStr);
         } elseif ($callableOrMethodStr instanceof \Closure) {
             $callableRefl = new \ReflectionFunction($callableOrMethodStr);
-            $invokableArr = array($callableRefl, null);
+            $executableStruct = array($callableRefl, null);
         } elseif (is_object($callableOrMethodStr) && is_callable($callableOrMethodStr)) {
             $invocationObj = $callableOrMethodStr;
             $callableRefl = $this->reflector->getMethod($invocationObj, '__invoke');
-            $invokableArr = array($callableRefl, $invocationObj);
+            $executableStruct = array($callableRefl, $invocationObj);
         } elseif (is_array($callableOrMethodStr)
             && isset($callableOrMethodStr[0], $callableOrMethodStr[1])
             && count($callableOrMethodStr) === 2
         ) {
-            $invokableArr = $this->generateInvokablesFromArray($callableOrMethodStr);
+            $executableStruct = $this->buildExecutableStructFromArray($callableOrMethodStr);
         } else {
             throw new InjectorException(
-                self::$errorMessages[self::E_INVOKABLE],
+                self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
         }
 
-        return $invokableArr;
+        return $executableStruct;
     }
 
-    private function generateInvokablesFromString($stringInvokable) {
-        if (function_exists($stringInvokable)) {
-            $callableRefl = $this->reflector->getFunction($stringInvokable);
-            $invokableArr = array($callableRefl, null);
-        } elseif (method_exists($stringInvokable, '__invoke')) {
-            $invocationObj = $this->make($stringInvokable);
+    private function buildExecutableStructFromString($stringExecutable) {
+        if (function_exists($stringExecutable)) {
+            $callableRefl = $this->reflector->getFunction($stringExecutable);
+            $executableStruct = array($callableRefl, null);
+        } elseif (method_exists($stringExecutable, '__invoke')) {
+            $invocationObj = $this->make($stringExecutable);
             $callableRefl = $this->reflector->getMethod($invocationObj, '__invoke');
-            $invokableArr = array($callableRefl, $invocationObj);
-        } elseif (strpos($stringInvokable, '::') !== false) {
-            list($class, $method) = explode('::', $stringInvokable, 2);
-            $invokableArr = $this->generateStringClassMethodCallable($class, $method);
+            $executableStruct = array($callableRefl, $invocationObj);
+        } elseif (strpos($stringExecutable, '::') !== false) {
+            list($class, $method) = explode('::', $stringExecutable, 2);
+            $executableStruct = $this->buildStringClassMethodCallable($class, $method);
         } else {
             throw new InjectorException(
-                self::$errorMessages[self::E_INVOKABLE],
+                self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
         }
 
-        return $invokableArr;
+        return $executableStruct;
     }
 
-    private function generateStringClassMethodCallable($class, $method) {
+    private function buildStringClassMethodCallable($class, $method) {
         $relativeStaticMethodStartPos = strpos($method, 'parent::');
 
         if ($relativeStaticMethodStartPos === 0) {
@@ -608,21 +605,21 @@ class Injector {
             : array($reflectionMethod, $this->make($class));
     }
 
-    private function generateInvokablesFromArray($arrayInvokable) {
-        list($classOrObj, $method) = $arrayInvokable;
+    private function buildExecutableStructFromArray($arrayExecutable) {
+        list($classOrObj, $method) = $arrayExecutable;
 
         if (is_object($classOrObj) && method_exists($classOrObj, $method)) {
             $callableRefl = $this->reflector->getMethod($classOrObj, $method);
-            $invokableArr = array($callableRefl, $classOrObj);
+            $executableStruct = array($callableRefl, $classOrObj);
         } elseif (is_string($classOrObj)) {
-            $invokableArr = $this->generateStringClassMethodCallable($classOrObj, $method);
+            $executableStruct = $this->buildStringClassMethodCallable($classOrObj, $method);
         } else {
             throw new InjectorException(
-                self::$errorMessages[self::E_INVOKABLE],
+                self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
         }
 
-        return $invokableArr;
+        return $executableStruct;
     }
 }

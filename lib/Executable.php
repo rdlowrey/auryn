@@ -2,27 +2,27 @@
 
 namespace Auryn;
 
-class Invokable {
-    private $reflFunc;
-    private $invokeObj;
+class Executable {
+    private $callableReflection;
+    private $invocationObject;
     private $isInstanceMethod;
 
-    public function __construct(\ReflectionFunctionAbstract $reflFunc, $invokeObj = NULL) {
+    public function __construct(\ReflectionFunctionAbstract $reflFunc, $invocationObject = null) {
         if ($reflFunc instanceof \ReflectionMethod) {
-            $this->isInstanceMethod = TRUE;
-            $this->setMethodCallable($reflFunc, $invokeObj);
+            $this->isInstanceMethod = true;
+            $this->setMethodCallable($reflFunc, $invocationObject);
         } else {
-            $this->isInstanceMethod = FALSE;
-            $this->reflFunc = $reflFunc;
+            $this->isInstanceMethod = false;
+            $this->callableReflection = $reflFunc;
         }
     }
 
-    private function setMethodCallable(\ReflectionMethod $reflection, $invokeObj) {
-        if (is_object($invokeObj)) {
-            $this->reflFunc = $reflection;
-            $this->invokeObj = $invokeObj;
+    private function setMethodCallable(\ReflectionMethod $reflection, $invocationObject) {
+        if (is_object($invocationObject)) {
+            $this->callableReflection = $reflection;
+            $this->invocationObject = $invocationObject;
         } elseif ($reflection->isStatic()) {
-            $this->reflFunc = $reflection;
+            $this->callableReflection = $reflection;
         } else {
             throw new \InvalidArgumentException(
                 'ReflectionMethod callables must specify an invocation object'
@@ -34,7 +34,7 @@ class Invokable {
         $args = func_get_args();
         $reflection = $this->callableReflection;
 
-        if ($this->isMethod) {
+        if ($this->isInstanceMethod) {
             return $reflection->invokeArgs($this->invocationObject, $args);
         }
 
@@ -44,11 +44,11 @@ class Invokable {
     }
 
     public function getCallableReflection() {
-        return $this->reflFunc;
+        return $this->callableReflection;
     }
 
     public function getInvocationObject() {
-        return $this->invokeObj;
+        return $this->invocationObject;
     }
 
     public function isInstanceMethod() {

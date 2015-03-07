@@ -58,7 +58,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testMakeInstanceReturnsSharedInstanceIfAvailable() {
         $injector = new Injector;
-        $injector->bind('Auryn\Test\RequiresInterface', array(':dep' => 'Auryn\Test\DepImplementation'));
+        $injector->define('Auryn\Test\RequiresInterface', array('dep' => 'Auryn\Test\DepImplementation'));
         $injector->share('Auryn\Test\RequiresInterface');
         $injected = $injector->make('Auryn\Test\RequiresInterface');
 
@@ -79,15 +79,15 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testMakeInstanceUsesCustomDefinitionIfSpecified() {
         $injector = new Injector;
-        $injector->bind('Auryn\Test\TestNeedsDep', array(':testDep'=>'Auryn\Test\TestDependency'));
-        $injected = $injector->make('Auryn\Test\TestNeedsDep', array(':testDep'=>'Auryn\Test\TestDependency2'));
+        $injector->define('Auryn\Test\TestNeedsDep', array('testDep'=>'Auryn\Test\TestDependency'));
+        $injected = $injector->make('Auryn\Test\TestNeedsDep', array('testDep'=>'Auryn\Test\TestDependency2'));
         $this->assertEquals('testVal2', $injected->testDep->testProp);
     }
 
     public function testMakeInstanceCustomDefinitionOverridesExistingDefinitions() {
         $injector = new Injector;
-        $injector->bind('Auryn\Test\InjectorTestChildClass', array('arg1'=>'First argument', 'arg2'=>'Second argument'));
-        $injected = $injector->make('Auryn\Test\InjectorTestChildClass', array('arg1'=>'Override'));
+        $injector->define('Auryn\Test\InjectorTestChildClass', array(':arg1'=>'First argument', ':arg2'=>'Second argument'));
+        $injected = $injector->make('Auryn\Test\InjectorTestChildClass', array(':arg1'=>'Override'));
         $this->assertEquals('Override', $injected->arg1);
         $this->assertEquals('Second argument', $injected->arg2);
     }
@@ -100,11 +100,11 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testMakeInstanceUsesReflectionForUnknownParamsInMultiBuildWithDeps() {
         $injector = new Injector;
-        $obj = $injector->make('Auryn\Test\TestMultiDepsWithCtor', array(':val1'=>'Auryn\Test\TestDependency'));
+        $obj = $injector->make('Auryn\Test\TestMultiDepsWithCtor', array('val1'=>'Auryn\Test\TestDependency'));
         $this->assertInstanceOf('Auryn\Test\TestMultiDepsWithCtor', $obj);
 
         $obj = $injector->make('Auryn\Test\NoTypehintNoDefaultConstructorClass',
-            array(':val1'=>'Auryn\Test\TestDependency')
+            array('val1'=>'Auryn\Test\TestDependency')
         );
         $this->assertInstanceOf('Auryn\Test\NoTypehintNoDefaultConstructorClass', $obj);
         $this->assertEquals(NULL, $obj->testParam);
@@ -142,14 +142,14 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     public function testTypelessDefineForDependency() {
         $thumbnailSize = 128;
         $injector = new Injector;
-        $injector->bindParam('thumbnailSize', $thumbnailSize);
+        $injector->defineParam('thumbnailSize', $thumbnailSize);
         $testClass = $injector->make('Auryn\Test\RequiresDependencyWithTypelessParameters');
         $this->assertEquals($thumbnailSize, $testClass->getThumbnailSize(), 'Typeless define was not injected correctly.');
     }
 
     public function testTypelessDefineForAliasedDependency() {
         $injector = new Injector;
-        $injector->bindParam('val', 42);
+        $injector->defineParam('val', 42);
 
         $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefault');
         $obj = $injector->make('Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
@@ -157,14 +157,14 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testMakeInstanceInjectsRawParametersDirectly() {
         $injector = new Injector;
-        $injector->bind('Auryn\Test\InjectorTestRawCtorParams', array(
-            'string' => 'string',
-            'obj' => new \StdClass,
-            'int' => 42,
-            'array' => array(),
-            'float' => 9.3,
-            'bool' => true,
-            'null' => null,
+        $injector->define('Auryn\Test\InjectorTestRawCtorParams', array(
+            ':string' => 'string',
+            ':obj' => new \StdClass,
+            ':int' => 42,
+            ':array' => array(),
+            ':float' => 9.3,
+            ':bool' => true,
+            ':null' => null,
         ));
 
         $obj = $injector->make('Auryn\Test\InjectorTestRawCtorParams');
@@ -256,8 +256,8 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testDefineAssignsPassedDefinition() {
         $injector = new Injector;
-        $definition = array(':dep' => 'Auryn\Test\DepImplementation');
-        $injector->bind('Auryn\Test\RequiresInterface', $definition);
+        $definition = array('dep' => 'Auryn\Test\DepImplementation');
+        $injector->define('Auryn\Test\RequiresInterface', $definition);
         $this->assertInstanceOf('Auryn\Test\RequiresInterface', $injector->make('Auryn\Test\RequiresInterface'));
     }
 
@@ -323,9 +323,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
      */
     public function testProvisionedInvokables($toInvoke, $definition, $expectedResult) {
         $injector = new Injector;
-        $invokable = $injector->makeInvokable($toInvoke);
-        $args = $injector->makeArguments($invokable, $definition);
-        $this->assertEquals($expectedResult, call_user_func_array($invokable, $args));
+        $this->assertEquals($expectedResult, $injector->execute($toInvoke, $definition));
     }
 
     public function provideExecutionExpectations() {
@@ -362,7 +360,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         // 4 -------------------------------------------------------------------------------------->
 
         $toInvoke = array('Auryn\Test\ExecuteClassDepsWithMethodDeps', 'execute');
-        $args = array('arg' => 9382);
+        $args = array(':arg' => 9382);
         $expectedResult = 9382;
         $return[] = array($toInvoke, $args, $expectedResult);
 
@@ -463,7 +461,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testStaticStringInvokableWithArgument() {
         $injector = new \Auryn\Injector;
-        $invokable = $injector->makeInvokable('Auryn\Test\ClassWithStaticMethodThatTakesArg::doSomething');
+        $invokable = $injector->buildExecutable('Auryn\Test\ClassWithStaticMethodThatTakesArg::doSomething');
         $this->assertEquals(42, $invokable(41));
 
     }
@@ -678,7 +676,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
      */
     public function testMakeExecutableFailsOnNonExistentFunction() {
         $injector = new Injector();
-        $injector->makeInvokable('nonExistentFunction');
+        $injector->buildExecutable('nonExistentFunction');
     }
 
     /**
@@ -688,7 +686,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     public function testMakeExecutableFailsOnNonExistentMethod() {
         $injector = new Injector();
         $object = new \StdClass();
-        $injector->makeInvokable(array($object, 'nonExistentFunction'));
+        $injector->buildExecutable(array($object, 'nonExistentFunction'));
     }
 
     /**
@@ -698,7 +696,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     public function testMakeExecutableFailsOnClassWithoutInvoke() {
         $injector = new Injector();
         $object = new \StdClass();
-        $injector->makeInvokable($object);
+        $injector->buildExecutable($object);
     }
 
     /**
@@ -719,7 +717,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testDefineWithBackslashAndMakeWithoutBackslash(){
         $injector = new Injector();
-        $injector->bind('Auryn\Test\SimpleNoTypehintClass', array('arg' => 'tested'));
+        $injector->define('Auryn\Test\SimpleNoTypehintClass', array(':arg' => 'tested'));
         $testClass = $injector->make('Auryn\Test\SimpleNoTypehintClass');
         $this->assertEquals('tested', $testClass->testParam);
     }
@@ -737,7 +735,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testInstanceMutate() {
         $injector = new Injector();
-        $injector->mutate('\StdClass', function($obj, $injector) {
+        $injector->prepare('\StdClass', function($obj, $injector) {
             $obj->testval = 42;
         });
         $obj = $injector->make('StdClass');
@@ -747,7 +745,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testInterfaceMutate() {
         $injector = new Injector();
-        $injector->mutate('Auryn\Test\SomeInterface', function($obj, $injector) {
+        $injector->prepare('Auryn\Test\SomeInterface', function($obj, $injector) {
             $obj->testProp = 42;
         });
         $obj = $injector->make('Auryn\Test\PreparesImplementationTest');
