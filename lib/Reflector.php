@@ -2,11 +2,7 @@
 
 namespace Auryn;
 
-/**
- * An facade providing access to cached reflection instances
- */
-interface ReflectionStorage {
-
+interface Reflector {
     /**
      * Retrieves ReflectionClass instances, caching them for future retrieval
      *
@@ -21,7 +17,7 @@ interface ReflectionStorage {
      * @param string $class
      * @return \ReflectionMethod
      */
-    public function getConstructor($class);
+    public function getCtor($class);
 
     /**
      * Retrieves and caches an array of constructor parameters for the given class
@@ -29,7 +25,7 @@ interface ReflectionStorage {
      * @param string $class
      * @return array[\ReflectionParameter]
      */
-    public function getConstructorParameters($class);
+    public function getCtorParams($class);
 
     /**
      * Retrieves the class type-hint from a given ReflectionParameter
@@ -41,9 +37,9 @@ interface ReflectionStorage {
      * already have it cached.
      *
      * @param \ReflectionFunctionAbstract $function
-     * @param \ReflectionParameter $parameter
+     * @param \ReflectionParameter $param
      */
-    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $parameter);
+    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param);
 
     /**
      * Retrieves and caches a reflection for the specified function

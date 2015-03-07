@@ -1,5 +1,7 @@
 <?php
 
+namespace Auryn\Test;
+
 class InaccessibleExecutableClassMethod {
     private function doSomethingPrivate() {
         return 42;
@@ -52,13 +54,29 @@ interface SharedAliasedInterface {
     function foo();
 }
 
-class SharedClass implements SharedAliasedInterface {    
+class SharedClass implements SharedAliasedInterface {
     function foo(){}
 }
 
 class NotSharedClass implements SharedAliasedInterface {
     function foo(){}
 }
+
+
+class DependencyWithDefinedParam {
+    public $foo;
+    function __construct($foo) {
+        $this->foo = $foo;
+    }
+}
+
+class RequiresDependencyWithDefinedParam {
+    public $obj;
+    function __construct(DependencyWithDefinedParam $obj) {
+        $this->obj = $obj;
+    }
+}
+
 
 class ClassWithAliasAsParameter {
 
@@ -173,6 +191,60 @@ class ProvTestNoDefinitionNullDefaultClass {
 
 interface TestNoExplicitDefine {}
 
+class InjectorTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine {
+    public $val = 42;
+    public function __construct($val) {
+        $this->val = $val;
+    }
+}
+
+class InjectorTestCtorParamWithNoTypehintOrDefaultDependent {
+    private $param;
+    function __construct(TestNoExplicitDefine $param) {
+        $this->param = $param;
+    }
+}
+
+class InjectorTestRawCtorParams {
+    public $string;
+    public $obj;
+    public $int;
+    public $array;
+    public $float;
+    public $bool;
+    public $null;
+
+    public function __construct($string, $obj, $int, $array, $float, $bool, $null) {
+        $this->string = $string;
+        $this->obj = $obj;
+        $this->int = $int;
+        $this->array = $array;
+        $this->float = $float;
+        $this->bool = $bool;
+        $this->null = $null;
+    }
+}
+
+class InjectorTestParentClass
+{
+    public function __construct($arg1) {
+        $this->arg1 = $arg1;
+    }
+}
+
+class InjectorTestChildClass extends InjectorTestParentClass
+{
+    public function __construct($arg1, $arg2) {
+        parent::__construct($arg1);
+        $this->arg2 = $arg2;
+    }
+
+}
+
+class CallableMock {
+    function __invoke() {}
+}
+
 class ProviderTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine {
     public $val = 42;
     public function __construct($val) {
@@ -187,60 +259,12 @@ class ProviderTestCtorParamWithNoTypehintOrDefaultDependent {
     }
 }
 
-class ProviderTestRawCtorParams {
-    public $string;
-    public $obj;
-    public $int;
-    public $array;
-    public $float;
-    public $bool;
-    public $null;
-    
-    public function __construct($string, $obj, $int, $array, $float, $bool, $null) {
-        $this->string = $string;
-        $this->obj = $obj;
-        $this->int = $int;
-        $this->array = $array;
-        $this->float = $float;
-        $this->bool = $bool;
-        $this->null = $null;
-    }
-}
-
-class ProviderTestParentClass
-{
-    public function __construct($arg1) {
-        $this->arg1 = $arg1;
-    }
-}
-
-class ProviderTestChildClass extends ProviderTestParentClass
-{
-    public function __construct($arg1, $arg2) {
-        parent::__construct($arg1);
-        $this->arg2 = $arg2;
-    }
-
-}
-
-class CallableMock {
-    function __invoke() {
-
-    }
-}
-
-class CallableMockWithArgs {
-    function __invoke($arg1, $arg2) {
-
-    }
-}
-
 class StringStdClassDelegateMock {
     function __invoke() {
         return $this->make();
     }
     private function make() {
-        $obj = new StdClass;
+        $obj = new \StdClass;
         $obj->test = 42;
         return $obj;
     }
@@ -329,8 +353,8 @@ class RequiresDelegatedInterface {
 }
 
 class TestMissingDependency {
- 
-    function __construct(TypoInTypehint $class) {        
+
+    function __construct(TypoInTypehint $class) {
     }
 }
 
@@ -378,9 +402,9 @@ class ClassWithCtor {
 class TestDependencyWithProtectedConstructor {
 
     protected function __construct() {
-        
+
     }
-    
+
     public static function create(){
         return new self();
     }
@@ -402,3 +426,5 @@ class SimpleNoTypehintClass {
     }
 
 }
+
+class SomeClassName {}
