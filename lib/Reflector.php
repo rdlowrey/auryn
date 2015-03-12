@@ -23,7 +23,7 @@ interface Reflector {
      * Retrieves and caches an array of constructor parameters for the given class
      *
      * @param string $class
-     * @return array[\ReflectionParameter]
+     * @return \ReflectionParameter[]
      */
     public function getCtorParams($class);
 
