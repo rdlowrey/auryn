@@ -535,7 +535,7 @@ class Injector {
      * Provision an Executable instance from any valid callable or class::method string
      *
      * @param mixed $callableOrMethodStr A valid PHP callable or a provisionable ClassName::methodName string
-     * @return Auryn\Executable
+     * @return \Auryn\Executable
      */
     public function buildExecutable($callableOrMethodStr) {
         list($reflFunc, $invocationObj) = $this->buildExecutableStruct($callableOrMethodStr);
