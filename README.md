@@ -16,7 +16,7 @@ caches any reflections it generates to minimize the potential performance impact
 > Auryn **is NOT** a Service Locator. DO NOT turn it into one by passing the injector into your
 > application classes. Service Locator is an anti-pattern; it hides class dependencies, makes code
 > more difficult to maintain and makes a liar of your API! You should *only* use an injector for
-> wiring together the disparate parts of your application during your app's bootstrap phase.
+> wiring together the disparate parts of your application during your bootstrap phase.
 
 ## The Guide
 
