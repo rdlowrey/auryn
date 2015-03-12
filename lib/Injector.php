@@ -358,7 +358,7 @@ class Injector {
                 $definition = isset($this->classDefinitions[$normalizedClass])
                     ? array_replace($this->classDefinitions[$normalizedClass], $definition)
                     : $definition;
-                $args = $this->provisionFuncArgs($ctor, $definition);
+                $args = $this->provisionFuncArgs($ctor, $definition, $ctorParams);
                 $obj = $reflClass->newInstanceArgs($args);
             } else {
                 $obj = $this->instantiateWithoutCtorParams($className);
@@ -389,11 +389,13 @@ class Injector {
         return new $className;
     }
 
-    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition) {
+    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition, array $reflParams = null) {
         $args = array();
 
         // @TODO store this in ReflectionStorage
-        $reflParams = $reflFunc->getParameters();
+        if (!isset($reflParams)) {
+            $reflParams = $reflFunc->getParameters();
+        }
 
         foreach ($reflParams as $i => $reflParam) {
             $name = $reflParam->name;
