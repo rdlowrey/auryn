@@ -23,7 +23,8 @@ class ReflectionCacheApc implements ReflectionCache {
         if ($localData != FALSE) {
             return $localData;
         } else {
-            return apc_exists($key) ? apc_fetch($key) : FALSE;
+            $data = apc_fetch($key, $success)
+            return $success ? $data : FALSE;
         }
     }
 
