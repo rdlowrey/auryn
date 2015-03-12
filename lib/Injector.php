@@ -206,7 +206,7 @@ class Injector {
             );
         }
 
-        $normalizedName = end($this->resolveAlias($name));
+        list(,$normalizedName) = $this->resolveAlias($name);
         $this->prepares[$normalizedName] = $callableOrMethodStr;
 
         return $this;
