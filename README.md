@@ -1,5 +1,7 @@
 # Auryn Injector
 
+[![Build Status](https://travis-ci.org/rdlowrey/Auryn.svg?branch=master)](https://travis-ci.org/rdlowrey/Auryn) 
+
 Auryn is a recursive dependency injector. Use Auryn to bootstrap and wire together
 S.O.L.I.D., object-oriented PHP applications.
 
