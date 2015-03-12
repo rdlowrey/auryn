@@ -764,6 +764,6 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     public function testCustomDefinitionNotPassedThrough() {
         $injector = new Injector();
         $injector->share('Auryn\Test\DependencyWithDefinedParam');
-        $injector->make('Auryn\Test\RequiresDependencyWithDefinedParam', [':foo' => 5]);
+        $injector->make('Auryn\Test\RequiresDependencyWithDefinedParam', array(':foo' => 5));
     }
 }
