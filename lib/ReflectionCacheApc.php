@@ -17,7 +17,7 @@ class ReflectionCacheApc implements ReflectionCache {
         return $this;
     }
 
-    private function fetch($key) {
+    public function fetch($key) {
         $localData = $this->localCache->fetch($key);
 
         if ($localData != FALSE) {
@@ -29,7 +29,7 @@ class ReflectionCacheApc implements ReflectionCache {
         }
     }
 
-    private function store($key, $data) {
+    public function store($key, $data) {
         $this->localCache->store($key, $data);
         apc_store($key, $data, $this->timeToLive);
     }
