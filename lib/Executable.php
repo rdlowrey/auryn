@@ -53,11 +53,10 @@ class Executable {
                 $reflection->getClosureThis(),
                 $reflection->getClosureScopeClass()->name
             );
+            return call_user_func_array($closure, $args);
         } else {
-            $closure = $reflection->getClosure();
+            return $reflection->invokeArgs($args);
         }
-
-        return call_user_func_array($closure, $args);
     }
 
     public function getCallableReflection() {
