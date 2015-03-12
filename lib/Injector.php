@@ -264,20 +264,20 @@ class Injector {
             $typeFilter = self::I_ALL;
         }
 
-        if ($typeFilter & self::I_BINDINGS && ($elements = $this->filter($this->classDefinitions, $name))) {
-            $result[self::I_BINDINGS] = $elements;
+        if ($typeFilter & self::I_BINDINGS) {
+            $result[self::I_BINDINGS] = $this->filter($this->classDefinitions, $name);
         }
-        if ($typeFilter & self::I_DELEGATES && ($elements = $this->filter($this->delegates, $name))) {
-            $result[self::I_DELEGATES] = $elements;
+        if ($typeFilter & self::I_DELEGATES) {
+            $result[self::I_DELEGATES] = $this->filter($this->delegates, $name);
         }
-        if ($typeFilter & self::I_PREPARES && ($elements = $this->filter($this->prepares, $name))) {
-            $result[self::I_PREPARES] = $elements;
+        if ($typeFilter & self::I_PREPARES) {
+            $result[self::I_PREPARES] = $this->filter($this->prepares, $name);
         }
-        if ($typeFilter & self::I_ALIASES && ($elements = $this->filter($this->aliases, $name))) {
-            $result[self::I_ALIASES] = $elements;
+        if ($typeFilter & self::I_ALIASES) {
+            $result[self::I_ALIASES] = $this->filter($this->aliases, $name);
         }
-        if ($typeFilter & self::I_SHARES && ($elements = $this->filter($this->shares, $name))) {
-            $result[self::I_SHARES] = $elements;
+        if ($typeFilter & self::I_SHARES) {
+            $result[self::I_SHARES] = $this->filter($this->shares, $name);
         }
 
         return $result;
