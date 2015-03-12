@@ -57,7 +57,7 @@ class Injector {
      * @return self
      */
     public function define($name, array $args) {
-        $normalizedName = end($this->resolveAlias($name));
+        list(,$normalizedName) = $this->resolveAlias($name);
         $this->classDefinitions[$normalizedName] = $args;
 
         return $this;
