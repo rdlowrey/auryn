@@ -10,7 +10,7 @@ class StandardReflector implements Reflector {
     public function getCtor($class) {
         $reflectionClass = new \ReflectionClass($class);
 
-        return $reflectionClass->getCtor();
+        return $reflectionClass->getConstructor();
     }
 
     public function getCtorParams($class) {
