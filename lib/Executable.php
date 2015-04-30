@@ -48,11 +48,19 @@ class Executable {
      */
     private function invokeClosureCompat($reflection, $args) {
         if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
-            $closure = \Closure::bind(
-                $reflection->getClosure(),
-                $reflection->getClosureThis(),
-                $reflection->getClosureScopeClass()->name
-            );
+            if ($reflection->getClosureScopeClass()) {
+                $closure = \Closure::bind(
+                    $reflection->getClosure(),
+                    $reflection->getClosureThis(),
+                    $reflection->getClosureScopeClass()
+                );
+            } else {
+                $closure = \Closure::bind(
+                    $reflection->getClosure(),
+                    $reflection->getClosureThis()
+                );
+            }
+
             return call_user_func_array($closure, $args);
         } else {
             return $reflection->invokeArgs($args);
