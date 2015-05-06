@@ -1,5 +1,10 @@
 #### master
 
+n/a
+
+v0.15.0
+================================================================================
+
 - `Injector::buildExecutable()` and `Injector::execute()` no longer accept the
   optional `$makeAccessible` parameter to allow invocation of protected/private
   methods.
@@ -8,8 +13,18 @@
 - Indexed arrays may now be used for injection definitions
 - New delegate (`+`) and definition (`@`) prefixes added for one-offs
 - Removed `ProviderBuilder` class
+- Renamed `ReflectionPool` -> `Reflector`
+- Renamed `Invokable` -> `Executable`
+- Add `Injector::inspect()` method for retrieving definitions
+- Removed `InjectorBuilder` class
 - Major internal refactoring
 - Miscellaneous bugfixes
+
+> **NOTE**
+> 
+> There are some small BC breaks in this release -- please test before deploying
+> v0.15.0 in production to ensure things still work as expected.
+
 
 ##### v0.14.2
 

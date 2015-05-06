@@ -422,7 +422,7 @@ class MyController {
 
 $db = new PDO('mysql:host=localhost;dbname=mydb', 'user', 'pass');
 
-$injector = new Auryn\Injector(new Auryn\ReflectionPool);
+$injector = new Auryn\Injector;
 $injector->share($db);
 
 $myController = $injector->make('MyController');
@@ -445,7 +445,7 @@ class Person {
     public $name = 'John Snow';
 }
 
-$injector = new Auryn\Injector(new Auryn\ReflectionPool);
+$injector = new Auryn\Injector;
 $injector->share('Person');
 
 $person = $injector->make('Person');
@@ -504,7 +504,7 @@ $complexClassFactory = function() {
     return $obj;
 };
 
-$injector = new Auryn\Injector(new Auryn\ReflectionPool);
+$injector = new Auryn\Injector;
 $injector->delegate('MyComplexClass', $complexClassFactory);
 
 $obj = $injector->make('MyComplexClass');
@@ -735,8 +735,7 @@ context of the `Injector`:
 $pdo = new PDO('sqlite:some_sqlite_file.db');
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-$reflectionPool = new Auryn\ReflectionPool;
-$injector = new Auryn\Injector($reflectionPool);
+$injector = new Auryn\Injector;
 
 $injector->share($pdo);
 $mapper = $injector->make('SomeService');
@@ -793,8 +792,7 @@ $request = $requestDetector->detectFromSuperglobal($_SERVER);
 $requestUri = $request->getUri();
 $requestMethod = strtolower($request->getMethod());
 
-$reflectionCache = new Auryn\ReflectionPool();
-$injector = new Auryn\Injector($reflectionCache);
+$injector = new Auryn\Injector;
 $injector->share($request);
 
 try {
