@@ -360,7 +360,7 @@ instantiate it.
 
 Sometimes applications may reuse the same value everywhere. However, it can be a hassle to manually
 specify definitions for this sort of thing everywhere it might be used in the app. Auryn mitigates
-this problem by exposing the `Injector::bindParam()` method. Consider the following example ...
+this problem by exposing the `Injector::defineParam()` method. Consider the following example ...
 
 ```php
 <?php
@@ -374,7 +374,7 @@ class MyClass {
 }
 
 $injector = new Auryn\Injector;
-$injector->bindParam('myValue', $myUniversalValue);
+$injector->defineParam('myValue', $myUniversalValue);
 $obj = $injector->make('MyClass');
 var_dump($obj->myValue === 42); // bool(true)
 ```
@@ -460,26 +460,14 @@ var_dump($person === $anotherPerson); // bool(true) because it's the same instan
 
 Defining an object as shared will store the provisioned instance in the Injector's shared cache and
 all future requests to the provider for an injected instance of that class will return the
-originally created object (unless you manually clear it from the cache). Note that in the above code
-we shared the class name (`Person`) instead of an actual instance. Sharing works with either a class
-name or an instance of a class. The difference is that when you specify a class name the Injector
+originally created object. Note that in the above code, we shared the class name (`Person`)
+instead of an actual instance. Sharing works with either a class name or an instance of a class.
+The difference is that when you specify a class name, the Injector
 will cache the shared instance the first time it is asked to create it.
 
 > **NOTE:** Once the Injector caches a shared instance, call-time definitions passed to
 `Auryn\Injector::make` will have no effect. Once shared, an instance will always be returned for
 instantiations of its type until the object is un-shared or refreshed:
-
-```php
-<?php
-// Clears shared instance from the Injector cache and unshares future StdClass instantiations
-$injector->unshare('StdClass');
-
-// Clears any currently shared StdClass instance, but maintains its status as a shared class.
-// A new StdClass will be created and cached the next time the Injector is asked to instantiate
-// an instance of StdClass.
-$injector->refresh('StdClass');
-```
-
 
 ### Instantiation Delegates
 
