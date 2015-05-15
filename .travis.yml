@@ -9,3 +9,6 @@ php:
 before_script:
   - composer install
 sudo: false
+script:
+  - phpunit
+  - vendor/bin/athletic --path test/Benchmark --formatter GroupedFormatter
