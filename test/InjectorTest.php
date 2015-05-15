@@ -785,4 +785,20 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('Auryn\Test\TestDelegationDependency', $obj);
         $this->assertTrue($obj->delegateCalled);
     }
+
+    public function testDelegationCustomArg() {
+        $value = 'custom value';
+        $depdency = new \Auryn\Test\TestDelegateCustomArgDependency;
+        $depdency->value = $value;
+
+        $injector = new Injector();
+        $injector->delegate(
+            'Auryn\Test\TestDelegateCustomArg',
+            'Auryn\Test\createTestDelegateCustomArg'
+        );
+        $customArgs = ['Auryn\Test\TestDelegateCustomArgDependency' => $depdency];
+        $obj = $injector->make('Auryn\Test\TestDelegateCustomArg', $customArgs);
+        $this->assertInstanceOf('Auryn\Test\TestDelegateCustomArg', $obj);
+        $this->assertEquals($value, $obj->dependency->value);
+    }
 }

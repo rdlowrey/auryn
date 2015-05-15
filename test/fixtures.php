@@ -447,3 +447,18 @@ function createTestDelegationDependency(TestDelegationSimple $testDelegationSimp
 
     return $instance;
 }
+
+class TestDelegateCustomArgDependency {
+    public $value = 'not set';
+}
+
+class TestDelegateCustomArg {
+    public $dependency;
+    public function __construct(TestDelegateCustomArgDependency $dependency) {
+        $this->dependency = $dependency;
+    }
+}
+
+function createTestDelegateCustomArg(TestDelegateCustomArgDependency $dependency) {
+    return new TestDelegateCustomArg($dependency);
+}
