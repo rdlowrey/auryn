@@ -323,7 +323,9 @@ class Injector {
 
         if (isset($this->delegates[$normalizedClass])) {
             $executable = $this->buildExecutable($this->delegates[$normalizedClass]);
-            $obj = $executable($className, $this);
+            $reflectionFunction = $executable->getCallableReflection();
+            $args = $this->provisionFuncArgs($reflectionFunction, $args);
+            $obj = call_user_func_array(array($executable, '__invoke'), $args);
         } else {
             $obj = $this->provisionInstance($className, $normalizedClass, $args);
         }
