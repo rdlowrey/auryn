@@ -453,10 +453,16 @@ class BaseExecutableClass {
     function foo() {
         return 'This is the BaseExecutableClass';
     }
+    static function bar() {
+        return 'This is the BaseExecutableClass';
+    }
 }
 
 class ExtendsExecutableClass extends BaseExecutableClass {
     function foo() {
+        return 'This is the ExtendsExecutableClass';
+    }
+    static function bar() {
         return 'This is the ExtendsExecutableClass';
     }
 }

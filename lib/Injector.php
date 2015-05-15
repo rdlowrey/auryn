@@ -601,16 +601,20 @@ class Injector {
 
         $reflectionMethod = $this->reflector->getMethod($class, $method);
 
+        $instance = NULL;
         if ($reflectionMethod->isStatic()) {
-            return array($reflectionMethod, NULL);
+            list($resolvedClass, ) = $this->resolveAlias($class);
+        }
+        else {
+            $instance = $this->make($class);
+            $resolvedClass = get_class($instance);
         }
 
-        $instance = $this->make($class);
         // If the class was aliased, the instance will not be of the type
         // $class but some other type. We need to get the reflection on the
         // actual class to be able to call the method correctly.
-        if ($class !== get_class($instance)) {
-            $reflectionMethod = $this->reflector->getMethod($instance, $method);
+        if ($class !== $resolvedClass) {
+            $reflectionMethod = $this->reflector->getMethod($resolvedClass, $method);
         }
 
         return array($reflectionMethod, $instance);
