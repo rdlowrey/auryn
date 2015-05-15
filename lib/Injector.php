@@ -599,11 +599,14 @@ class Injector {
             $method = substr($method, $relativeStaticMethodStartPos + 8);
         }
 
-        $reflectionMethod = $this->reflector->getMethod($class, $method);
+        list($className, $normalizedClass) = $this->resolveAlias($class);
+        $reflectionMethod = $this->reflector->getMethod($normalizedClass, $method);
 
-        return $reflectionMethod->isStatic()
-            ? array($reflectionMethod, null)
-            : array($reflectionMethod, $this->make($class));
+        if ($reflectionMethod->isStatic()) {
+            return array($reflectionMethod, NULL);
+        } else {
+            return array($reflectionMethod, $this->make($className));
+        }
     }
 
     private function buildExecutableStructFromArray($arrayExecutable) {
