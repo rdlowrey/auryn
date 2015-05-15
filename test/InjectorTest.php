@@ -766,4 +766,23 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $injector->share('Auryn\Test\DependencyWithDefinedParam');
         $injector->make('Auryn\Test\RequiresDependencyWithDefinedParam', array(':foo' => 5));
     }
+    
+    public function testDelegationFunction() {
+        $injector = new Injector();
+        $injector->delegate('Auryn\Test\TestDelegationSimple', 'Auryn\Test\createTestDelegationSimple');
+        $obj = $injector->make('Auryn\Test\TestDelegationSimple');
+        $this->assertInstanceOf('Auryn\Test\TestDelegationSimple', $obj);
+        $this->assertTrue($obj->delegateCalled);
+    }
+
+    public function testDelegationDependency() {
+        $injector = new Injector();
+        $injector->delegate(
+            'Auryn\Test\TestDelegationDependency',
+            'Auryn\Test\createTestDelegationDependency'
+        );
+        $obj = $injector->make('Auryn\Test\TestDelegationDependency');
+        $this->assertInstanceOf('Auryn\Test\TestDelegationDependency', $obj);
+        $this->assertTrue($obj->delegateCalled);
+    }
 }

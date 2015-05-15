@@ -423,3 +423,27 @@ class SimpleNoTypehintClass {
 }
 
 class SomeClassName {}
+
+class TestDelegationSimple {
+    public $delgateCalled = false;
+}
+
+class TestDelegationDependency {
+    public $delgateCalled = false;
+    function __construct(TestDelegationSimple $testDelegationSimple) {
+    }
+}
+
+function createTestDelegationSimple() {
+    $instance = new TestDelegationSimple;
+    $instance->delegateCalled = true;
+
+    return $instance;
+}
+
+function createTestDelegationDependency(TestDelegationSimple $testDelegationSimple) {
+    $instance = new TestDelegationDependency($testDelegationSimple);
+    $instance->delegateCalled = true;
+
+    return $instance;
+}
