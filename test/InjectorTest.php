@@ -464,14 +464,16 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
 
-        // 19 ------------------------------------------------------------------------------------->
-        
-        $object = new \Auryn\Test\ReturnsCallable('new value');
-        $args = array();
-        $toInvoke = $object->getCallable();
-        $expectedResult = 'new value';
-        $return[] = array($toInvoke, $args, $expectedResult);
 
+        if (PHP_VERSION_ID > 50400) {
+            // 19 ------------------------------------------------------------------------------------->
+
+            $object = new \Auryn\Test\ReturnsCallable('new value');
+            $args = array();
+            $toInvoke = $object->getCallable();
+            $expectedResult = 'new value';
+            $return[] = array($toInvoke, $args, $expectedResult);
+        }
         // x -------------------------------------------------------------------------------------->
 
         return $return;
