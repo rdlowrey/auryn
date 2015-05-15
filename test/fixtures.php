@@ -447,3 +447,16 @@ function createTestDelegationDependency(TestDelegationSimple $testDelegationSimp
 
     return $instance;
 }
+
+
+class BaseExecutableClass {
+    function foo() {
+        return 'This is the BaseExecutableClass';
+    }
+}
+
+class ExtendsExecutableClass extends BaseExecutableClass {
+    function foo() {
+        return 'This is the ExtendsExecutableClass';
+    }
+}

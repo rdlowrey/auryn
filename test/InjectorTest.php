@@ -785,4 +785,11 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('Auryn\Test\TestDelegationDependency', $obj);
         $this->assertTrue($obj->delegateCalled);
     }
+
+    public function testExecutableAliasing() {
+        $injector = new Injector();
+        $injector->alias('Auryn\Test\BaseExecutableClass', 'Auryn\Test\ExtendsExecutableClass');
+        $result = $injector->execute(['Auryn\Test\BaseExecutableClass', 'foo']);
+        $this->assertEquals('This is the ExtendsExecutableClass', $result);
+    }
 }
