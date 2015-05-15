@@ -599,25 +599,14 @@ class Injector {
             $method = substr($method, $relativeStaticMethodStartPos + 8);
         }
 
-        $reflectionMethod = $this->reflector->getMethod($class, $method);
+        list($className, $normalizedClass) = $this->resolveAlias($class);
+        $reflectionMethod = $this->reflector->getMethod($normalizedClass, $method);
 
-        $instance = NULL;
         if ($reflectionMethod->isStatic()) {
-            list($resolvedClass, ) = $this->resolveAlias($class);
+            return array($reflectionMethod, NULL);
+        } else {
+            return array($reflectionMethod, $this->make($className));
         }
-        else {
-            $instance = $this->make($class);
-            $resolvedClass = get_class($instance);
-        }
-
-        // If the class was aliased, the instance will not be of the type
-        // $class but some other type. We need to get the reflection on the
-        // actual class to be able to call the method correctly.
-        if ($class !== $resolvedClass) {
-            $reflectionMethod = $this->reflector->getMethod($resolvedClass, $method);
-        }
-
-        return array($reflectionMethod, $instance);
     }
 
     private function buildExecutableStructFromArray($arrayExecutable) {
