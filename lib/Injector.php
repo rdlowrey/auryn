@@ -415,7 +415,7 @@ class Injector {
             } elseif (($prefix = self::A_DEFINE . $name) && isset($definition[$prefix])) {
                 // interpret the param as a class definition
                 $arg = $this->buildArgFromParamDefineArr($definition[$prefix]);
-            } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam)) {
+            } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam, $definition)) {
                 $arg = $this->buildArgFromReflParam($reflParam);
             }
 
@@ -456,13 +456,19 @@ class Injector {
         return $executable($paramName, $this);
     }
 
-    private function buildArgFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam) {
+    private function buildArgFromTypeHint(
+        \ReflectionFunctionAbstract $reflFunc,
+        \ReflectionParameter $reflParam,
+        array $definition
+    ) {
         $typeHint = $this->reflector->getParamTypeHint($reflFunc, $reflParam);
 
         if (!$typeHint) {
             $obj = null;
         } elseif ($reflParam->isDefaultValueAvailable()) {
             $obj = $reflParam->getDefaultValue();
+        } elseif (array_key_exists($typeHint, $definition)) {
+            $obj = $definition[$typeHint];
         } else {
             $obj = $this->make($typeHint);
         }

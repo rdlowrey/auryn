@@ -788,17 +788,22 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     public function testDelegationCustomArg() {
         $value = 'custom value';
-        $depdency = new \Auryn\Test\TestDelegateCustomArgDependency;
-        $depdency->value = $value;
-
-        $injector = new Injector();
-        $injector->delegate(
-            'Auryn\Test\TestDelegateCustomArg',
-            'Auryn\Test\createTestDelegateCustomArg'
-        );
-        $customArgs = ['Auryn\Test\TestDelegateCustomArgDependency' => $depdency];
-        $obj = $injector->make('Auryn\Test\TestDelegateCustomArg', $customArgs);
-        $this->assertInstanceOf('Auryn\Test\TestDelegateCustomArg', $obj);
-        $this->assertEquals($value, $obj->dependency->value);
+        $dependency = new \Auryn\Test\TestDelegateCustomArgDependency;
+        $dependency->value = $value;
+        
+        $customArgsByType = ['Auryn\Test\TestDelegateCustomArgDependency' => $dependency];
+        $customArgsByName = [':dependency' => $dependency];
+        $setCustomArgs = [$customArgsByType, $customArgsByName];
+        
+        foreach ($setCustomArgs as $customArgs) {
+            $injector = new Injector();
+            $injector->delegate(
+                'Auryn\Test\TestDelegateCustomArg',
+                'Auryn\Test\createTestDelegateCustomArg'
+            );
+            $obj = $injector->make('Auryn\Test\TestDelegateCustomArg', $customArgs);
+            $this->assertInstanceOf('Auryn\Test\TestDelegateCustomArg', $obj);
+            $this->assertEquals($value, $obj->dependency->value);
+        }
     }
 }
