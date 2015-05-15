@@ -466,3 +466,19 @@ class ExtendsExecutableClass extends BaseExecutableClass {
         return 'This is the ExtendsExecutableClass';
     }
 }
+
+class ReturnsCallable {
+    private $value = 'original';
+
+    function __construct($value) {
+        $this->value = $value;
+    }
+
+    function getCallable() {
+        $callable = function () {
+            return $this->value;
+        };
+
+        return $callable;
+    }
+}

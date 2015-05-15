@@ -448,10 +448,28 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
 
+        // 17 ------------------------------------------------------------------------------------->
 
         $toInvoke = 'Auryn\Test\testExecuteFunctionWithArg';
         $args = array();
         $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+
+        // 18 ------------------------------------------------------------------------------------->
+
+        $toInvoke = function() {
+            return 42;
+        };
+        $args = array();
+        $expectedResult = 42;
+        $return[] = array($toInvoke, $args, $expectedResult);
+
+        // 19 ------------------------------------------------------------------------------------->
+        
+        $object = new \Auryn\Test\ReturnsCallable('new value');
+        $args = array();
+        $toInvoke = $object->getCallable();
+        $expectedResult = 'new value';
         $return[] = array($toInvoke, $args, $expectedResult);
 
         // x -------------------------------------------------------------------------------------->
