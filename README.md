@@ -257,6 +257,10 @@ $myObj = $injector->make('MyClass');
 var_dump($myObj instanceof MyClass); // true
 ```
 
+> **NOTE:** Since this `define()` call is passing raw values (as evidenced by the colon `:` usage),
+you can achieve the same result by omitting the array key(s) and relying on parameter order rather
+than name. Like so: `$injector->define('MyClass', [$dependencyInstance]);`
+
 ###### Specifying Injection Definitions On the Fly
 
 You may also specify injection definitions at call-time with `Auryn\Injector::make`. Consider:
@@ -329,12 +333,12 @@ on type-hints, class name definitions and existing instances. But what happens i
 a scalar or other non-object variable into a class? First, let's establish the following behavioral
 rule:
 
-> **IMPORTANT:** The Injector assumes all injection definitions are class names by default.
+> **IMPORTANT:** The Injector assumes all named-parameter definitions are class names by default.
 
-If you want the Injector to treat a parameter definition as a "raw" value and not a class name, you
-must prefix the parameter name in your definition with a colon character `:`. For example, consider
-the following code in which we tell the Injector to share a `PDO` database connection instance and
-define its scalar constructor parameters:
+If you want the Injector to treat a named-parameter definition as a "raw" value and not a class name,
+you must prefix the parameter name in your definition with a colon character `:`. For example,
+consider the following code in which we tell the Injector to share a `PDO` database connection
+instance and define its scalar constructor parameters:
 
 ```php
 <?php
@@ -355,6 +359,12 @@ the names specified in the string and an exception would result. Also, note that
 easily specified arrays or integers or any other data type in the above definitions. As long as the
 parameter name is prefixed with a `:`, Auryn will inject the value directly without attempting to
 instantiate it.
+
+> **NOTE:** As mentioned previously, since this `define()` call is passing raw values, you may opt to
+assign the values by parameter order rather than name. Since PDO's first three parameters are `$dsn`,
+`$username`, and `$password`, in that order, you could accomplish the same result by leaving out the
+array keys, like so:
+`$injector->define('PDO', ['mysql:dbname=testdb;host=127.0.0.1', 'dbuser', 'dbpass']);`
 
 ### Global Parameter Definitions
 
