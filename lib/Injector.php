@@ -600,7 +600,7 @@ class Injector {
         }
 
         list($className, $normalizedClass) = $this->resolveAlias($class);
-        $reflectionMethod = $this->reflector->getMethod($normalizedClass, $method);
+        $reflectionMethod = $this->reflector->getMethod($className, $method);
 
         return $reflectionMethod->isStatic()
             ? array($reflectionMethod, null)
