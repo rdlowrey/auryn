@@ -2,6 +2,10 @@
 
 - n/a
 
+#### v0.15.2
+
+- Fix bug using incorrect class casing in certain situations (@danack)
+
 #### v0.15.1
 
 - Fix regression preventing delegates from being provisioned as executables
