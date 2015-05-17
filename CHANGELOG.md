@@ -1,6 +1,13 @@
 #### master
 
-n/a
+- n/a
+
+#### v0.15.1
+
+- Fix regression preventing delegates from being provisioned as executables
+  (@danack)
+- Fix bug preventing alias names from being observed when executing (@danack)
+- Add tests (@danack)
 
 v0.15.0
 ================================================================================
