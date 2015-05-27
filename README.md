@@ -257,6 +257,10 @@ $myObj = $injector->make('MyClass');
 var_dump($myObj instanceof MyClass); // true
 ```
 
+> **NOTE:** Since this `define()` call is passing raw values (as evidenced by the colon `:` usage),
+you can achieve the same result by omitting the array key(s) and relying on parameter order rather
+than name. Like so: `$injector->define('MyClass', [$dependencyInstance]);`
+
 ###### Specifying Injection Definitions On the Fly
 
 You may also specify injection definitions at call-time with `Auryn\Injector::make`. Consider:
@@ -329,12 +333,12 @@ on type-hints, class name definitions and existing instances. But what happens i
 a scalar or other non-object variable into a class? First, let's establish the following behavioral
 rule:
 
-> **IMPORTANT:** The Injector assumes all injection definitions are class names by default.
+> **IMPORTANT:** The Injector assumes all named-parameter definitions are class names by default.
 
-If you want the Injector to treat a parameter definition as a "raw" value and not a class name, you
-must prefix the parameter name in your definition with a colon character `:`. For example, consider
-the following code in which we tell the Injector to share a `PDO` database connection instance and
-define its scalar constructor parameters:
+If you want the Injector to treat a named-parameter definition as a "raw" value and not a class name,
+you must prefix the parameter name in your definition with a colon character `:`. For example,
+consider the following code in which we tell the Injector to share a `PDO` database connection
+instance and define its scalar constructor parameters:
 
 ```php
 <?php
@@ -356,11 +360,17 @@ easily specified arrays or integers or any other data type in the above definiti
 parameter name is prefixed with a `:`, Auryn will inject the value directly without attempting to
 instantiate it.
 
+> **NOTE:** As mentioned previously, since this `define()` call is passing raw values, you may opt to
+assign the values by parameter order rather than name. Since PDO's first three parameters are `$dsn`,
+`$username`, and `$password`, in that order, you could accomplish the same result by leaving out the
+array keys, like so:
+`$injector->define('PDO', ['mysql:dbname=testdb;host=127.0.0.1', 'dbuser', 'dbpass']);`
+
 ### Global Parameter Definitions
 
 Sometimes applications may reuse the same value everywhere. However, it can be a hassle to manually
 specify definitions for this sort of thing everywhere it might be used in the app. Auryn mitigates
-this problem by exposing the `Injector::bindParam()` method. Consider the following example ...
+this problem by exposing the `Injector::defineParam()` method. Consider the following example ...
 
 ```php
 <?php
@@ -374,7 +384,7 @@ class MyClass {
 }
 
 $injector = new Auryn\Injector;
-$injector->bindParam('myValue', $myUniversalValue);
+$injector->defineParam('myValue', $myUniversalValue);
 $obj = $injector->make('MyClass');
 var_dump($obj->myValue === 42); // bool(true)
 ```
@@ -460,26 +470,14 @@ var_dump($person === $anotherPerson); // bool(true) because it's the same instan
 
 Defining an object as shared will store the provisioned instance in the Injector's shared cache and
 all future requests to the provider for an injected instance of that class will return the
-originally created object (unless you manually clear it from the cache). Note that in the above code
-we shared the class name (`Person`) instead of an actual instance. Sharing works with either a class
-name or an instance of a class. The difference is that when you specify a class name the Injector
+originally created object. Note that in the above code, we shared the class name (`Person`)
+instead of an actual instance. Sharing works with either a class name or an instance of a class.
+The difference is that when you specify a class name, the Injector
 will cache the shared instance the first time it is asked to create it.
 
 > **NOTE:** Once the Injector caches a shared instance, call-time definitions passed to
 `Auryn\Injector::make` will have no effect. Once shared, an instance will always be returned for
 instantiations of its type until the object is un-shared or refreshed:
-
-```php
-<?php
-// Clears shared instance from the Injector cache and unshares future StdClass instantiations
-$injector->unshare('StdClass');
-
-// Clears any currently shared StdClass instance, but maintains its status as a shared class.
-// A new StdClass will be created and cached the next time the Injector is asked to instantiate
-// an instance of StdClass.
-$injector->refresh('StdClass');
-```
-
 
 ### Instantiation Delegates
 
