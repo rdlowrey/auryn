@@ -360,6 +360,14 @@ class NonConcreteDependencyWithDefaultValue {
     }
 }
 
+
+class ConcreteDependencyWithDefaultValue {
+    public $dependency;
+    function __construct(\StdClass $instance = NULL) {
+        $this->dependency = $instance;
+    }
+}
+
 class TypelessParameterDependency {
 
     public $thumbnailSize;

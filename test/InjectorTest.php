@@ -614,11 +614,43 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $injector->make($class);
     }
 
-    public function testNonConcreteDependencyWithDefaultValue() {
+    public function testNonConcreteDependencyWithDefault() {
         $injector = new Injector;
         $class = $injector->make('Auryn\Test\NonConcreteDependencyWithDefaultValue');
         $this->assertInstanceOf('Auryn\Test\NonConcreteDependencyWithDefaultValue', $class);
         $this->assertNull($class->interface);
+    }
+
+    public function testNonConcreteDependencyWithDefaultValueThroughAlias() {
+        $injector = new Injector;
+        $injector->alias(
+            'Auryn\Test\DelegatableInterface',
+            'Auryn\Test\ImplementsInterface'
+        );
+        $class = $injector->make('Auryn\Test\NonConcreteDependencyWithDefaultValue');
+        $this->assertInstanceOf('Auryn\Test\NonConcreteDependencyWithDefaultValue', $class);
+        $this->assertInstanceOf('Auryn\Test\ImplementsInterface', $class->interface);
+    }
+
+    public function testNonConcreteDependencyWithDefaultValueThroughDelegation() {
+        $injector = new Injector;
+        $injector->delegate('Auryn\Test\DelegatableInterface', 'Auryn\Test\ImplementsInterfaceFactory');
+        $class = $injector->make('Auryn\Test\NonConcreteDependencyWithDefaultValue');
+        $this->assertInstanceOf('Auryn\Test\NonConcreteDependencyWithDefaultValue', $class);
+        $this->assertInstanceOf('Auryn\Test\ImplementsInterface', $class->interface);
+    }
+
+    public function testDependencyWithDefaultValueThroughShare() {
+        $injector = new Injector;
+        //Instance is not shared, null default is used for dependency
+        $instance = $injector->make('Auryn\Test\ConcreteDependencyWithDefaultValue');
+        $this->assertNull($instance->dependency);
+
+        //Instance is explicitly shared, $instance is used for dependency
+        $instance = new \StdClass();
+        $injector->share($instance);
+        $instance = $injector->make('Auryn\Test\ConcreteDependencyWithDefaultValue');
+        $this->assertInstanceOf('StdClass', $instance->dependency);
     }
 
     /**
