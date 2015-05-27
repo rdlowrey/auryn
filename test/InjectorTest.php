@@ -863,4 +863,12 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $injector->delegate('Auryn\Test\DelegateClosureInGlobalScope', $delegateClosure);
         $injector->make('Auryn\Test\DelegateClosureInGlobalScope');
     }
+
+    public function testCloningWithServiceLocator() {
+        $injector = new Injector();
+        $injector->share($injector);
+        $instance = $injector->make('Auryn\Test\CloneTest');
+        $newInjector = $instance->injector;
+        $newInstance = $newInjector->make('Auryn\Test\CloneTest');
+    }
 }

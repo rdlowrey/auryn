@@ -49,6 +49,10 @@ class Injector {
         $this->reflector = $reflector ?: new CachingReflector;
     }
 
+    public function __clone() {
+        $this->inProgressMakes = array();
+    }
+    
     /**
      * Define instantiation directives for the specified class
      *

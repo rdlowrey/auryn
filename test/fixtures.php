@@ -498,3 +498,11 @@ function getDelegateClosureInGlobalScope() {
         return new DelegateClosureInGlobalScope();
     };
 }
+
+class CloneTest {
+    public $injector;
+    function __construct(\Auryn\Injector $injector) {
+        $this->injector = clone $injector;
+    }
+}
+    
