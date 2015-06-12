@@ -506,3 +506,6 @@ class CloneTest {
     }
 }
     
+class DependencyChainTest {
+    function __construct(DepInterface $dep){} 
+}

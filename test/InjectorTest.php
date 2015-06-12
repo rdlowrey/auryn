@@ -25,7 +25,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_NEEDS_DEFINITION
      */
     public function testMakeInstanceThrowsExceptionOnInterfaceWithoutAlias() {
@@ -34,7 +34,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_NEEDS_DEFINITION
      */
     public function testMakeInstanceThrowsExceptionOnNonConcreteCtorParamWithoutImplementation() {
@@ -111,7 +111,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
      */
     public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefault() {
@@ -121,7 +121,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
      */
     public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefaultThroughAliasedTypehint() {
@@ -179,7 +179,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @TODO
-     * @expectedException Auryn\InjectorException
+     * @expectedException \Exception
      */
     public function testMakeInstanceThrowsExceptionWhenDelegateDoes() {
         $injector= new Injector;
@@ -193,7 +193,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
         $callable->expects($this->once())
             ->method('__invoke')
-            ->will($this->throwException(new \Auryn\InjectorException()));
+            ->will($this->throwException(new \Exception()));
 
         $injector->make('TestDependency');
     }
@@ -229,25 +229,23 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException Auryn\InjectorException
+     * @expectedException Auryn\ConfigException
      */
     public function testMakeInstanceThrowsExceptionIfStringDelegateClassHasNoInvokeMethod() {
         $injector= new Injector;
         $injector->delegate('StdClass', 'StringDelegateWithNoInvokeMethod');
-        $obj = $injector->make('StdClass');
     }
 
     /**
-     * @expectedException Auryn\InjectorException
+     * @expectedException Auryn\ConfigException
      */
     public function testMakeInstanceThrowsExceptionIfStringDelegateClassInstantiationFails() {
         $injector= new Injector;
         $injector->delegate('StdClass', 'SomeClassThatDefinitelyDoesNotExistForReal');
-        $obj = $injector->make('StdClass');
     }
 
     /**
-     * @expectedException Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      */
     public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithNoDefinition() {
         $injector = new Injector;
@@ -277,7 +275,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException Auryn\InjectorException
+     * @expectedException \Auryn\ConfigException
      */
     public function testShareThrowsExceptionOnInvalidArgument() {
         $injector = new Injector;
@@ -299,7 +297,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
     /**
      * @dataProvider provideInvalidDelegates
-     * @expectedException Auryn\InjectorException
+     * @expectedException Auryn\ConfigException
      */
     public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate) {
         $injector = new Injector;
@@ -606,7 +604,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
 
      /**
      * @dataProvider provideCyclicDependencies
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_CYCLIC_DEPENDENCY
      */
     public function testCyclicDependencies($class) {
@@ -654,7 +652,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\ConfigException
      * @expectedExceptionCode \Auryn\Injector::E_ALIASED_CANNOT_SHARE
      */
     public function testShareAfterAliasException() {
@@ -694,7 +692,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\ConfigException
      * @expectedExceptionCode \Auryn\Injector::E_SHARED_CANNOT_ALIAS
      */
     public function testAliasAfterShareException() {
@@ -705,7 +703,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_NON_PUBLIC_CONSTRUCTOR
      */
     public function testAppropriateExceptionThrownOnNonPublicConstructor() {
@@ -714,7 +712,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_NON_PUBLIC_CONSTRUCTOR
      */
     public function testAppropriateExceptionThrownOnNonPublicConstructorWithArgs() {
@@ -723,7 +721,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_INVOKABLE
      */
     public function testMakeExecutableFailsOnNonExistentFunction() {
@@ -732,7 +730,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_INVOKABLE
      */
     public function testMakeExecutableFailsOnNonExistentMethod() {
@@ -742,7 +740,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_INVOKABLE
      */
     public function testMakeExecutableFailsOnClassWithoutInvoke() {
@@ -752,7 +750,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\ConfigException
      * @expectedExceptionCode \Auryn\Injector::E_NON_EMPTY_STRING_ALIAS
      */
     public function testBadAlias() {
@@ -810,7 +808,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     /**
      * Test that custom definitions are not passed through to dependencies.
      * Surprising things would happen if this did occur.
-     * @expectedException \Auryn\InjectorException
+     * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
      */
     public function testCustomDefinitionNotPassedThrough() {
@@ -855,7 +853,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     /**
      * Test coverage for delegate closures that are defined outside 
      * of a class.ph
-     * @throws \Auryn\InjectorException
+     * @throws \Auryn\ConfigException
      */
     public function testDelegateClosure() {
         $delegateClosure = \Auryn\Test\getDelegateClosureInGlobalScope();        
@@ -870,5 +868,19 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $instance = $injector->make('Auryn\Test\CloneTest');
         $newInjector = $instance->injector;
         $newInstance = $newInjector->make('Auryn\Test\CloneTest');
+    }
+    
+    public function testDebugMake() {
+        $injector = new Injector();
+        try {
+            $injector->make('Auryn\Test\DependencyChainTest');
+        }
+        catch(\Auryn\InjectionException $ie) {
+            $chain = $ie->getDependencyChain();
+            $this->assertCount(2, $chain);
+
+            $this->assertEquals('auryn\test\dependencychaintest', $chain[0]);
+            $this->assertEquals('auryn\test\depinterface', $chain[1]);
+        }
     }
 }
