@@ -880,7 +880,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         };
 
         $injector->delegate('Auryn\Test\AbstractExecuteTest', $fn);        
-        $result = $injector->execute(['Auryn\Test\AbstractExecuteTest', 'process']);
+        $result = $injector->execute(array('Auryn\Test\AbstractExecuteTest', 'process'));
 
         $this->assertEquals('Concrete', $result);
     }
