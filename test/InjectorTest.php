@@ -871,4 +871,17 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $newInjector = $instance->injector;
         $newInstance = $newInjector->make('Auryn\Test\CloneTest');
     }
+    
+    public function testAbstractExecute() {
+        $injector = new Injector();
+
+        $fn = function () {
+            return new \Auryn\Test\ConcreteExexcuteTest();
+        };
+
+        $injector->delegate('Auryn\Test\AbstractExecuteTest', $fn);        
+        $result = $injector->execute(['Auryn\Test\AbstractExecuteTest', 'process']);
+
+        $this->assertEquals('Concrete', $result);
+    }
 }

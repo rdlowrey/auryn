@@ -614,9 +614,17 @@ class Injector {
         list($className, $normalizedClass) = $this->resolveAlias($class);
         $reflectionMethod = $this->reflector->getMethod($className, $method);
 
-        return $reflectionMethod->isStatic()
-            ? array($reflectionMethod, null)
-            : array($reflectionMethod, $this->make($className));
+        if ($reflectionMethod->isStatic()) {
+            return array($reflectionMethod, null);
+        }
+
+        $instance = $this->make($className);
+        // If the class was delegated, the instance may not be of the type
+        // $class but some other type. We need to get the reflection on the
+        // actual class to be able to call the method correctly.
+        $reflectionMethod = $this->reflector->getMethod($instance, $method);
+
+        return array($reflectionMethod, $instance);
     }
 
     private function buildExecutableStructFromArray($arrayExecutable) {

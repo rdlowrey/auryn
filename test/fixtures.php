@@ -505,4 +505,15 @@ class CloneTest {
         $this->injector = clone $injector;
     }
 }
-    
+
+abstract class AbstractExecuteTest {
+    function process() {
+        return "Abstract";
+    }
+}
+
+class ConcreteExexcuteTest extends AbstractExecuteTest {
+    function process() {
+        return "Concrete";
+    }
+}
