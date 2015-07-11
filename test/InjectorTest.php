@@ -333,7 +333,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
     public function testUnknownDelegationMethod() {
         $injector = new Injector;
         try {
-            $injector->delegate('Auryn\Test\DelegatableInterface', ['stdClass', 'methodWhichDoesNotExist']);
+            $injector->delegate('Auryn\Test\DelegatableInterface', array('stdClass', 'methodWhichDoesNotExist'));
             $this->fail("Delegation was supposed to fail.");
         }
         catch(\Auryn\InjectorException $ie) {
