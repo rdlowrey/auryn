@@ -516,4 +516,7 @@ class ConcreteExexcuteTest extends AbstractExecuteTest {
     function process() {
         return "Concrete";
     }
+    
+class DependencyChainTest {
+    function __construct(DepInterface $dep){} 
 }

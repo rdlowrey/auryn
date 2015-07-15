@@ -94,13 +94,13 @@ class Injector {
      */
     public function alias($original, $alias) {
         if (empty($original) || !is_string($original)) {
-            throw new InjectorException(
+            throw new ConfigException(
                 self::M_NON_EMPTY_STRING_ALIAS,
                 self::E_NON_EMPTY_STRING_ALIAS
             );
         }
         if (empty($alias) || !is_string($alias)) {
-            throw new InjectorException(
+            throw new ConfigException(
                 self::M_NON_EMPTY_STRING_ALIAS,
                 self::E_NON_EMPTY_STRING_ALIAS
             );
@@ -109,7 +109,7 @@ class Injector {
         $originalNormalized = $this->normalizeName($original);
 
         if (isset($this->shares[$originalNormalized])) {
-            throw new InjectorException(
+            throw new ConfigException(
                 sprintf(
                     self::M_SHARED_CANNOT_ALIAS,
                     $this->normalizeName(get_class($this->shares[$originalNormalized])),
@@ -146,7 +146,7 @@ class Injector {
         } elseif (is_object($nameOrInstance)) {
             $this->shareInstance($nameOrInstance);
         } else {
-            throw new InjectorException(
+            throw new ConfigException(
                 sprintf(
                     self::M_SHARE_ARGUMENT,
                     __CLASS__,
@@ -180,7 +180,7 @@ class Injector {
         $normalizedName = $this->normalizeName(get_class($obj));
         if (isset($this->aliases[$normalizedName])) {
             // You cannot share an instance of a class name that is already aliased
-            throw new InjectorException(
+            throw new ConfigException(
                 sprintf(
                     self::M_ALIASED_CANNOT_SHARE,
                     $normalizedName,
@@ -204,7 +204,8 @@ class Injector {
      */
     public function prepare($name, $callableOrMethodStr) {
         if ($this->isExecutable($callableOrMethodStr) === false) {
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes,
                 self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
@@ -242,8 +243,7 @@ class Injector {
             $errorDetail = '';
             if (is_string($callableOrMethodStr)) {
                 $errorDetail = " but received '$callableOrMethodStr'";
-            }
-            else if (is_array($callableOrMethodStr) && 
+            } elseif (is_array($callableOrMethodStr) && 
                 count($callableOrMethodStr) == 2 && 
                 array_key_exists(0, $callableOrMethodStr) &&
                 array_key_exists(1, $callableOrMethodStr)) {
@@ -252,8 +252,8 @@ class Injector {
                 }
             }
 
-            throw new InjectorException(
-                sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__, $errorDetail),
+            throw new ConfigException(
+                sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__),
                 self::E_DELEGATE_ARGUMENT
             );
         }
@@ -318,7 +318,8 @@ class Injector {
         list($className, $normalizedClass) = $this->resolveAlias($name);
 
         if (isset($this->inProgressMakes[$normalizedClass])) {
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes,
                 sprintf(
                     self::M_CYCLIC_DEPENDENCY,
                     $className
@@ -327,7 +328,7 @@ class Injector {
             );
         }
 
-        $this->inProgressMakes[$normalizedClass] = true;
+        $this->inProgressMakes[$normalizedClass] = count($this->inProgressMakes);
 
         // isset() is used specifically here because classes may be marked as "shared" before an
         // instance is stored. In these cases the class is "shared," but it has a null value and
@@ -365,7 +366,8 @@ class Injector {
             if (!$ctor) {
                 $obj = $this->instantiateWithoutCtorParams($className);
             } elseif (!$ctor->isPublic()) {
-                throw new InjectorException(
+                throw new InjectionException(
+                    $this->inProgressMakes,
                     sprintf(self::M_NON_PUBLIC_CONSTRUCTOR, $className),
                     self::E_NON_PUBLIC_CONSTRUCTOR
                 );
@@ -383,7 +385,8 @@ class Injector {
             return $obj;
 
         } catch (\ReflectionException $e) {
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes,
                 sprintf(self::M_MAKE_FAILURE, $className, $e->getMessage()),
                 self::E_MAKE_FAILURE,
                 $e
@@ -396,7 +399,8 @@ class Injector {
 
         if (!$reflClass->isInstantiable()) {
             $type = $reflClass->isInterface() ? 'interface' : 'abstract';
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes,
                 sprintf(self::M_NEEDS_DEFINITION, $type, $className),
                 self::E_NEEDS_DEFINITION
             );
@@ -443,13 +447,15 @@ class Injector {
 
     private function buildArgFromParamDefineArr($definition) {
         if (!is_array($definition)) {
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes
                 // @TODO Add message
             );
         }
 
         if (!isset($definition[0], $definition[1])) {
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes
                 // @TODO Add message
             );
         }
@@ -461,7 +467,8 @@ class Injector {
 
     private function buildArgFromDelegate($paramName, $callableOrMethodStr) {
         if ($this->isExecutable($callableOrMethodStr) === false) {
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes,
                 self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
@@ -511,7 +518,8 @@ class Injector {
                 : '';
             $funcWord = $classWord . $reflFunc->name;
 
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes,
                 sprintf(
                     self::M_UNDEFINED_PARAM,
                     $reflParam->name,
@@ -585,7 +593,8 @@ class Injector {
         ) {
             $executableStruct = $this->buildExecutableStructFromArray($callableOrMethodStr);
         } else {
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes,
                 self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
@@ -606,7 +615,8 @@ class Injector {
             list($class, $method) = explode('::', $stringExecutable, 2);
             $executableStruct = $this->buildStringClassMethodCallable($class, $method);
         } else {
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes,
                 self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
@@ -649,7 +659,8 @@ class Injector {
         } elseif (is_string($classOrObj)) {
             $executableStruct = $this->buildStringClassMethodCallable($classOrObj, $method);
         } else {
-            throw new InjectorException(
+            throw new InjectionException(
+                $this->inProgressMakes,
                 self::M_INVOKABLE,
                 self::E_INVOKABLE
             );
