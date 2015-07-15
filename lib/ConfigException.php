@@ -2,4 +2,6 @@
 
 namespace Auryn;
 
-class ConfigException extends InjectorException {}
+class ConfigException extends InjectorException
+{
+}

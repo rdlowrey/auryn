@@ -2,11 +2,12 @@
 
 namespace Auryn;
 
-class InjectionException extends InjectorException {
-    
+class InjectionException extends InjectorException
+{
     public $dependencyChain;
     
-    public function __construct(array $inProgressMakes, $message = "", $code = 0, \Exception $previous = null) {
+    public function __construct(array $inProgressMakes, $message = "", $code = 0, \Exception $previous = null)
+    {
         $this->dependencyChain = array_flip($inProgressMakes);
         ksort($this->dependencyChain);
         
@@ -18,7 +19,8 @@ class InjectionException extends InjectorException {
      * the exception occurred.
      * @return array
      */
-    public function getDependencyChain() {
+    public function getDependencyChain()
+    {
         return $this->dependencyChain;
     }
 }

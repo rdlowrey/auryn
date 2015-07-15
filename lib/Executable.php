@@ -2,12 +2,14 @@
 
 namespace Auryn;
 
-class Executable {
+class Executable
+{
     private $callableReflection;
     private $invocationObject;
     private $isInstanceMethod;
 
-    public function __construct(\ReflectionFunctionAbstract $reflFunc, $invocationObject = null) {
+    public function __construct(\ReflectionFunctionAbstract $reflFunc, $invocationObject = null)
+    {
         if ($reflFunc instanceof \ReflectionMethod) {
             $this->isInstanceMethod = true;
             $this->setMethodCallable($reflFunc, $invocationObject);
@@ -17,7 +19,8 @@ class Executable {
         }
     }
 
-    private function setMethodCallable(\ReflectionMethod $reflection, $invocationObject) {
+    private function setMethodCallable(\ReflectionMethod $reflection, $invocationObject)
+    {
         if (is_object($invocationObject)) {
             $this->callableReflection = $reflection;
             $this->invocationObject = $invocationObject;
@@ -30,7 +33,8 @@ class Executable {
         }
     }
 
-    public function __invoke() {
+    public function __invoke()
+    {
         $args = func_get_args();
         $reflection = $this->callableReflection;
 
@@ -46,7 +50,8 @@ class Executable {
     /**
      * @TODO Remove this extra indirection when 5.3 support is dropped
      */
-    private function invokeClosureCompat($reflection, $args) {
+    private function invokeClosureCompat($reflection, $args)
+    {
         if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
             $scope = $reflection->getClosureScopeClass();
             $closure = \Closure::bind(
@@ -60,15 +65,18 @@ class Executable {
         }
     }
 
-    public function getCallableReflection() {
+    public function getCallableReflection()
+    {
         return $this->callableReflection;
     }
 
-    public function getInvocationObject() {
+    public function getInvocationObject()
+    {
         return $this->invocationObject;
     }
 
-    public function isInstanceMethod() {
+    public function isInstanceMethod()
+    {
         return $this->isInstanceMethod;
     }
 }

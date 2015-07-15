@@ -2,4 +2,6 @@
 
 namespace Auryn;
 
-class InjectorException extends \Exception {}
+class InjectorException extends \Exception
+{
+}

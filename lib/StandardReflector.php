@@ -2,34 +2,41 @@
 
 namespace Auryn;
 
-class StandardReflector implements Reflector {
-    public function getClass($class) {
+class StandardReflector implements Reflector
+{
+    public function getClass($class)
+    {
         return new \ReflectionClass($class);
     }
 
-    public function getCtor($class) {
+    public function getCtor($class)
+    {
         $reflectionClass = new \ReflectionClass($class);
 
         return $reflectionClass->getConstructor();
     }
 
-    public function getCtorParams($class) {
+    public function getCtorParams($class)
+    {
         return ($reflectedCtor = $this->getCtor($class))
             ? $reflectedCtor->getParameters()
-            : NULL;
+            : null;
     }
 
-    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param) {
+    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param)
+    {
         return ($reflectionClass = $param->getClass())
             ? $reflectionClass->getName()
-            : NULL;
+            : null;
     }
 
-    public function getFunction($functionName) {
+    public function getFunction($functionName)
+    {
         return new \ReflectionFunction($functionName);
     }
 
-    public function getMethod($classNameOrInstance, $methodName) {
+    public function getMethod($classNameOrInstance, $methodName)
+    {
         $className = is_string($classNameOrInstance)
             ? $classNameOrInstance
             : get_class($classNameOrInstance);
