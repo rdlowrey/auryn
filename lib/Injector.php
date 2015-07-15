@@ -12,7 +12,7 @@ class Injector {
     const I_ALIASES = 8;
     const I_SHARES = 16;
     const I_ALL = 17;
-    
+
     const E_NON_EMPTY_STRING_ALIAS = 1;
     const M_NON_EMPTY_STRING_ALIAS = "Invalid alias: non-empty string required at arguments 1 and 2";
     const E_SHARED_CANNOT_ALIAS = 2;
@@ -52,7 +52,7 @@ class Injector {
     public function __clone() {
         $this->inProgressMakes = array();
     }
-    
+
     /**
      * Define instantiation directives for the specified class
      *
@@ -243,21 +243,20 @@ class Injector {
             $errorDetail = '';
             if (is_string($callableOrMethodStr)) {
                 $errorDetail = " but received '$callableOrMethodStr'";
-            } elseif (is_array($callableOrMethodStr) && 
-                count($callableOrMethodStr) == 2 && 
+            } elseif (is_array($callableOrMethodStr) &&
+                count($callableOrMethodStr) == 2 &&
                 array_key_exists(0, $callableOrMethodStr) &&
-                array_key_exists(1, $callableOrMethodStr)) {
+                array_key_exists(1, $callableOrMethodStr)
+            ) {
                 if (is_string($callableOrMethodStr[0]) && is_string($callableOrMethodStr[1])) {
                     $errorDetail = " but received ['".$callableOrMethodStr[0]."', '".$callableOrMethodStr[1]."']";
                 }
             }
-
             throw new ConfigException(
-                sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__),
+                sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__, $errorDetail),
                 self::E_DELEGATE_ARGUMENT
             );
         }
-
         $normalizedName = $this->normalizeName($name);
         $this->delegates[$normalizedName] = $callableOrMethodStr;
 
@@ -280,7 +279,7 @@ class Injector {
         if (empty($typeFilter)) {
             $typeFilter = self::I_ALL;
         }
-        
+
         $types = array(
             self::I_BINDINGS => "classDefinitions",
             self::I_DELEGATES => "delegates",
