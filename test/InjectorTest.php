@@ -318,6 +318,31 @@ class InjectorTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceof('Auryn\Test\MadeByDelegate', $injector->make('Auryn\Test\MadeByDelegate'));
     }
 
+    public function testUnknownDelegationFunction() {
+        $injector = new Injector;
+        try {
+            $injector->delegate('Auryn\Test\DelegatableInterface', 'FunctionWhichDoesNotExist');
+            $this->fail("Delegation was supposed to fail.");
+        }
+        catch(\Auryn\InjectorException $ie) {
+            $this->assertContains('FunctionWhichDoesNotExist', $ie->getMessage());
+            $this->assertEquals(\Auryn\Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
+        }
+    }
+
+    public function testUnknownDelegationMethod() {
+        $injector = new Injector;
+        try {
+            $injector->delegate('Auryn\Test\DelegatableInterface', array('stdClass', 'methodWhichDoesNotExist'));
+            $this->fail("Delegation was supposed to fail.");
+        }
+        catch(\Auryn\InjectorException $ie) {
+            $this->assertContains('stdClass', $ie->getMessage());
+            $this->assertContains('methodWhichDoesNotExist', $ie->getMessage());
+            $this->assertEquals(\Auryn\Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
+        }
+    }
+
     /**
      * @dataProvider provideExecutionExpectations
      */

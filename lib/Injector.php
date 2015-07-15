@@ -32,7 +32,7 @@ class Injector {
     const E_UNDEFINED_PARAM = 9;
     const M_UNDEFINED_PARAM = "No definition available to provision typeless parameter \$%s at position %d in %s()";
     const E_DELEGATE_ARGUMENT = 10;
-    const M_DELEGATE_ARGUMENT = "%s::delegate expects a valid callable or executable class::method string at Argument 2";
+    const M_DELEGATE_ARGUMENT = "%s::delegate expects a valid callable or executable class::method string at Argument 2%s";
     const E_CYCLIC_DEPENDENCY = 11;
     const M_CYCLIC_DEPENDENCY = "Detected a cyclic dependency while provisioning %s";
 
@@ -239,8 +239,21 @@ class Injector {
      */
     public function delegate($name, $callableOrMethodStr) {
         if ($this->isExecutable($callableOrMethodStr) === false) {
+            $errorDetail = '';
+            if (is_string($callableOrMethodStr)) {
+                $errorDetail = " but received '$callableOrMethodStr'";
+            }
+            else if (is_array($callableOrMethodStr) && 
+                count($callableOrMethodStr) == 2 && 
+                array_key_exists(0, $callableOrMethodStr) &&
+                array_key_exists(1, $callableOrMethodStr)) {
+                if (is_string($callableOrMethodStr[0]) && is_string($callableOrMethodStr[1])) {
+                    $errorDetail = " but received ['".$callableOrMethodStr[0]."', '".$callableOrMethodStr[1]."']";
+                }
+            }
+
             throw new InjectorException(
-                sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__),
+                sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__, $errorDetail),
                 self::E_DELEGATE_ARGUMENT
             );
         }
