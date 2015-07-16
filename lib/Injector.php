@@ -27,7 +27,7 @@ class Injector
     const E_NON_PUBLIC_CONSTRUCTOR = 6;
     const M_NON_PUBLIC_CONSTRUCTOR = "Cannot instantiate protected/private constructor in class %s";
     const E_NEEDS_DEFINITION = 7;
-    const M_NEEDS_DEFINITION = "Injection definition required for non-concrete parameter $%s of type %s";
+    const M_NEEDS_DEFINITION = "Injection definition required for %s %s";
     const E_MAKE_FAILURE = 8;
     const M_MAKE_FAILURE = "Could not make %s: %s";
     const E_UNDEFINED_PARAM = 9;
@@ -415,7 +415,7 @@ class Injector
         $reflClass = $this->reflector->getClass($className);
 
         if (!$reflClass->isInstantiable()) {
-            $type = $reflClass->isInterface() ? 'interface' : 'abstract';
+            $type = $reflClass->isInterface() ? 'interface' : 'abstract class';
             throw new InjectionException(
                 $this->inProgressMakes,
                 sprintf(self::M_NEEDS_DEFINITION, $type, $className),
