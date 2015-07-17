@@ -703,3 +703,22 @@ class DependencyChainTest
     {
     }
 }
+
+class Bug109Dep
+{
+}
+
+class Bug109
+{
+    private $dep;
+
+    public function __construct(Bug109Dep $dep = null)
+    {
+        $this->dep = $dep;
+    }
+
+    public function getDep()
+    {
+        return $this->dep;
+    }
+}

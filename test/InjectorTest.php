@@ -688,12 +688,13 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $injector->make($class);
     }
 
+    /**
+     * @expectedException \Auryn\InjectionException
+     */
     public function testNonConcreteDependencyWithDefault()
     {
         $injector = new Injector;
         $class = $injector->make('Auryn\Test\NonConcreteDependencyWithDefaultValue');
-        $this->assertInstanceOf('Auryn\Test\NonConcreteDependencyWithDefaultValue', $class);
-        $this->assertNull($class->interface);
     }
 
     public function testNonConcreteDependencyWithDefaultValueThroughAlias()
@@ -720,9 +721,6 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     public function testDependencyWithDefaultValueThroughShare()
     {
         $injector = new Injector;
-        //Instance is not shared, null default is used for dependency
-        $instance = $injector->make('Auryn\Test\ConcreteDependencyWithDefaultValue');
-        $this->assertNull($instance->dependency);
 
         //Instance is explicitly shared, $instance is used for dependency
         $instance = new \StdClass();
@@ -999,5 +997,13 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
             $this->assertEquals('auryn\test\dependencychaintest', $chain[0]);
             $this->assertEquals('auryn\test\depinterface', $chain[1]);
         }
+    }
+
+    public function testBug109()
+    {
+        $injector = new Injector();
+        $obj = $injector->make("Auryn\Test\Bug109");
+        $dep = $obj->getDep();
+        $this->assertInstanceOf("Auryn\Test\Bug109Dep", $dep);
     }
 }

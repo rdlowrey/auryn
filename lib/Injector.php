@@ -503,23 +503,7 @@ class Injector
     {
         $typeHint = $this->reflector->getParamTypeHint($reflFunc, $reflParam);
 
-        if (!$typeHint) {
-            $obj = null;
-        } elseif ($reflParam->isDefaultValueAvailable()) {
-            $normalizedName = $this->normalizeName($typeHint);
-            // Injector has been told explicitly how to make this type
-            if (isset($this->aliases[$normalizedName]) ||
-                isset($this->delegates[$normalizedName]) ||
-                isset($this->shares[$normalizedName])) {
-                $obj = $this->make($typeHint);
-            } else {
-                $obj = $reflParam->getDefaultValue();
-            }
-        } else {
-            $obj = $this->make($typeHint);
-        }
-
-        return $obj;
+        return $typeHint ? $this->make($typeHint) : null;
     }
 
     private function buildArgFromReflParam(\ReflectionParameter $reflParam)
