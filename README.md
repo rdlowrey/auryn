@@ -63,7 +63,7 @@ You may also use composer to include auryn as a dependency in your projects `com
 Alternatively require the package using composer cli:
 
 ```bash
-composer require rdlowrey/auryn "~0.14"
+composer require rdlowrey/auryn
 ```
 
 ##### Manual Download
@@ -74,12 +74,12 @@ Archived tagged release versions are also available for manual download on the p
 
 ## Basic Usage
 
-To start using the injector, simply create a new instance of the `auryn\Injector` ("the Injector")
+To start using the injector, simply create a new instance of the `Auryn\Injector` ("the Injector")
 class:
 
 ```php
 <?php
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 ```
 
 ### Basic Instantiation
@@ -90,7 +90,7 @@ the following with equivalent results:
 
 ```php
 <?php
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $obj1 = new SomeNamespace\MyClass;
 $obj2 = $injector->make('SomeNamespace\MyClass');
 
@@ -119,7 +119,7 @@ class MyClass {
     }
 }
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $myObj = $injector->make('MyClass');
 
 var_dump($myObj->dep1 instanceof SomeDependency); // true
@@ -153,7 +153,7 @@ class Engine {
     }
 }
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $car = $injector->make('Car');
 var_dump($car instanceof Car); // true
 ```
@@ -190,7 +190,7 @@ ahead of time:
 
 ```php
 <?php
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $injector->define('Car', ['engine' => 'V8']);
 $car = $injector->make('Car');
 
@@ -221,7 +221,7 @@ class MyClass {
     }
 }
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $injector->define('MyClass', ['arg2' => 'SomeImplementationClass']);
 
 $myObj = $injector->make('MyClass');
@@ -248,7 +248,7 @@ class MyClass {
     }
 }
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $dependencyInstance = new SomeImplementation;
 $injector->define('MyClass', [':dependency' => $dependencyInstance]);
 
@@ -263,7 +263,7 @@ than name. Like so: `$injector->define('MyClass', [$dependencyInstance]);`
 
 ###### Specifying Injection Definitions On the Fly
 
-You may also specify injection definitions at call-time with `auryn\Injector::make`. Consider:
+You may also specify injection definitions at call-time with `Auryn\Injector::make`. Consider:
 
 ```php
 <?php
@@ -278,7 +278,7 @@ class MyClass {
     }
 }
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $myObj = $injector->make('MyClass', ['dependency' => 'SomeImplementation']);
 
 var_dump($myObj instanceof MyClass); // true
@@ -288,7 +288,7 @@ The above code shows how even though we haven't called  the Injector's `define` 
 call-time specification allows us to instantiate `MyClass`.
 
 > **NOTE:** on-the-fly instantiation definitions will override a pre-defined definition for the
-specified class, but only in the context of that particular call to `auryn\Injector::make`.
+specified class, but only in the context of that particular call to `Auryn\Injector::make`.
 
 ### Type-Hint Aliasing
 
@@ -309,7 +309,7 @@ class Car {
     }
 }
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 
 // Tell the Injector class to inject an instance of V8 any time
 // it encounters an Engine type-hint
@@ -342,7 +342,7 @@ instance and define its scalar constructor parameters:
 
 ```php
 <?php
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $injector->share('PDO');
 $injector->define('PDO', [
     ':dsn' => 'mysql:dbname=testdb;host=127.0.0.1',
@@ -383,7 +383,7 @@ class MyClass {
     }
 }
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $injector->defineParam('myValue', $myUniversalValue);
 $obj = $injector->make('MyClass');
 var_dump($obj->myValue === 42); // bool(true)
@@ -406,7 +406,7 @@ One of the more ubiquitous plagues in modern OOP is the Singleton anti-pattern. 
 limit classes to a single instance often fall into the trap of using `static` Singleton
 implementations for things like configuration classes and database connections. While it's often
 necessary to prevent multiple instances of a class, the Singleton method spells death to testability
-and should generally be avoided. `auryn\Injector` makes sharing class instances across contexts a
+and should generally be avoided. `Auryn\Injector` makes sharing class instances across contexts a
 triviality while allowing maximum testability and API transparency.
 
 Let's consider how a typical problem facing object-oriented web applications is easily solved by
@@ -432,7 +432,7 @@ class MyController {
 
 $db = new PDO('mysql:host=localhost;dbname=mydb', 'user', 'pass');
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $injector->share($db);
 
 $myController = $injector->make('MyController');
@@ -442,7 +442,7 @@ In the above code, the `DataMapper` instance will be provisioned with the same `
 connection instance we originally shared. This example is contrived and overly simple, but the
 implication should be clear:
 
-> By sharing an instance of a class, `auryn\Injector` will always use that instance when
+> By sharing an instance of a class, `Auryn\Injector` will always use that instance when
 > provisioning classes that type-hint the shared class.
 
 ###### A Simpler Example
@@ -455,7 +455,7 @@ class Person {
     public $name = 'John Snow';
 }
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $injector->share('Person');
 
 $person = $injector->make('Person');
@@ -476,7 +476,7 @@ The difference is that when you specify a class name, the Injector
 will cache the shared instance the first time it is asked to create it.
 
 > **NOTE:** Once the Injector caches a shared instance, call-time definitions passed to
-`auryn\Injector::make` will have no effect. Once shared, an instance will always be returned for
+`Auryn\Injector::make` will have no effect. Once shared, an instance will always be returned for
 instantiations of its type until the object is un-shared or refreshed:
 
 ### Instantiation Delegates
@@ -502,7 +502,7 @@ $complexClassFactory = function() {
     return $obj;
 };
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $injector->delegate('MyComplexClass', $complexClassFactory);
 
 $obj = $injector->make('MyComplexClass');
@@ -516,7 +516,7 @@ specified closure when asked to instantiate `MyComplexClass`.
 ###### Available Delegate Types
 
 Any valid PHP callable may be registered as a class instantiation delegate using
-`auryn\Injector::delegate`. Additionally you may specify the name of a delegate class that
+`Auryn\Injector::delegate`. Additionally you may specify the name of a delegate class that
 specifies an `__invoke` method and it will be automatically provisioned and have its `__invoke`
 method called at delegation time. Instance methods from uninstantiated classes may also be specified
 using the `['NonStaticClassName', 'factoryMethod']` construction. For example:
@@ -589,7 +589,7 @@ The following examples all work:
 
 ```php
 <?php
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $injector->execute(function(){});
 $injector->execute([$objectInstance, 'methodName']);
 $injector->execute('globalFunctionName');
@@ -616,7 +616,7 @@ class Example {
     }
 }
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 
 // outputs: int(42)
 var_dump($injector->execute('Example::myMethod', $args = [':arg2' => 42]));
@@ -625,11 +625,11 @@ var_dump($injector->execute('Example::myMethod', $args = [':arg2' => 42]));
 
 ### Dependency Resolution
 
-`auryn\Injector` resolves dependencies in the following order:
+`Auryn\Injector` resolves dependencies in the following order:
 
 1. If a shared instance exists for the class in question, the shared instance will always be returned
 2. If a delegate callable is assigned for a class, its return result will always be used
-3. If a call-time definition is passed to `auryn\Injector::make`, that definition will be used
+3. If a call-time definition is passed to `Auryn\Injector::make`, that definition will be used
 4. If a pre-defined definition exists, it will be used
 5. If a dependency is type-hinted, the Injector will recursively instantiate it subject to any implementations or definitions
 6. If no type-hint exists and the parameter has a default value, the default value is injected
@@ -733,7 +733,7 @@ context of the `Injector`:
 $pdo = new PDO('sqlite:some_sqlite_file.db');
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 
 $injector->share($pdo);
 $mapper = $injector->make('SomeService');
@@ -790,7 +790,7 @@ $request = $requestDetector->detectFromSuperglobal($_SERVER);
 $requestUri = $request->getUri();
 $requestMethod = strtolower($request->getMethod());
 
-$injector = new auryn\Injector;
+$injector = new Auryn\Injector;
 $injector->share($request);
 
 try {
@@ -842,6 +842,6 @@ In the above example the auryn DIC allows us to write fully testable, fully OO c
 for their dependencies. Because the DIC recursively instantiates the dependencies of objects it
 creates we have no need to pass around a Service Locator. Additionally, this example shows how we can
 eliminate evil Singletons using the sharing capabilities of the auryn DIC. In the front controller
-code, we share the request object so that any classes instantiated by the `auryn\Injector` that ask
+code, we share the request object so that any classes instantiated by the `Auryn\Injector` that ask
 for a `Request` will receive the same instance. This feature not only helps eliminate Singletons,
 but also the need for hard-to-test `static` properties.
