@@ -317,7 +317,7 @@ class Injector
         if (empty($name)) {
             return $source;
         } elseif (array_key_exists($name, $source)) {
-            return [$name => $source[$name]];
+            return array($name => $source[$name]);
         } else {
             return array();
         }

@@ -1004,10 +1004,9 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     public function testInspectShares()
     {
         $injector = new Injector();
-        $injector->share(\Auryn\Test\SomeClassName::class);
+        $injector->share('Auryn\Test\SomeClassName');
 
-        $expectedKey = strtolower(\Auryn\Test\SomeClassName::class);
-        $inspection = $injector->inspect(\Auryn\Test\SomeClassName::class, Injector::I_SHARES)[Injector::I_SHARES];
-        $this->assertArrayHasKey($expectedKey, $inspection);
+        $inspection = $injector->inspect('Auryn\Test\SomeClassName', Injector::I_SHARES);
+        $this->assertArrayHasKey('auryn\test\someclassname', $inspection[Injector::I_SHARES]);
     }
 }
