@@ -302,6 +302,7 @@ class Injector
             self::I_ALIASES => "aliases",
             self::I_SHARES => "shares"
         );
+
         foreach ($types as $type => $source) {
             if ($typeFilter & $type) {
                 $result[$type] = $this->filter($this->{$source}, $name);
@@ -315,8 +316,8 @@ class Injector
     {
         if (empty($name)) {
             return $source;
-        } elseif (isset($source[$name])) {
-            return $source[$name];
+        } elseif (array_key_exists($name, $source)) {
+            return [$name => $source[$name]];
         } else {
             return array();
         }

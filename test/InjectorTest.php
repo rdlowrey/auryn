@@ -1000,4 +1000,14 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
             $this->assertEquals('auryn\test\depinterface', $chain[1]);
         }
     }
+
+    public function testInspectShares()
+    {
+        $injector = new Injector();
+        $injector->share(\Auryn\Test\SomeClassName::class);
+
+        $expectedKey = strtolower(\Auryn\Test\SomeClassName::class);
+        $inspection = $injector->inspect(\Auryn\Test\SomeClassName::class, Injector::I_SHARES)[Injector::I_SHARES];
+        $this->assertArrayHasKey($expectedKey, $inspection);
+    }
 }
