@@ -36,6 +36,8 @@ class Injector
     const M_DELEGATE_ARGUMENT = "%s::delegate expects a valid callable or executable class::method string at Argument 2%s";
     const E_CYCLIC_DEPENDENCY = 11;
     const M_CYCLIC_DEPENDENCY = "Detected a cyclic dependency while provisioning %s";
+    const E_MAKING_FAILED = 12;
+    const M_MAKING_FAILED = "Making %s did not result in an object, instead result is of type '%s'";
 
     private $reflector;
     private $classDefinitions = array();
@@ -563,13 +565,26 @@ class Injector
             $executable = $this->buildExecutable($prepare);
             $executable($obj, $this);
         }
-        if ($interfaces = class_implements($obj)) {
-            $interfaces = array_flip(array_map(array($this, 'normalizeName'), $interfaces));
-            $prepares = array_intersect_key($this->prepares, $interfaces);
-            foreach ($prepares as $prepare) {
-                $executable = $this->buildExecutable($prepare);
-                $executable($obj, $this);
-            }
+
+        $interfaces = @class_implements($obj);
+        
+        if ($interfaces === false) {
+            throw new InjectionException(
+                $this->inProgressMakes,
+                sprintf(
+                    self::M_MAKING_FAILED,
+                    $normalizedClass,
+                    gettype($obj)
+                ),  
+                self::E_MAKING_FAILED
+            );
+        }
+
+        $interfaces = array_flip(array_map(array($this, 'normalizeName'), $interfaces));
+        $prepares = array_intersect_key($this->prepares, $interfaces);
+        foreach ($prepares as $prepare) {
+            $executable = $this->buildExecutable($prepare);
+            $executable($obj, $this);
         }
     }
 
