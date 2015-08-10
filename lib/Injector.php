@@ -367,11 +367,11 @@ class Injector
             $obj = $this->provisionInstance($className, $normalizedClass, $args);
         }
 
+        $this->prepareInstance($obj, $normalizedClass);
+
         if (array_key_exists($normalizedClass, $this->shares)) {
             $this->shares[$normalizedClass] = $obj;
         }
-
-        $this->prepareInstance($obj, $normalizedClass);
 
         unset($this->inProgressMakes[$normalizedClass]);
 

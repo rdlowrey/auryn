@@ -1023,4 +1023,18 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $injector->delegate('Auryn\Test\SomeClassName', $delegate);
         $injector->make('Auryn\Test\SomeClassName');
     }
+
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\Injector::E_MAKING_FAILED
+     */
+    public function testDelegationDoesntMakeObjectMakesString()
+    {
+        $delegate = function () {
+            return 'ThisIsNotAClass';
+        };
+        $injector = new Injector();
+        $injector->delegate('Auryn\Test\SomeClassName', $delegate);
+        $injector->make('Auryn\Test\SomeClassName');
+    }
 }
