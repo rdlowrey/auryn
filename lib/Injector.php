@@ -580,11 +580,13 @@ class Injector
             );
         }
 
-        $interfaces = array_flip(array_map(array($this, 'normalizeName'), $interfaces));
-        $prepares = array_intersect_key($this->prepares, $interfaces);
-        foreach ($prepares as $prepare) {
-            $executable = $this->buildExecutable($prepare);
-            $executable($obj, $this);
+        if ($interfaces) {
+            $interfaces = array_flip(array_map(array($this, 'normalizeName'), $interfaces));
+            $prepares = array_intersect_key($this->prepares, $interfaces);
+            foreach ($prepares as $prepare) {
+                $executable = $this->buildExecutable($prepare);
+                $executable($obj, $this);
+            }
         }
     }
 
