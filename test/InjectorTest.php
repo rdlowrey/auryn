@@ -1037,4 +1037,26 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $injector->delegate('Auryn\Test\SomeClassName', $delegate);
         $injector->make('Auryn\Test\SomeClassName');
     }
+
+    public function testPrepareCallableReplacesObjectWithReturnValueOfSameInterfaceType()
+    {
+        $injector = new Injector;
+        $expected = new SomeImplementation; // <-- implements SomeInterface
+        $injector->prepare("Auryn\Test\SomeInterface", function ($impl) use ($expected) {
+            return $expected;
+        });
+        $actual = $injector->make("Auryn\Test\SomeImplementation");
+        $this->assertSame($expected, $actual);
+    }
+
+    public function testPrepareCallableReplacesObjectWithReturnValueOfSameClassType()
+    {
+        $injector = new Injector;
+        $expected = new SomeImplementation; // <-- implements SomeInterface
+        $injector->prepare("Auryn\Test\SomeImplementation", function ($impl) use ($expected) {
+            return $expected;
+        });
+        $actual = $injector->make("Auryn\Test\SomeImplementation");
+        $this->assertSame($expected, $actual);
+    }
 }

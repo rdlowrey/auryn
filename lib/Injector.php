@@ -367,7 +367,7 @@ class Injector
             $obj = $this->provisionInstance($className, $normalizedClass, $args);
         }
 
-        $this->prepareInstance($obj, $normalizedClass);
+        $obj = $this->prepareInstance($obj, $normalizedClass);
 
         if (array_key_exists($normalizedClass, $this->shares)) {
             $this->shares[$normalizedClass] = $obj;
@@ -563,11 +563,14 @@ class Injector
         if (isset($this->prepares[$normalizedClass])) {
             $prepare = $this->prepares[$normalizedClass];
             $executable = $this->buildExecutable($prepare);
-            $executable($obj, $this);
+            $result = $executable($obj, $this);
+            if ($result instanceof $normalizedClass) {
+                $obj = $result;
+            }
         }
 
         $interfaces = @class_implements($obj);
-        
+
         if ($interfaces === false) {
             throw new InjectionException(
                 $this->inProgressMakes,
@@ -575,19 +578,26 @@ class Injector
                     self::M_MAKING_FAILED,
                     $normalizedClass,
                     gettype($obj)
-                ),  
+                ),
                 self::E_MAKING_FAILED
             );
         }
 
-        if ($interfaces) {
-            $interfaces = array_flip(array_map(array($this, 'normalizeName'), $interfaces));
-            $prepares = array_intersect_key($this->prepares, $interfaces);
-            foreach ($prepares as $prepare) {
-                $executable = $this->buildExecutable($prepare);
-                $executable($obj, $this);
+        if (empty($interfaces)) {
+            return $obj;
+        }
+
+        $interfaces = array_flip(array_map(array($this, 'normalizeName'), $interfaces));
+        $prepares = array_intersect_key($this->prepares, $interfaces);
+        foreach ($prepares as $interfaceName => $prepare) {
+            $executable = $this->buildExecutable($prepare);
+            $result = $executable($obj, $this);
+            if ($result instanceof $normalizedClass) {
+                $obj = $result;
             }
         }
+
+        return $obj;
     }
 
     /**
