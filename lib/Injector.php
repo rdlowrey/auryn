@@ -97,7 +97,7 @@ class Injector
      *
      * @param string $original The typehint to replace
      * @param string $alias The implementation name
-     * @throws ConfigException if any argument is empty or not a strings
+     * @throws ConfigException if any argument is empty or not a string
      * @return self
      */
     public function alias($original, $alias)
