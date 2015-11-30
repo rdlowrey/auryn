@@ -218,10 +218,10 @@ class Injector
     public function prepare($name, $callableOrMethodStr)
     {
         if ($this->isExecutable($callableOrMethodStr) === false) {
-            throw new InjectionException(
+            throw InjectionException::fromInvalidCallable(
                 $this->inProgressMakes,
-                self::M_INVOKABLE,
-                self::E_INVOKABLE
+                self::E_INVOKABLE,
+                $callableOrMethodStr
             );
         }
 
@@ -490,10 +490,9 @@ class Injector
     private function buildArgFromDelegate($paramName, $callableOrMethodStr)
     {
         if ($this->isExecutable($callableOrMethodStr) === false) {
-            throw new InjectionException(
+            throw InjectionException::fromInvalidCallable(
                 $this->inProgressMakes,
-                self::M_INVOKABLE,
-                self::E_INVOKABLE
+                $callableOrMethodStr
             );
         }
 
@@ -625,7 +624,15 @@ class Injector
      */
     public function buildExecutable($callableOrMethodStr)
     {
-        list($reflFunc, $invocationObj) = $this->buildExecutableStruct($callableOrMethodStr);
+        try {
+            list($reflFunc, $invocationObj) = $this->buildExecutableStruct($callableOrMethodStr);
+        } catch (\ReflectionException $e) {
+            throw InjectionException::fromInvalidCallable(
+                $this->inProgressMakes,
+                $callableOrMethodStr,
+                $e
+            );
+        }
 
         return new Executable($reflFunc, $invocationObj);
     }
@@ -647,10 +654,9 @@ class Injector
         ) {
             $executableStruct = $this->buildExecutableStructFromArray($callableOrMethodStr);
         } else {
-            throw new InjectionException(
+            throw InjectionException::fromInvalidCallable(
                 $this->inProgressMakes,
-                self::M_INVOKABLE,
-                self::E_INVOKABLE
+                $callableOrMethodStr
             );
         }
 
@@ -670,10 +676,9 @@ class Injector
             list($class, $method) = explode('::', $stringExecutable, 2);
             $executableStruct = $this->buildStringClassMethodCallable($class, $method);
         } else {
-            throw new InjectionException(
+            throw InjectionException::fromInvalidCallable(
                 $this->inProgressMakes,
-                self::M_INVOKABLE,
-                self::E_INVOKABLE
+                $stringExecutable
             );
         }
 
@@ -716,10 +721,9 @@ class Injector
         } elseif (is_string($classOrObj)) {
             $executableStruct = $this->buildStringClassMethodCallable($classOrObj, $method);
         } else {
-            throw new InjectionException(
+            throw InjectionException::fromInvalidCallable(
                 $this->inProgressMakes,
-                self::M_INVOKABLE,
-                self::E_INVOKABLE
+                $arrayExecutable
             );
         }
 
