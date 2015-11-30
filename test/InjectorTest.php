@@ -838,7 +838,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
             "StdClass::nonExistentMethod",
             \Auryn\Injector::E_INVOKABLE
         );
-        $injector->buildExecutable(['StdClass', 'nonExistentMethod']);
+        $injector->buildExecutable(array('StdClass', 'nonExistentMethod'));
     }
 
     /**
