@@ -16,10 +16,6 @@ class InjectionException extends InjectorException
 
     /**
      * Add a human readable version of the invalid callable to the standard 'invalid invokable' message.
-     * @param array $inProgressMakes
-     * @param $callableOrMethodStr
-     * @param \Exception $previous
-     * @return InjectionException
      */
     public static function fromInvalidCallable(
         array $inProgressMakes,
