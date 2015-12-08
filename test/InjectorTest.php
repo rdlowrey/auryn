@@ -1064,8 +1064,8 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
 
         $injector = new Injector;
         try {
-            $injector->define('Auryn\Test\ParentWithConstructor', [':foo' => 'parent']);
-            $injector->define('Auryn\Test\ChildWithoutConstructor', [':foo' => 'child']);
+            $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
+            $injector->define('Auryn\Test\ChildWithoutConstructor', array(':foo' => 'child'));
             
             $injector->share('Auryn\Test\ParentWithConstructor');
             $injector->share('Auryn\Test\ChildWithoutConstructor');
@@ -1088,7 +1088,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
      */
     public function testChildWithoutConstructorMissingParam() {
         $injector = new Injector;
-        $injector->define('Auryn\Test\ParentWithConstructor', [':foo' => 'parent']);
+        $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
         $injector->make('Auryn\Test\ChildWithoutConstructor');
     }
 }
