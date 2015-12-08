@@ -703,3 +703,13 @@ class DependencyChainTest
     {
     }
 }
+
+class ParentWithConstructor {
+    public $foo;
+    function __construct($foo) {
+        $this->foo = $foo;
+    }
+}
+
+class ChildWithoutConstructor extends ParentWithConstructor {
+}
