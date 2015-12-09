@@ -1059,4 +1059,36 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $actual = $injector->make("Auryn\Test\SomeImplementation");
         $this->assertSame($expected, $actual);
     }
+
+    public function testChildWithoutConstructorWorks() {
+
+        $injector = new Injector;
+        try {
+            $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
+            $injector->define('Auryn\Test\ChildWithoutConstructor', array(':foo' => 'child'));
+            
+            $injector->share('Auryn\Test\ParentWithConstructor');
+            $injector->share('Auryn\Test\ChildWithoutConstructor');
+
+            $child = $injector->make('Auryn\Test\ChildWithoutConstructor');
+            $this->assertEquals('child', $child->foo);
+
+            $parent = $injector->make('Auryn\Test\ParentWithConstructor');
+            $this->assertEquals('parent', $parent->foo);
+        }
+        catch (\Auryn\InjectionException $ie) {
+            echo $ie->getMessage();
+            $this->fail("Auryn failed to locate the ");
+        }
+    }
+    
+    /**
+     * @expectedException \Auryn\InjectionException
+     * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
+     */
+    public function testChildWithoutConstructorMissingParam() {
+        $injector = new Injector;
+        $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
+        $injector->make('Auryn\Test\ChildWithoutConstructor');
+    }
 }
