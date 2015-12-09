@@ -807,25 +807,38 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $injector->make('Auryn\Test\HasNonPublicConstructorWithArgs');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Injector::E_INVOKABLE
-     */
     public function testMakeExecutableFailsOnNonExistentFunction()
     {
         $injector = new Injector();
+        $this->setExpectedException(
+            'Auryn\InjectionException',
+            'nonExistentFunction',
+            \Auryn\Injector::E_INVOKABLE
+        );
         $injector->buildExecutable('nonExistentFunction');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Injector::E_INVOKABLE
-     */
-    public function testMakeExecutableFailsOnNonExistentMethod()
+    public function testMakeExecutableFailsOnNonExistentInstanceMethod()
     {
         $injector = new Injector();
         $object = new \StdClass();
-        $injector->buildExecutable(array($object, 'nonExistentFunction'));
+        $this->setExpectedException(
+            'Auryn\InjectionException',
+            "[object(stdClass), 'nonExistentMethod']",
+            \Auryn\Injector::E_INVOKABLE
+        );
+        $injector->buildExecutable(array($object, 'nonExistentMethod'));
+    }
+    
+    public function testMakeExecutableFailsOnNonExistentStaticMethod()
+    {
+        $injector = new Injector();
+        $this->setExpectedException(
+            'Auryn\InjectionException',
+            "StdClass::nonExistentMethod",
+            \Auryn\Injector::E_INVOKABLE
+        );
+        $injector->buildExecutable(array('StdClass', 'nonExistentMethod'));
     }
 
     /**
