@@ -97,6 +97,7 @@ class Injector
      *
      * @param string $original The typehint to replace
      * @param string $alias The implementation name
+     * @throws ConfigException if any argument is empty or not a string
      * @return self
      */
     public function alias($original, $alias)
@@ -147,6 +148,7 @@ class Injector
      * Share the specified class/instance across the Injector context
      *
      * @param mixed $nameOrInstance The class or object to share
+     * @throws ConfigException if $nameOrInstance is not a string or an object
      * @return self
      */
     public function share($nameOrInstance)
@@ -213,6 +215,8 @@ class Injector
      *
      * @param string $name
      * @param mixed $callableOrMethodStr Any callable or provisionable invokable method
+     * @throws InjectionException if $callableOrMethodStr is not a callable.
+     *                            See https://github.com/rdlowrey/auryn#injecting-for-execution
      * @return self
      */
     public function prepare($name, $callableOrMethodStr)
@@ -251,6 +255,7 @@ class Injector
      *
      * @param string $name
      * @param mixed $callableOrMethodStr Any callable or provisionable invokable method
+     * @throws ConfigException if $callableOrMethodStr is not a callable.
      * @return self
      */
     public function delegate($name, $callableOrMethodStr)
@@ -260,7 +265,7 @@ class Injector
             if (is_string($callableOrMethodStr)) {
                 $errorDetail = " but received '$callableOrMethodStr'";
             } elseif (is_array($callableOrMethodStr) &&
-                count($callableOrMethodStr) == 2 &&
+                count($callableOrMethodStr) === 2 &&
                 array_key_exists(0, $callableOrMethodStr) &&
                 array_key_exists(1, $callableOrMethodStr)
             ) {
@@ -330,6 +335,7 @@ class Injector
      *
      * @param string $name
      * @param array $args
+     * @throws InjectionException if a cyclic gets detected when provisioning
      * @return mixed
      */
     public function make($name, array $args = array())
