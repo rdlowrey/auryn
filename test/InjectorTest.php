@@ -1051,6 +1051,14 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $injector->make('Auryn\Test\SomeClassName');
     }
 
+    public function testPrepareInvalidCallable()
+    {
+        $injector = new Injector;
+        $invalidCallable = 'This_does_not_exist';
+        $this->setExpectedException('Auryn\InjectionException', $invalidCallable);
+        $injector->prepare("StdClass", $invalidCallable);
+    }
+
     public function testPrepareCallableReplacesObjectWithReturnValueOfSameInterfaceType()
     {
         $injector = new Injector;
