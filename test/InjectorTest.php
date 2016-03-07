@@ -731,18 +731,6 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('StdClass', $instance->dependency);
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionCode \Auryn\Injector::E_ALIASED_CANNOT_SHARE
-     */
-    public function testShareAfterAliasException()
-    {
-        $injector = new Injector();
-        $testClass = new \StdClass();
-        $injector->alias('StdClass', 'Auryn\Test\SomeOtherClass');
-        $injector->share($testClass);
-    }
-
     public function testShareAfterAliasAliasedClassAllowed()
     {
         $injector = new Injector();
@@ -773,18 +761,6 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $obj2 = $injector->make('Auryn\Test\DepInterface');
         $this->assertInstanceOf('Auryn\Test\DepImplementation', $obj);
         $this->assertEquals($obj, $obj2);
-    }
-
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionCode \Auryn\Injector::E_SHARED_CANNOT_ALIAS
-     */
-    public function testAliasAfterShareException()
-    {
-        $injector = new Injector();
-        $testClass = new \StdClass();
-        $injector->share($testClass);
-        $injector->alias('StdClass', 'Auryn\Test\SomeOtherClass');
     }
 
     /**

@@ -20,8 +20,6 @@ class Injector
     const M_SHARED_CANNOT_ALIAS = "Cannot alias class %s to %s because it is currently shared";
     const E_SHARE_ARGUMENT = 3;
     const M_SHARE_ARGUMENT = "%s::share() requires a string class name or object instance at Argument 1; %s specified";
-    const E_ALIASED_CANNOT_SHARE = 4;
-    const M_ALIASED_CANNOT_SHARE = "Cannot share class %s because it is currently aliased to %s";
     const E_INVOKABLE = 5;
     const M_INVOKABLE = "Invalid invokable: callable or provisional string required";
     const E_NON_PUBLIC_CONSTRUCTOR = 6;
@@ -117,21 +115,13 @@ class Injector
 
         $originalNormalized = $this->normalizeName($original);
 
-        if (isset($this->shares[$originalNormalized])) {
-            throw new ConfigException(
-                sprintf(
-                    self::M_SHARED_CANNOT_ALIAS,
-                    $this->normalizeName(get_class($this->shares[$originalNormalized])),
-                    $alias
-                ),
-                self::E_SHARED_CANNOT_ALIAS
-            );
-        }
-
         if (array_key_exists($originalNormalized, $this->shares)) {
             $aliasNormalized = $this->normalizeName($alias);
-            $this->shares[$aliasNormalized] = null;
-            unset($this->shares[$originalNormalized]);
+            $this->shares[$aliasNormalized] = $this->shares[$aliasNormalized];
+            if ($aliasNormalized !== $originalNormalized) {
+                $this->shares[$aliasNormalized] = null;
+                unset($this->shares[$originalNormalized]);
+            }
         }
 
         $this->aliases[$originalNormalized] = $alias;
@@ -193,17 +183,6 @@ class Injector
     private function shareInstance($obj)
     {
         $normalizedName = $this->normalizeName(get_class($obj));
-        if (isset($this->aliases[$normalizedName])) {
-            // You cannot share an instance of a class name that is already aliased
-            throw new ConfigException(
-                sprintf(
-                    self::M_ALIASED_CANNOT_SHARE,
-                    $normalizedName,
-                    $this->aliases[$normalizedName]
-                ),
-                self::E_ALIASED_CANNOT_SHARE
-            );
-        }
         $this->shares[$normalizedName] = $obj;
     }
 
