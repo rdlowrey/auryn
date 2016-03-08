@@ -103,6 +103,26 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Second argument', $injected->arg2);
     }
 
+    public function testMakeInstanceBasedOnTypeHintingWithCustomDefinitionOrder()
+    {
+        $injector = new Injector;
+        $injected = $injector->make('Auryn\Test\TestMultiDepsNeeded', array(new TestDependency2()));
+
+        $this->assertEquals(get_class($injected->testDep), 'Auryn\Test\TestDependency');
+        $this->assertEquals(get_class($injected->testDep2), 'Auryn\Test\TestDependency2');
+        $this->assertTrue(in_array('Auryn\Test\DepInterface', class_implements($injected->testDep2)));
+    }
+
+    public function testMakeInstanceBasedOnDocBlocksWithCustomDefinitionOrder()
+    {
+        $injector = new Injector;
+        $injected = $injector->make('Auryn\Test\TestMultiDepsNeeded2', array(new TestDependency2()));
+
+        $this->assertEquals(get_class($injected->testDep), 'Auryn\Test\TestDependency');
+        $this->assertEquals(get_class($injected->testDep2), 'Auryn\Test\TestDependency2');
+        $this->assertTrue(in_array('Auryn\Test\DepInterface', class_implements($injected->testDep2)));
+    }
+
     public function testMakeInstanceStoresShareIfMarkedWithNullInstance()
     {
         $injector = new Injector;
