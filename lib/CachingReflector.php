@@ -2,6 +2,9 @@
 
 namespace Auryn;
 
+use phpDocumentor\Reflection\DocBlock;
+use phpDocumentor\Reflection\DocBlock\Context;
+
 class CachingReflector implements Reflector
 {
     const CACHE_KEY_CLASSES = 'auryn.refls.classes.';
@@ -9,6 +12,8 @@ class CachingReflector implements Reflector
     const CACHE_KEY_CTOR_PARAMS = 'auryn.refls.ctor-params.';
     const CACHE_KEY_FUNCS = 'auryn.refls.funcs.';
     const CACHE_KEY_METHODS = 'auryn.refls.methods.';
+    const CACHE_KEY_DOC_BLOCK = 'auryn.refls.doc-block.';
+    const CACHE_KEY_IMPLEMENTED = 'auryn.refls.implemented.';
 
     private $reflector;
     private $cache;
@@ -24,7 +29,7 @@ class CachingReflector implements Reflector
         $cacheKey = self::CACHE_KEY_CLASSES . strtolower($class);
 
         if (!$reflectionClass = $this->cache->fetch($cacheKey)) {
-            $reflectionClass = new \ReflectionClass($class);
+            $reflectionClass = new ExtendedReflectionClass($class);
             $this->cache->store($cacheKey, $reflectionClass);
         }
 
@@ -128,5 +133,39 @@ class CachingReflector implements Reflector
         }
 
         return $reflectedMethod;
+    }
+
+    public function getDocBlock(\ReflectionMethod $method)
+    {
+        $cacheKey = self::CACHE_KEY_DOC_BLOCK . strtolower($method->class);
+
+        if (!$docBlock = $this->cache->fetch($cacheKey)) {
+
+            $class = $this->getClass($method->class);
+
+            $docBlock = new DocBlock(
+                $method->getDocComment(),
+                new Context(
+                    $class->getNamespaceName(),
+                    $class->getUseStatements()
+                )
+            );
+
+            $this->cache->store($cacheKey, $docBlock);
+        }
+
+        return $docBlock;
+    }
+
+    public function getImplemented($className)
+    {
+        $cacheKey = self::CACHE_KEY_IMPLEMENTED . strtolower($className);
+
+        if (!$implemented = $this->cache->fetch($cacheKey)) {
+            $implemented = array_merge(array($className), class_implements($className));
+            $this->cache->store($cacheKey, $implemented);
+        }
+
+        return $implemented;
     }
 }
