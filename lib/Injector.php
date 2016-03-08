@@ -117,7 +117,7 @@ class Injector
 
         if (array_key_exists($originalNormalized, $this->shares)) {
             $aliasNormalized = $this->normalizeName($alias);
-            $this->shares[$aliasNormalized] = $this->shares[$aliasNormalized];
+            $this->shares[$aliasNormalized] = $this->shares[$originalNormalized];
             if ($aliasNormalized !== $originalNormalized) {
                 $this->shares[$aliasNormalized] = null;
                 unset($this->shares[$originalNormalized]);
@@ -414,7 +414,7 @@ class Injector
         return new $className;
     }
 
-    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition, array $reflParams = null)
+    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definitions, array $reflParams = null)
     {
         $args = array();
 
@@ -424,28 +424,96 @@ class Injector
         }
 
         foreach ($reflParams as $i => $reflParam) {
+
+            $args[$i] = null;
+
+            foreach ($definitions as $j => $definition) {
+
+                // use Reflection to inspect to needed parameters
+                if ($reflParam->getClass()) {
+
+                    if (is_object($definition) && in_array($reflParam->getClass()->getName(), $this->reflector->getImplemented(get_class($definition)))) {
+
+                        $args[$i] = $definition;
+
+                        // no need to use this again, if not unset, checking for a definition with numeric keys will fail later on
+                        unset($reflParams[$i], $definitions[$j]);
+
+                        // no need to loop again, since we found a match already!
+                        continue 2;
+                    }
+
+                    // skip the checking-for-doc-comment part because the parameter was type-hinted
+                    continue;
+                }
+
+                $docBlockParams = $this->reflector->getDocBlock($reflFunc)->getTagsByName('param');
+
+                // use Doc Comment to inspect to needed parameters
+                if (isset($docBlockParams[$i])) {
+                    $type = $docBlockParams[$i]->getType();
+
+                    if (!empty($type) && !in_array(strtolower($type), ['array', 'null'])) {
+
+                        if (is_object($definition)) {
+
+                            $class = get_class($definition);
+
+                            foreach (explode('|', $type) as $t) {
+
+                                // sub string type because the DocBlock always prepends a string, we don't want that
+                                if (in_array(substr($t, 1), $this->reflector->getImplemented($class))) {
+
+                                    $args[$i] = $definition;
+
+                                    // no need to use this again, if not unset, checking for a definition with numeric keys will fail later on
+                                    unset($reflParams[$i], $definitions[$j]);
+
+                                    // no need to loop again, since we found a match already!
+                                    continue 3;
+                                }
+                            }
+                        }
+
+                        // if parameter is not type hinted
+                        if (is_null($reflParam->getClass())) {
+
+                            $args[$i] = $this->make($type);
+
+                            unset($reflParams[$i]);
+
+                            // no need to loop again, since we found a match already!
+                            continue 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach ($reflParams as $i => $reflParam) {
+
             $name = $reflParam->name;
 
-            if (isset($definition[$i]) || array_key_exists($i, $definition)) {
+            if (isset($definitions[$i]) || array_key_exists($i, $definitions)) {
                 // indexed arguments take precedence over named parameters
-                $arg = $definition[$i];
-            } elseif (isset($definition[$name]) || array_key_exists($name, $definition)) {
+                $arg = $definitions[$i];
+            } elseif (isset($definitions[$name]) || array_key_exists($name, $definitions)) {
                 // interpret the param as a class name to be instantiated
-                $arg = $this->make($definition[$name]);
-            } elseif (($prefix = self::A_RAW . $name) && (isset($definition[$prefix]) || array_key_exists($prefix, $definition))) {
+                $arg = $this->make($definitions[$name]);
+            } elseif (($prefix = self::A_RAW . $name) && (isset($definitions[$prefix]) || array_key_exists($prefix, $definitions))) {
                 // interpret the param as a raw value to be injected
-                $arg = $definition[$prefix];
-            } elseif (($prefix = self::A_DELEGATE . $name) && isset($definition[$prefix])) {
+                $arg = $definitions[$prefix];
+            } elseif (($prefix = self::A_DELEGATE . $name) && isset($definitions[$prefix])) {
                 // interpret the param as an invokable delegate
-                $arg = $this->buildArgFromDelegate($name, $definition[$prefix]);
-            } elseif (($prefix = self::A_DEFINE . $name) && isset($definition[$prefix])) {
+                $arg = $this->buildArgFromDelegate($name, $definitions[$prefix]);
+            } elseif (($prefix = self::A_DEFINE . $name) && isset($definitions[$prefix])) {
                 // interpret the param as a class definition
-                $arg = $this->buildArgFromParamDefineArr($definition[$prefix]);
+                $arg = $this->buildArgFromParamDefineArr($definitions[$prefix]);
             } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam)) {
                 $arg = $this->buildArgFromReflParam($reflParam);
             }
 
-            $args[] = $arg;
+            $args[$i] = $arg;
         }
 
         return $args;
