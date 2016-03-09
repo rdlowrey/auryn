@@ -117,7 +117,6 @@ class Injector
 
         if (array_key_exists($originalNormalized, $this->shares)) {
             $aliasNormalized = $this->normalizeName($alias);
-            $this->shares[$aliasNormalized] = $this->shares[$aliasNormalized];
             if ($aliasNormalized !== $originalNormalized) {
                 $this->shares[$aliasNormalized] = null;
                 unset($this->shares[$originalNormalized]);
