@@ -78,7 +78,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Auryn\InjectorException
+     * @expectedException \Auryn\InjectorException
      */
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
@@ -147,7 +147,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @TODO
-     * @expectedException Auryn\InjectorException
+     * @expectedException \Auryn\InjectorException
      */
     public function testMakeInstanceThrowsExceptionOnUninstantiableTypehintWithoutDefinition()
     {
@@ -252,7 +252,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Auryn\ConfigException
+     * @expectedException \Auryn\ConfigException
      */
     public function testMakeInstanceThrowsExceptionIfStringDelegateClassHasNoInvokeMethod()
     {
@@ -261,7 +261,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Auryn\ConfigException
+     * @expectedException \Auryn\ConfigException
      */
     public function testMakeInstanceThrowsExceptionIfStringDelegateClassInstantiationFails()
     {
@@ -329,7 +329,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider provideInvalidDelegates
-     * @expectedException Auryn\ConfigException
+     * @expectedException \Auryn\ConfigException
      */
     public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate)
     {
@@ -555,7 +555,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Auryn\InjectorException
+     * @expectedException \Auryn\InjectorException
      */
     public function testMissingAlias()
     {
@@ -829,7 +829,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         );
         $injector->buildExecutable(array($object, 'nonExistentMethod'));
     }
-    
+
     public function testMakeExecutableFailsOnNonExistentStaticMethod()
     {
         $injector = new Injector();
@@ -1087,7 +1087,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         try {
             $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
             $injector->define('Auryn\Test\ChildWithoutConstructor', array(':foo' => 'child'));
-            
+
             $injector->share('Auryn\Test\ParentWithConstructor');
             $injector->share('Auryn\Test\ChildWithoutConstructor');
 
@@ -1102,7 +1102,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
             $this->fail("Auryn failed to locate the ");
         }
     }
-    
+
     /**
      * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
