@@ -139,6 +139,22 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @requires PHP 5.6
+     */
+    public function testMakeInstanceUsesReflectionForUnknownParamsWithDepsAndVariadicsWithTypeHint()
+    {
+        require_once __DIR__ . "/fixtures_5_6.php";
+
+        $injector = new Injector;
+        $obj = $injector->make('Auryn\Test\TypehintNoDefaultConstructorVariadicClass',
+            array('arg'=>'Auryn\Test\TestDependency')
+        );
+        $this->assertInstanceOf('Auryn\Test\TypehintNoDefaultConstructorVariadicClass', $obj);
+        $this->assertInternalType("array", $obj->testParam);
+        $this->assertInstanceOf('Auryn\Test\TestDependency', $obj->testParam[0]);
+    }
+
+    /**
      * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
      */

@@ -10,3 +10,12 @@ class NoTypehintNoDefaultConstructorVariadicClass
         $this->testParam = $arg;
     }
 }
+
+class TypehintNoDefaultConstructorVariadicClass
+{
+    public $testParam = 1;
+    public function __construct(TestDependency ...$arg)
+    {
+        $this->testParam = $arg;
+    }
+}
