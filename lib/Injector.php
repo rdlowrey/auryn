@@ -464,6 +464,12 @@ class Injector
                 $arg = $this->buildArgFromParamDefineArr($definition[$prefix]);
             } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam)) {
                 $arg = $this->buildArgFromReflParam($reflParam);
+
+                if ($arg === null && PHP_VERSION_ID >= 50600 && $reflParam->isVariadic()) {
+                    // buildArgFromReflParam might return null in case the parameter is optional
+                    // in case of variadics, the parameter is optional, but null might not be allowed
+                    continue;
+                }
             }
 
             $args[] = $arg;
