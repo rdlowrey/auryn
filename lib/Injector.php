@@ -224,7 +224,6 @@ class Injector
         if ($this->isExecutable($callableOrMethodStr) === false) {
             throw InjectionException::fromInvalidCallable(
                 $this->inProgressMakes,
-                self::E_INVOKABLE,
                 $callableOrMethodStr
             );
         }
