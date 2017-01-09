@@ -31,7 +31,7 @@ class Injector
     const E_MAKE_FAILURE = 8;
     const M_MAKE_FAILURE = "Could not make %s: %s";
     const E_UNDEFINED_PARAM = 9;
-    const M_UNDEFINED_PARAM = "No definition available to provision typeless parameter \$%s at position %d in %s()";
+    const M_UNDEFINED_PARAM = "No definition available to provision typeless parameter \$%s at position %d in %s()%s";
     const E_DELEGATE_ARGUMENT = 10;
     const M_DELEGATE_ARGUMENT = "%s::delegate expects a valid callable or executable class::method string at Argument 2%s";
     const E_CYCLIC_DEPENDENCY = 11;
@@ -367,7 +367,7 @@ class Injector
             if (isset($this->delegates[$normalizedClass])) {
                 $executable = $this->buildExecutable($this->delegates[$normalizedClass]);
                 $reflectionFunction = $executable->getCallableReflection();
-                $args = $this->provisionFuncArgs($reflectionFunction, $args);
+                $args = $this->provisionFuncArgs($reflectionFunction, $args, null, $className);
                 $obj = call_user_func_array(array($executable, '__invoke'), $args);
             } else {
                 $obj = $this->provisionInstance($className, $normalizedClass, $args);
@@ -411,7 +411,7 @@ class Injector
                 $definition = isset($this->classDefinitions[$normalizedClass])
                     ? array_replace($this->classDefinitions[$normalizedClass], $definition)
                     : $definition;
-                $args = $this->provisionFuncArgs($ctor, $definition, $ctorParams);
+                $args = $this->provisionFuncArgs($ctor, $definition, $ctorParams, $className);
                 $obj = $reflClass->newInstanceArgs($args);
             } else {
                 $obj = $this->instantiateWithoutCtorParams($className);
@@ -444,7 +444,7 @@ class Injector
         return new $className;
     }
 
-    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition, array $reflParams = null)
+    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition, array $reflParams = null, $className = null)
     {
         $args = array();
 
@@ -472,7 +472,7 @@ class Injector
                 // interpret the param as a class definition
                 $arg = $this->buildArgFromParamDefineArr($definition[$prefix]);
             } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam)) {
-                $arg = $this->buildArgFromReflParam($reflParam);
+                $arg = $this->buildArgFromReflParam($reflParam, $className);
 
                 if ($arg === null && PHP_VERSION_ID >= 50600 && $reflParam->isVariadic()) {
                     // buildArgFromReflParam might return null in case the parameter is optional
@@ -545,7 +545,7 @@ class Injector
         return $obj;
     }
 
-    private function buildArgFromReflParam(\ReflectionParameter $reflParam)
+    private function buildArgFromReflParam(\ReflectionParameter $reflParam, $className = null)
     {
         if (array_key_exists($reflParam->name, $this->paramDefinitions)) {
             $arg = $this->paramDefinitions[$reflParam->name];
@@ -558,8 +558,11 @@ class Injector
             $arg = null;
         } else {
             $reflFunc = $reflParam->getDeclaringFunction();
+            $classDeclare = ($reflFunc instanceof \ReflectionMethod)
+                ? " declared in " . $reflFunc->getDeclaringClass()->name . "::"
+                : "";
             $classWord = ($reflFunc instanceof \ReflectionMethod)
-                ? $reflFunc->getDeclaringClass()->name . '::'
+                ? $className . '::'
                 : '';
             $funcWord = $classWord . $reflFunc->name;
 
@@ -569,7 +572,8 @@ class Injector
                     self::M_UNDEFINED_PARAM,
                     $reflParam->name,
                     $reflParam->getPosition(),
-                    $funcWord
+                    $funcWord,
+                    $classDeclare
                 ),
                 self::E_UNDEFINED_PARAM
             );
@@ -632,7 +636,7 @@ class Injector
     {
         list($reflFunc, $invocationObj) = $this->buildExecutableStruct($callableOrMethodStr);
         $executable = new Executable($reflFunc, $invocationObj);
-        $args = $this->provisionFuncArgs($reflFunc, $args);
+        $args = $this->provisionFuncArgs($reflFunc, $args, null, $invocationObj === null ? null : get_class($invocationObj));
 
         return call_user_func_array(array($executable, '__invoke'), $args);
     }

@@ -1171,8 +1171,10 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     /**
      * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
+     * @expectedExceptionMessage No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\ChildWithoutConstructor::__construct() declared in Auryn\Test\ParentWithConstructor
      */
-    public function testChildWithoutConstructorMissingParam() {
+    public function testChildWithoutConstructorMissingParam()
+    {
         $injector = new Injector;
         $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
         $injector->make('Auryn\Test\ChildWithoutConstructor');
