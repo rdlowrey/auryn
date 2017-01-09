@@ -78,7 +78,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Auryn\InjectorException
+     * @expectedException \Auryn\InjectorException
      */
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
@@ -128,6 +128,10 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
      */
     public function testMakeInstanceUsesReflectionForUnknownParamsInMultiBuildWithDepsAndVariadics()
     {
+        if (defined('HHVM_VERSION')) {
+            $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
+        }
+
         require_once __DIR__ . "/fixtures_5_6.php";
 
         $injector = new Injector;
@@ -135,7 +139,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
             array('val1'=>'Auryn\Test\TestDependency')
         );
         $this->assertInstanceOf('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass', $obj);
-        $this->assertEquals([], $obj->testParam);
+        $this->assertEquals(array(), $obj->testParam);
     }
 
     /**
@@ -143,6 +147,10 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
      */
     public function testMakeInstanceUsesReflectionForUnknownParamsWithDepsAndVariadicsWithTypeHint()
     {
+        if (defined('HHVM_VERSION')) {
+            $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
+        }
+
         require_once __DIR__ . "/fixtures_5_6.php";
 
         $injector = new Injector;
