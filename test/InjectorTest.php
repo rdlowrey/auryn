@@ -1112,4 +1112,21 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
         $injector->make('Auryn\Test\ChildWithoutConstructor');
     }
+
+    public function testInstanceClosureDelegates()
+    {
+        $injector = new Injector;
+        $injector->delegate('Auryn\Test\DelegatingInstanceA', function (DelegateA $d) {
+            return new \Auryn\Test\DelegatingInstanceA($d);
+        });
+        $injector->delegate('Auryn\Test\DelegatingInstanceB', function (DelegateB $d) {
+            return new \Auryn\Test\DelegatingInstanceB($d);
+        });
+
+        $a = $injector->make('Auryn\Test\DelegatingInstanceA');
+        $b = $injector->make('Auryn\Test\DelegatingInstanceB');
+
+        $this->assertInstanceOf('Auryn\Test\DelegateA', $a->a);
+        $this->assertInstanceOf('Auryn\Test\DelegateB', $b->b);
+    }
 }
