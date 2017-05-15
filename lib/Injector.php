@@ -369,7 +369,7 @@ class Injector
             $args = $this->provisionFuncArgs($reflectionFunction, $args);
             $obj = call_user_func_array(array($executable, '__invoke'), $args);
         } else {
-            $obj = $this->provisionInstance($className, $normalizedClass, $args);
+            $obj = $this->provisionInstance($className, $args);
         }
 
         $obj = $this->prepareInstance($obj, $normalizedClass);
@@ -383,7 +383,7 @@ class Injector
         return $obj;
     }
 
-    private function provisionInstance($className, $normalizedClass, array $definition)
+    private function provisionInstance($className, array $definition)
     {
         try {
             $ctor = $this->reflector->getCtor($className);
@@ -398,9 +398,12 @@ class Injector
                 );
             } elseif ($ctorParams = $this->reflector->getCtorParams($className)) {
                 $reflClass = $this->reflector->getClass($className);
-                $definition = isset($this->classDefinitions[$normalizedClass])
-                    ? array_replace($this->classDefinitions[$normalizedClass], $definition)
+
+                $normalizedCtorClass = $this->normalizeName($ctor->class);
+                $definition = isset($this->classDefinitions[$normalizedCtorClass])
+                    ? array_replace($this->classDefinitions[$normalizedCtorClass], $definition)
                     : $definition;
+
                 $args = $this->provisionFuncArgs($ctor, $definition, $ctorParams);
                 $obj = $reflClass->newInstanceArgs($args);
             } else {
