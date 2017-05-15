@@ -619,7 +619,7 @@ class Example {
 $injector = new Auryn\Injector;
 
 // outputs: int(42)
-var_dump($injector->execute('Example::myMethod', $args = [':arg2' => 42]));
+var_dump($injector->execute('Example::myMethod', [':arg2' => 42]));
 ```
 
 
