@@ -78,7 +78,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Auryn\InjectorException
+     * @expectedException \Auryn\InjectorException
      */
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
@@ -121,6 +121,45 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertInstanceOf('Auryn\Test\NoTypehintNoDefaultConstructorClass', $obj);
         $this->assertEquals(null, $obj->testParam);
+    }
+
+    /**
+     * @requires PHP 5.6
+     */
+    public function testMakeInstanceUsesReflectionForUnknownParamsInMultiBuildWithDepsAndVariadics()
+    {
+        if (defined('HHVM_VERSION')) {
+            $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
+        }
+
+        require_once __DIR__ . "/fixtures_5_6.php";
+
+        $injector = new Injector;
+        $obj = $injector->make('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass',
+            array('val1'=>'Auryn\Test\TestDependency')
+        );
+        $this->assertInstanceOf('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass', $obj);
+        $this->assertEquals(array(), $obj->testParam);
+    }
+
+    /**
+     * @requires PHP 5.6
+     */
+    public function testMakeInstanceUsesReflectionForUnknownParamsWithDepsAndVariadicsWithTypeHint()
+    {
+        if (defined('HHVM_VERSION')) {
+            $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
+        }
+
+        require_once __DIR__ . "/fixtures_5_6.php";
+
+        $injector = new Injector;
+        $obj = $injector->make('Auryn\Test\TypehintNoDefaultConstructorVariadicClass',
+            array('arg'=>'Auryn\Test\TestDependency')
+        );
+        $this->assertInstanceOf('Auryn\Test\TypehintNoDefaultConstructorVariadicClass', $obj);
+        $this->assertInternalType("array", $obj->testParam);
+        $this->assertInstanceOf('Auryn\Test\TestDependency', $obj->testParam[0]);
     }
 
     /**
@@ -829,7 +868,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         );
         $injector->buildExecutable(array($object, 'nonExistentMethod'));
     }
-    
+
     public function testMakeExecutableFailsOnNonExistentStaticMethod()
     {
         $injector = new Injector();
@@ -1087,7 +1126,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         try {
             $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
             $injector->define('Auryn\Test\ChildWithoutConstructor', array(':foo' => 'child'));
-            
+
             $injector->share('Auryn\Test\ParentWithConstructor');
             $injector->share('Auryn\Test\ChildWithoutConstructor');
 
@@ -1102,7 +1141,7 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
             $this->fail("Auryn failed to locate the ");
         }
     }
-    
+
     /**
      * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
