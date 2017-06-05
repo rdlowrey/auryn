@@ -12,7 +12,7 @@ class Injector
     const I_PREPARES = 4;
     const I_ALIASES = 8;
     const I_SHARES = 16;
-    const I_ALL = 17;
+    const I_ALL = 31;
 
     const E_NON_EMPTY_STRING_ALIAS = 1;
     const M_NON_EMPTY_STRING_ALIAS = "Invalid alias: non-empty string required at arguments 1 and 2";
