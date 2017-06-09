@@ -1,6 +1,8 @@
+dist: trusty
+
 language: php
+
 php:
-  - 5.3
   - 5.4
   - 5.5
   - 5.6
@@ -8,9 +10,15 @@ php:
   - 7.1
   - nightly
   - hhvm
+
+matrix:
+  include:
+    - php: 5.3
+      dist: precise
+
 before_script:
   - composer install
-sudo: false
+
 script:
   - phpunit
   - vendor/bin/athletic --path test/Benchmark --formatter GroupedFormatter

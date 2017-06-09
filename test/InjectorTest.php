@@ -1062,6 +1062,32 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('auryn\test\someclassname', $inspection[Injector::I_SHARES]);
     }
 
+    public function testInspectAll()
+    {
+        $injector = new Injector();
+
+        // Injector::I_BINDINGS
+        $injector->define('Auryn\Test\DependencyWithDefinedParam', array(':arg' => 42));
+
+        // Injector::I_DELEGATES
+        $injector->delegate('Auryn\Test\MadeByDelegate', 'Auryn\Test\CallableDelegateClassTest');
+
+        // Injector::I_PREPARES
+        $injector->prepare('Auryn\Test\MadeByDelegate', function ($c) {});
+
+        // Injector::I_ALIASES
+        $injector->alias('i', 'Auryn\Injector');
+
+        // Injector::I_SHARES
+        $injector->share('Auryn\Injector');
+
+        $all = $injector->inspect();
+        $some = $injector->inspect('Auryn\Test\MadeByDelegate');
+
+        $this->assertCount(5, array_filter($all));
+        $this->assertCount(2, array_filter($some));
+    }
+
     /**
      * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_MAKING_FAILED
