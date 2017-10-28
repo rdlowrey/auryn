@@ -235,6 +235,34 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($obj->null);
     }
 
+    public function testMakeLabeledInstanceDirectly()
+    {
+        $injector = new Injector;
+
+        $injector->defineLabel('desktop', 'Auryn\Test\TypelessParameterDependency', array(
+            ':thumbnailSize' => 300
+        ));
+
+
+        $obj = $injector->make('#desktop');
+        $this->assertEquals($obj->thumbnailSize, 300);
+    }
+
+    public function testMakeInstanceWithLabeledParametersRecursively()
+    {
+        $injector = new Injector;
+        $injector->defineLabel('parent', 'Auryn\Test\RequiresDependencyWithTypelessParameters', array(
+            ':dependency' => '#injected'
+        ));
+        $injector->defineLabel('injected', 'Auryn\Test\TypelessParameterDependency', array(
+            ':thumbnailSize' => 300
+        ));
+
+        $obj = $injector->make('#parent');
+
+        $this->assertSame($obj->dependency->thumbnailSize, 300);
+    }
+
     /**
      * @TODO
      * @expectedException \Exception
