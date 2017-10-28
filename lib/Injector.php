@@ -148,9 +148,9 @@ class Injector
      * @param array $params Parameters to be passed into make
      * @return self
      */
-    public function defineLabel($label, $class, array $params)
+    public function defineLabel($label, $class, array $params = array())
     {
-        $this->labels[self::A_LABEL.$label] = array($class, $params);
+        $this->labels[$this->normalizeName(self::A_LABEL.$label)] = array($class, $params);
         return $this;
     }
 
@@ -354,8 +354,18 @@ class Injector
      */
     public function make($name, array $args = array())
     {
-        if ($name[0] === self::A_LABEL && array_key_exists($name, $this->labels)){
-            return $this->make($this->labels[$name][0], $this->labels[$name][1]);
+        $normalizedName = $this->normalizeName($name);
+        if ($normalizedName[0] === self::A_LABEL && array_key_exists($normalizedName, $this->labels)){
+
+            if (isset($this->shares[$normalizedName])) {
+                return $this->shares[$normalizedName];
+            }
+            $obj = $this->make($this->labels[$normalizedName][0], $this->labels[$normalizedName][1]);
+
+            if (array_key_exists($normalizedName, $this->shares)) {
+                $this->shares[$normalizedName] = $obj;
+            }
+            return $obj;
         }
         list($className, $normalizedClass) = $this->resolveAlias($name);
 

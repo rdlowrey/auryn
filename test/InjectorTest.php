@@ -659,6 +659,15 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($class, $class2);
     }
 
+    public function testShareByLabel()
+    {
+        $injector = new Injector;
+        $injector->defineLabel('sharedDependency', 'Auryn\Test\SharedClass');
+        $injector->share('#sharedDependency');
+        $obj1 = $injector->make('#sharedDependency');
+        $obj2 = $injector->make('#sharedDependency');
+        $this->assertSame($obj1, $obj2);
+    }
     public function testNotSharedByAliasedInterfaceName()
     {
         $injector = new Injector;
