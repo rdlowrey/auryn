@@ -701,7 +701,9 @@ class Injector
 
     private function buildExecutableStructFromString($stringExecutable)
     {
-        if (function_exists($stringExecutable)) {
+        if ($stringExecutable[0] == self::A_LABEL) {
+            $executableStruct = $this->buildExecutableStruct($this->make($stringExecutable));
+        } elseif (function_exists($stringExecutable)) {
             $callableRefl = $this->reflector->getFunction($stringExecutable);
             $executableStruct = array($callableRefl, null);
         } elseif (method_exists($stringExecutable, '__invoke')) {

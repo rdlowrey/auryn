@@ -606,6 +606,17 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         return $return;
     }
 
+    public function testExecuteLabeledDefinition()
+    {
+        $injector = new Injector;
+        $injector->defineLabel('some.dependency', 'Auryn\Test\RequiresDependencyWithTypelessParameters', array(
+            ':dependency' => new TypelessParameterDependency(150)
+        ));
+        $injector->defineLabel('test.executable', 'Auryn\Test\ExecuteClassInvokableWithInjectedProperty', array(':dependency' => '#some.dependency'));
+        $result = $injector->execute('#test.executable');
+        $this->assertSame(150, $result->dependency->thumbnailSize);
+    }
+
     public function testStaticStringInvokableWithArgument()
     {
         $injector = new \Auryn\Injector;
