@@ -150,7 +150,7 @@ class Injector
      */
     public function defineLabel($label, $class, array $params)
     {
-        $this->labels[self::A_LABEL.$label] = [$class, $params];
+        $this->labels[self::A_LABEL.$label] = array($class, $params);
         return $this;
     }
 
