@@ -471,7 +471,9 @@ class Injector
                 // interpret the param as a class name to be instantiated
                 $arg = $this->make($definition[$name]);
             } elseif (($prefix = self::A_RAW . $name) && (isset($definition[$prefix]) || array_key_exists($prefix, $definition))) {
+                // interpret the param as a raw value to be injected
                 $arg = $definition[$prefix];
+
                 if (is_string($arg) && $arg[0] === self::A_LABEL && isset($this->labels[$arg])) {
                     $arg = $this->make(
                         $this->labels[$arg][0], 
@@ -496,6 +498,7 @@ class Injector
 
             $args[] = $arg;
         }
+        
         return $args;
     }
 
