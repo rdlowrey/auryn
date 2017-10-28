@@ -498,7 +498,7 @@ class Injector
 
             $args[] = $arg;
         }
-        
+
         return $args;
     }
 
