@@ -42,5 +42,10 @@
             "Auryn\\Test\\": "test/"
         },
         "files": ["test/fixtures.php"]
-    }
+    },
+	"extra" : {
+		"branch-alias" : {
+			"dev-master" : "1.4.x-dev"
+		}
+	}    
 }
