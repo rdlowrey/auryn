@@ -417,7 +417,19 @@ class ExecuteClassRelativeStaticMethod extends ExecuteClassStaticMethod
         return 'this should NEVER be seen since we are testing against parent::execute()';
     }
 }
+class ExecuteClassInvokableWithInjectedProperty
+{
+    public $dependency;
 
+    public function __construct($dependency){
+        $this->dependency = $dependency;
+    }
+
+    public function __invoke()
+    {
+        return $this->dependency;
+    }
+}
 class ExecuteClassInvokable
 {
     public function __invoke()

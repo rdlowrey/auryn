@@ -235,6 +235,34 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertNull($obj->null);
     }
 
+    public function testMakeLabeledInstanceDirectly()
+    {
+        $injector = new Injector;
+
+        $injector->defineLabel('desktop', 'Auryn\Test\TypelessParameterDependency', array(
+            ':thumbnailSize' => 300
+        ));
+
+
+        $obj = $injector->make('#desktop');
+        $this->assertEquals($obj->thumbnailSize, 300);
+    }
+
+    public function testMakeInstanceWithLabeledParametersRecursively()
+    {
+        $injector = new Injector;
+        $injector->defineLabel('parent', 'Auryn\Test\RequiresDependencyWithTypelessParameters', array(
+            ':dependency' => '#injected'
+        ));
+        $injector->defineLabel('injected', 'Auryn\Test\TypelessParameterDependency', array(
+            ':thumbnailSize' => 300
+        ));
+
+        $obj = $injector->make('#parent');
+
+        $this->assertSame($obj->dependency->thumbnailSize, 300);
+    }
+
     /**
      * @TODO
      * @expectedException \Exception
@@ -578,6 +606,17 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         return $return;
     }
 
+    public function testExecuteLabeledDefinition()
+    {
+        $injector = new Injector;
+        $injector->defineLabel('some.dependency', 'Auryn\Test\RequiresDependencyWithTypelessParameters', array(
+            ':dependency' => new TypelessParameterDependency(150)
+        ));
+        $injector->defineLabel('test.executable', 'Auryn\Test\ExecuteClassInvokableWithInjectedProperty', array(':dependency' => '#some.dependency'));
+        $result = $injector->execute('#test.executable');
+        $this->assertSame(150, $result->dependency->thumbnailSize);
+    }
+
     public function testStaticStringInvokableWithArgument()
     {
         $injector = new \Auryn\Injector;
@@ -620,6 +659,15 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($class, $class2);
     }
 
+    public function testShareByLabel()
+    {
+        $injector = new Injector;
+        $injector->defineLabel('sharedDependency', 'Auryn\Test\SharedClass');
+        $injector->share('#sharedDependency');
+        $obj1 = $injector->make('#sharedDependency');
+        $obj2 = $injector->make('#sharedDependency');
+        $this->assertSame($obj1, $obj2);
+    }
     public function testNotSharedByAliasedInterfaceName()
     {
         $injector = new Injector;

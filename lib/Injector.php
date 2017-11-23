@@ -7,6 +7,7 @@ class Injector
     const A_RAW = ':';
     const A_DELEGATE = '+';
     const A_DEFINE = '@';
+    const A_LABEL = '#';
     const I_BINDINGS = 1;
     const I_DELEGATES = 2;
     const I_PREPARES = 4;
@@ -47,6 +48,7 @@ class Injector
     private $prepares = array();
     private $delegates = array();
     private $inProgressMakes = array();
+    private $labels = array();
 
     public function __construct(Reflector $reflector = null)
     {
@@ -136,6 +138,19 @@ class Injector
 
         $this->aliases[$originalNormalized] = $alias;
 
+        return $this;
+    }
+    /**
+     * Share a named dependecy 
+     * 
+     * @param string $label The name of the resource
+     * @param string $class The type of the class
+     * @param array $params Parameters to be passed into make
+     * @return self
+     */
+    public function defineLabel($label, $class, array $params = array())
+    {
+        $this->labels[$this->normalizeName(self::A_LABEL.$label)] = array($class, $params);
         return $this;
     }
 
@@ -339,6 +354,19 @@ class Injector
      */
     public function make($name, array $args = array())
     {
+        $normalizedName = $this->normalizeName($name);
+        if ($normalizedName[0] === self::A_LABEL && array_key_exists($normalizedName, $this->labels)){
+
+            if (isset($this->shares[$normalizedName])) {
+                return $this->shares[$normalizedName];
+            }
+            $obj = $this->make($this->labels[$normalizedName][0], $this->labels[$normalizedName][1]);
+
+            if (array_key_exists($normalizedName, $this->shares)) {
+                $this->shares[$normalizedName] = $obj;
+            }
+            return $obj;
+        }
         list($className, $normalizedClass) = $this->resolveAlias($name);
 
         if (isset($this->inProgressMakes[$normalizedClass])) {
@@ -455,6 +483,13 @@ class Injector
             } elseif (($prefix = self::A_RAW . $name) && (isset($definition[$prefix]) || array_key_exists($prefix, $definition))) {
                 // interpret the param as a raw value to be injected
                 $arg = $definition[$prefix];
+
+                if (is_string($arg) && $arg[0] === self::A_LABEL && isset($this->labels[$arg])) {
+                    $arg = $this->make(
+                        $this->labels[$arg][0], 
+                        $this->labels[$arg][1]
+                    );
+                }
             } elseif (($prefix = self::A_DELEGATE . $name) && isset($definition[$prefix])) {
                 // interpret the param as an invokable delegate
                 $arg = $this->buildArgFromDelegate($name, $definition[$prefix]);
@@ -676,7 +711,9 @@ class Injector
 
     private function buildExecutableStructFromString($stringExecutable)
     {
-        if (function_exists($stringExecutable)) {
+        if ($stringExecutable[0] == self::A_LABEL) {
+            $executableStruct = $this->buildExecutableStruct($this->make($stringExecutable));
+        } elseif (function_exists($stringExecutable)) {
             $callableRefl = $this->reflector->getFunction($stringExecutable);
             $executableStruct = array($callableRefl, null);
         } elseif (method_exists($stringExecutable, '__invoke')) {
