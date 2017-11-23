@@ -845,3 +845,7 @@ eliminate evil Singletons using the sharing capabilities of the auryn DIC. In th
 code, we share the request object so that any classes instantiated by the `Auryn\Injector` that ask
 for a `Request` will receive the same instance. This feature not only helps eliminate Singletons,
 but also the need for hard-to-test `static` properties.
+
+# PSR-11
+
+You can make use of [auryn-container-interop](https://github.com/elazar/auryn-container-interop) for PSR-11. Auryn is an Injector not a container. Discussion over [here](https://github.com/rdlowrey/auryn/issues/77).
