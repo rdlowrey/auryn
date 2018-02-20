@@ -279,7 +279,7 @@ class MyClass {
 }
 
 $injector = new Auryn\Injector;
-$myObj = $injector->make('MyClass', ['dependency' => 'SomeImplementation']);
+$myObj = $injector->make('MyClass', ['dependency' => 'SomeImplementationClass']);
 
 var_dump($myObj instanceof MyClass); // true
 ```
