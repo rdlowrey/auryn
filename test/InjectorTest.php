@@ -1238,19 +1238,27 @@ class InjectorTest extends TestCase
         $this->assertInstanceOf('Auryn\Test\DelegateB', $b->b);
     }
 
+
     public function testThatExceptionInConstructorDoesntCauseCyclicDependencyException()
     {
         $injector = new Injector;
 
         try {
             $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
         }
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Exception in constructor');
 
         $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
+    }
+
+    public function testProvidesExtensionsOfArrayMap()
+    {
+        $injector = New Injector;
+        $obj = $injector->make('\Auryn\Test\ExtendedExtendedArrayObject');
+
+        $this->assertInstanceOf('\ArrayObject', $obj);
     }
 }

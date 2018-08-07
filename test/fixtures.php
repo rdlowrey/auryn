@@ -744,8 +744,12 @@ class DelegatingInstanceB {
     }
 }
 
+
 class ThrowsExceptionInConstructor {
     public function __construct() {
         throw new \Exception('Exception in constructor');
     }
 }
+
+class ExtendedArrayObject extends \ArrayObject {}
+class ExtendedExtendedArrayObject extends ExtendedArrayObject {}
