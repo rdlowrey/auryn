@@ -1194,4 +1194,12 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('Auryn\Test\DelegateA', $a->a);
         $this->assertInstanceOf('Auryn\Test\DelegateB', $b->b);
     }
+
+    public function testProvidesExtensionsOfArrayMap()
+    {
+        $injector = New Injector;
+        $obj = $injector->make('\Auryn\Test\ExtendedExtendedArrayObject');
+
+        $this->assertInstanceOf('\ArrayObject', $obj);
+    }
 }

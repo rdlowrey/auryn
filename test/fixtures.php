@@ -727,3 +727,6 @@ class DelegatingInstanceB {
         $this->b = $b;
     }
 }
+
+class ExtendedArrayObject extends \ArrayObject {}
+class ExtendedExtendedArrayObject extends ExtendedArrayObject {}
