@@ -20,5 +20,5 @@ before_script:
   - composer install
 
 script:
-  - phpunit
+  - vendor/bin/phpunit
   - vendor/bin/athletic --path test/Benchmark --formatter GroupedFormatter
