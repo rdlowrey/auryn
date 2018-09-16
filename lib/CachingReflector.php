@@ -23,9 +23,8 @@ class CachingReflector implements Reflector
     {
         $cacheKey = self::CACHE_KEY_CLASSES . strtolower($class);
 
-        if (!$reflectionClass = $this->cache->fetch($cacheKey)) {
-            $reflectionClass = new \ReflectionClass($class);
-            $this->cache->store($cacheKey, $reflectionClass);
+        if (($reflectionClass = $this->cache->fetch($cacheKey)) === false) {
+            $this->cache->store($cacheKey, $reflectionClass = $this->reflector->getClass($class));
         }
 
         return $reflectionClass;
@@ -35,12 +34,8 @@ class CachingReflector implements Reflector
     {
         $cacheKey = self::CACHE_KEY_CTORS . strtolower($class);
 
-        $reflectedCtor = $this->cache->fetch($cacheKey);
-
-        if ($reflectedCtor === false) {
-            $reflectionClass = $this->getClass($class);
-            $reflectedCtor = $reflectionClass->getConstructor();
-            $this->cache->store($cacheKey, $reflectedCtor);
+        if (($reflectedCtor = $this->cache->fetch($cacheKey)) === false) {
+            $this->cache->store($cacheKey, $reflectedCtor = $this->reflector->getCtor($class));
         }
 
         return $reflectedCtor;
@@ -50,17 +45,9 @@ class CachingReflector implements Reflector
     {
         $cacheKey = self::CACHE_KEY_CTOR_PARAMS . strtolower($class);
 
-        $reflectedCtorParams = $this->cache->fetch($cacheKey);
-
-        if (false !== $reflectedCtorParams) {
-            return $reflectedCtorParams;
-        } elseif ($reflectedCtor = $this->getCtor($class)) {
-            $reflectedCtorParams = $reflectedCtor->getParameters();
-        } else {
-            $reflectedCtorParams = null;
+        if (($reflectedCtorParams = $this->cache->fetch($cacheKey)) === false) {
+            $this->cache->store($cacheKey, $reflectedCtorParams = $this->reflector->getCtorParams($class));
         }
-
-        $this->cache->store($cacheKey, $reflectedCtorParams);
 
         return $reflectedCtorParams;
     }
@@ -82,19 +69,12 @@ class CachingReflector implements Reflector
 
         $typeHint = ($paramCacheKey === null) ? false : $this->cache->fetch($paramCacheKey);
 
-        if (false !== $typeHint) {
-            return $typeHint;
+        if (false === $typeHint) {
+            $typeHint = $this->reflector->getParamTypeHint($function, $param);
+            if ($paramCacheKey !== null) {
+                $this->cache->store($paramCacheKey, $typeHint);
+            }
         }
-
-        if ($reflectionClass = $param->getClass()) {
-            $typeHint = $reflectionClass->getName();
-            $classCacheKey = self::CACHE_KEY_CLASSES . strtolower($typeHint);
-            $this->cache->store($classCacheKey, $reflectionClass);
-        } else {
-            $typeHint = null;
-        }
-
-        $this->cache->store($paramCacheKey, $typeHint);
 
         return $typeHint;
     }
@@ -104,11 +84,8 @@ class CachingReflector implements Reflector
         $lowFunc = strtolower($functionName);
         $cacheKey = self::CACHE_KEY_FUNCS . $lowFunc;
 
-        $reflectedFunc = $this->cache->fetch($cacheKey);
-
-        if (false === $reflectedFunc) {
-            $reflectedFunc = new \ReflectionFunction($functionName);
-            $this->cache->store($cacheKey, $reflectedFunc);
+        if (($reflectedFunc = $this->cache->fetch($cacheKey)) === false) {
+            $this->cache->store($cacheKey, $reflectedFunc = $this->reflector->getFunction($functionName));
         }
 
         return $reflectedFunc;
@@ -122,9 +99,8 @@ class CachingReflector implements Reflector
 
         $cacheKey = self::CACHE_KEY_METHODS . strtolower($className) . '.' . strtolower($methodName);
 
-        if (!$reflectedMethod = $this->cache->fetch($cacheKey)) {
-            $reflectedMethod = new \ReflectionMethod($className, $methodName);
-            $this->cache->store($cacheKey, $reflectedMethod);
+        if (($reflectedMethod = $this->cache->fetch($cacheKey)) === false) {
+            $this->cache->store($cacheKey, $reflectedMethod = $this->reflector->getMethod($classNameOrInstance, $methodName));
         }
 
         return $reflectedMethod;
