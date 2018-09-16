@@ -1194,4 +1194,21 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertInstanceOf('Auryn\Test\DelegateA', $a->a);
         $this->assertInstanceOf('Auryn\Test\DelegateB', $b->b);
     }
+
+    /**
+     * @expectedException \Exception
+     * @expectedExceptionMessage Exception in constructor
+     */
+    public function testThatExceptionInConstructorDoesntCauseCyclicDependencyException()
+    {
+        $injector = new Injector;
+
+        try {
+            $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
+        }
+        catch (\Exception $e) {
+        }
+
+        $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
+    }
 }
