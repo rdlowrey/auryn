@@ -713,3 +713,23 @@ class ParentWithConstructor {
 
 class ChildWithoutConstructor extends ParentWithConstructor {
 }
+
+class DelegateA {}
+class DelegatingInstanceA {
+    public function __construct(DelegateA $a) {
+        $this->a = $a;
+    }
+}
+
+class DelegateB {}
+class DelegatingInstanceB {
+    public function __construct(DelegateB $b) {
+        $this->b = $b;
+    }
+}
+
+class ThrowsExceptionInConstructor {
+    public function __construct() {
+        throw new \Exception('Exception in constructor');
+    }
+}

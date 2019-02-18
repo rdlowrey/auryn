@@ -12,7 +12,7 @@ class Injector
     const I_PREPARES = 4;
     const I_ALIASES = 8;
     const I_SHARES = 16;
-    const I_ALL = 17;
+    const I_ALL = 31;
 
     const E_NON_EMPTY_STRING_ALIAS = 1;
     const M_NON_EMPTY_STRING_ALIAS = "Invalid alias: non-empty string required at arguments 1 and 2";
@@ -363,22 +363,32 @@ class Injector
             return $this->shares[$normalizedClass];
         }
 
-        if (isset($this->delegates[$normalizedClass])) {
-            $executable = $this->buildExecutable($this->delegates[$normalizedClass]);
-            $reflectionFunction = $executable->getCallableReflection();
-            $args = $this->provisionFuncArgs($reflectionFunction, $args, null, $className);
-            $obj = call_user_func_array(array($executable, '__invoke'), $args);
-        } else {
-            $obj = $this->provisionInstance($className, $normalizedClass, $args);
+        try {
+            if (isset($this->delegates[$normalizedClass])) {
+                $executable = $this->buildExecutable($this->delegates[$normalizedClass]);
+                $reflectionFunction = $executable->getCallableReflection();
+                $args = $this->provisionFuncArgs($reflectionFunction, $args, null, $className);
+                $obj = call_user_func_array(array($executable, '__invoke'), $args);
+            } else {
+                $obj = $this->provisionInstance($className, $normalizedClass, $args);
+            }
+
+            $obj = $this->prepareInstance($obj, $normalizedClass);
+
+            if (array_key_exists($normalizedClass, $this->shares)) {
+                $this->shares[$normalizedClass] = $obj;
+            }
+
+            unset($this->inProgressMakes[$normalizedClass]);
         }
-
-        $obj = $this->prepareInstance($obj, $normalizedClass);
-
-        if (array_key_exists($normalizedClass, $this->shares)) {
-            $this->shares[$normalizedClass] = $obj;
+        catch (\Throwable $exception) {
+            unset($this->inProgressMakes[$normalizedClass]);
+            throw $exception;
         }
-
-        unset($this->inProgressMakes[$normalizedClass]);
+        catch (\Exception $exception) {
+            unset($this->inProgressMakes[$normalizedClass]);
+            throw $exception;
+        }
 
         return $obj;
     }
@@ -463,6 +473,12 @@ class Injector
                 $arg = $this->buildArgFromParamDefineArr($definition[$prefix]);
             } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam)) {
                 $arg = $this->buildArgFromReflParam($reflParam, $className);
+
+                if ($arg === null && PHP_VERSION_ID >= 50600 && $reflParam->isVariadic()) {
+                    // buildArgFromReflParam might return null in case the parameter is optional
+                    // in case of variadics, the parameter is optional, but null might not be allowed
+                    continue;
+                }
             }
 
             $args[] = $arg;

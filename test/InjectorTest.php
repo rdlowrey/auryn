@@ -124,6 +124,45 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @requires PHP 5.6
+     */
+    public function testMakeInstanceUsesReflectionForUnknownParamsInMultiBuildWithDepsAndVariadics()
+    {
+        if (defined('HHVM_VERSION')) {
+            $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
+        }
+
+        require_once __DIR__ . "/fixtures_5_6.php";
+
+        $injector = new Injector;
+        $obj = $injector->make('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass',
+            array('val1'=>'Auryn\Test\TestDependency')
+        );
+        $this->assertInstanceOf('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass', $obj);
+        $this->assertEquals(array(), $obj->testParam);
+    }
+
+    /**
+     * @requires PHP 5.6
+     */
+    public function testMakeInstanceUsesReflectionForUnknownParamsWithDepsAndVariadicsWithTypeHint()
+    {
+        if (defined('HHVM_VERSION')) {
+            $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
+        }
+
+        require_once __DIR__ . "/fixtures_5_6.php";
+
+        $injector = new Injector;
+        $obj = $injector->make('Auryn\Test\TypehintNoDefaultConstructorVariadicClass',
+            array('arg'=>'Auryn\Test\TestDependency')
+        );
+        $this->assertInstanceOf('Auryn\Test\TypehintNoDefaultConstructorVariadicClass', $obj);
+        $this->assertInternalType("array", $obj->testParam);
+        $this->assertInstanceOf('Auryn\Test\TestDependency', $obj->testParam[0]);
+    }
+
+    /**
      * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
      */
@@ -1023,6 +1062,32 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('auryn\test\someclassname', $inspection[Injector::I_SHARES]);
     }
 
+    public function testInspectAll()
+    {
+        $injector = new Injector();
+
+        // Injector::I_BINDINGS
+        $injector->define('Auryn\Test\DependencyWithDefinedParam', array(':arg' => 42));
+
+        // Injector::I_DELEGATES
+        $injector->delegate('Auryn\Test\MadeByDelegate', 'Auryn\Test\CallableDelegateClassTest');
+
+        // Injector::I_PREPARES
+        $injector->prepare('Auryn\Test\MadeByDelegate', function ($c) {});
+
+        // Injector::I_ALIASES
+        $injector->alias('i', 'Auryn\Injector');
+
+        // Injector::I_SHARES
+        $injector->share('Auryn\Injector');
+
+        $all = $injector->inspect();
+        $some = $injector->inspect('Auryn\Test\MadeByDelegate');
+
+        $this->assertCount(5, array_filter($all));
+        $this->assertCount(2, array_filter($some));
+    }
+
     /**
      * @expectedException \Auryn\InjectionException
      * @expectedExceptionCode \Auryn\Injector::E_MAKING_FAILED
@@ -1113,5 +1178,39 @@ class InjectorTest extends \PHPUnit_Framework_TestCase
         $injector = new Injector;
         $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
         $injector->make('Auryn\Test\ChildWithoutConstructor');
+    }
+
+    public function testInstanceClosureDelegates()
+    {
+        $injector = new Injector;
+        $injector->delegate('Auryn\Test\DelegatingInstanceA', function (DelegateA $d) {
+            return new \Auryn\Test\DelegatingInstanceA($d);
+        });
+        $injector->delegate('Auryn\Test\DelegatingInstanceB', function (DelegateB $d) {
+            return new \Auryn\Test\DelegatingInstanceB($d);
+        });
+
+        $a = $injector->make('Auryn\Test\DelegatingInstanceA');
+        $b = $injector->make('Auryn\Test\DelegatingInstanceB');
+
+        $this->assertInstanceOf('Auryn\Test\DelegateA', $a->a);
+        $this->assertInstanceOf('Auryn\Test\DelegateB', $b->b);
+    }
+
+    /**
+     * @expectedException \Exception
+     * @expectedExceptionMessage Exception in constructor
+     */
+    public function testThatExceptionInConstructorDoesntCauseCyclicDependencyException()
+    {
+        $injector = new Injector;
+
+        try {
+            $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
+        }
+        catch (\Exception $e) {
+        }
+
+        $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
     }
 }
