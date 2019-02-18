@@ -363,22 +363,32 @@ class Injector
             return $this->shares[$normalizedClass];
         }
 
-        if (isset($this->delegates[$normalizedClass])) {
-            $executable = $this->buildExecutable($this->delegates[$normalizedClass]);
-            $reflectionFunction = $executable->getCallableReflection();
-            $args = $this->provisionFuncArgs($reflectionFunction, $args);
-            $obj = call_user_func_array(array($executable, '__invoke'), $args);
-        } else {
-            $obj = $this->provisionInstance($className, $normalizedClass, $args);
+        try {
+            if (isset($this->delegates[$normalizedClass])) {
+                $executable = $this->buildExecutable($this->delegates[$normalizedClass]);
+                $reflectionFunction = $executable->getCallableReflection();
+                $args = $this->provisionFuncArgs($reflectionFunction, $args);
+                $obj = call_user_func_array(array($executable, '__invoke'), $args);
+            } else {
+                $obj = $this->provisionInstance($className, $normalizedClass, $args);
+            }
+
+            $obj = $this->prepareInstance($obj, $normalizedClass);
+
+            if (array_key_exists($normalizedClass, $this->shares)) {
+                $this->shares[$normalizedClass] = $obj;
+            }
+
+            unset($this->inProgressMakes[$normalizedClass]);
         }
-
-        $obj = $this->prepareInstance($obj, $normalizedClass);
-
-        if (array_key_exists($normalizedClass, $this->shares)) {
-            $this->shares[$normalizedClass] = $obj;
+        catch (\Throwable $exception) {
+            unset($this->inProgressMakes[$normalizedClass]);
+            throw $exception;
         }
-
-        unset($this->inProgressMakes[$normalizedClass]);
+        catch (\Exception $exception) {
+            unset($this->inProgressMakes[$normalizedClass]);
+            throw $exception;
+        }
 
         return $obj;
     }

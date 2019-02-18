@@ -727,3 +727,9 @@ class DelegatingInstanceB {
         $this->b = $b;
     }
 }
+
+class ThrowsExceptionInConstructor {
+    public function __construct() {
+        throw new \Exception('Exception in constructor');
+    }
+}
