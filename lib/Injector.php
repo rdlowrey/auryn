@@ -441,14 +441,13 @@ class Injector
 				$method,
 				$parameters,
 				&$initializer
-			) use ( $className, $normalizedClass, $args ) {
+			) use ($className, $normalizedClass, $args)
+			{
 				var_dump( 'Called from ' . __METHOD__ );
 				$wrappedObject = $this->provisionInstance($className, $normalizedClass, $args); // instantiation logic here
 //				$wrappedObject = $this->prepareInstance($wrappedObject, $normalizedClass);
 				var_dump( '$wrappedObject' );
-//				codecept_debug( $wrappedObject );
 				$initializer   = null; // turning off further lazy initialization
-
 			}
 		);
 	}
