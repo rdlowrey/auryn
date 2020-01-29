@@ -1235,4 +1235,45 @@ class InjectorTest extends TestCase
 
         $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
     }
+
+	public function testInstanceProxy() {
+		$injector = new Injector();
+		$injector->proxy( TestDependency::class );
+
+		$class = $injector->make( TestDependency::class );
+
+		$this->assertInstanceOf(
+			\ProxyManager\Proxy\LazyLoadingInterface::class,
+			$class,
+			''
+		);
+
+		$this->assertEquals( 'testVal', $class->testProp, '' );
+    }
+
+	public function testMakeInstanceInjectsSimpleConcreteDependencyProxy()
+	{
+		$injector = new Injector;
+		$injector->proxy( TestDependency::class );
+
+		$need_dep = $injector->make( TestNeedsDep::class );
+
+		$this->assertInstanceOf(
+			TestNeedsDep::class,
+			$need_dep,
+			''
+		);
+	}
+
+	public function testShareInstanceProxy() {
+		$injector = new Injector();
+		$injector->proxy( TestDependency::class );
+		$injector->share(TestDependency::class);
+
+		$class = $injector->make( TestDependency::class );
+
+		$class2 = $injector->make( TestDependency::class );
+
+		$this->assertEquals( $class, $class2, '' );
+	}
 }
