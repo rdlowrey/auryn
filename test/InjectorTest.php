@@ -1283,12 +1283,13 @@ class InjectorTest extends TestCase
 	{
 		$injector = new Injector();
 		$injector->proxy('Auryn\Test\PreparesImplementationTest');
-//		$injector->prepare('Auryn\Test\PreparesImplementationTest', function ($obj, $injector) {
-//			$obj->testProp = 42;
-//		});
+		$injector->prepare('Auryn\Test\PreparesImplementationTest', function ($obj, $injector) {
+			$obj->testProp = 42;
+		});
 		$obj = $injector->make('Auryn\Test\PreparesImplementationTest');
 
-		var_dump( $obj );
+//		var_dump( $obj );
+//		var_dump( $obj->testProp );
 		$this->assertSame(42, $obj->testProp);
 	}
 }

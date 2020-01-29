@@ -54,6 +54,7 @@ class Injector
     private $prepares = array();
     private $delegates = array();
     private $proxies = array();
+    private $prepares_proxy = array();
     private $inProgressMakes = array();
 
 	public function __construct(Reflector $reflector = null, Proxy $proxy = null)
@@ -406,7 +407,11 @@ class Injector
                 $args = $this->provisionFuncArgs($reflectionFunction, $args, null, $className);
                 $obj = call_user_func_array(array($executable, '__invoke'), $args);
             } elseif(isset($this->proxies[$normalizedClass])) {
+            	if ( isset( $this->prepares[$normalizedClass] ) ) {
+					$this->prepares_proxy[$normalizedClass] = $this->prepares[$normalizedClass];
+				}
 				$obj = $this->resolveProxy($className, $normalizedClass, $args);
+				unset($this->prepares[$normalizedClass]);
 			} else {
                 $obj = $this->provisionInstance($className, $normalizedClass, $args);
             }
@@ -443,11 +448,14 @@ class Injector
 				&$initializer
 			) use ($className, $normalizedClass, $args)
 			{
-				var_dump( 'Called from ' . __METHOD__ );
-				$wrappedObject = $this->provisionInstance($className, $normalizedClass, $args); // instantiation logic here
-//				$wrappedObject = $this->prepareInstance($wrappedObject, $normalizedClass);
-				var_dump( '$wrappedObject' );
-				$initializer   = null; // turning off further lazy initialization
+				$wrappedObject = $this->provisionInstance($className, $normalizedClass, $args);
+
+				if (isset($this->prepares_proxy[$normalizedClass])) {
+					$this->prepares[$normalizedClass] = $this->prepares_proxy[$normalizedClass];
+				}
+
+				$wrappedObject = $this->prepareInstance($wrappedObject, $normalizedClass);
+				$initializer   = null;
 			}
 		);
 	}
