@@ -419,11 +419,11 @@ class Injector
 
             unset($this->inProgressMakes[$normalizedClass]);
         }
-        catch (\Throwable $exception) {
-            unset($this->inProgressMakes[$normalizedClass]);
-            throw $exception;
-        }
         catch (\Exception $exception) {
+			unset($this->inProgressMakes[$normalizedClass]);
+			throw $exception;
+		}
+        catch (\Throwable $exception) {
             unset($this->inProgressMakes[$normalizedClass]);
             throw $exception;
         }
