@@ -1236,33 +1236,42 @@ class InjectorTest extends TestCase
         $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
     }
 
+    /**
+     * @expectedException \Auryn\ConfigException
+     */
+    public function testThatExceptionInConstructorDoesntCauseCyclicDependencyExceptiongg()
+    {
+		$injector = new Injector();
+		$injector->proxy( 1 );
+    }
+
 	public function testInstanceProxy()
 	{
 		$injector = new Injector();
-		$injector->proxy(TestDependency::class);
-		$class = $injector->make(TestDependency::class);
+		$injector->proxy('Auryn\Test\TestDependency');
+		$class = $injector->make('Auryn\Test\TestDependency');
 
-		$this->assertInstanceOf(TestDependency::class, $class, '');
-		$this->assertInstanceOf(\ProxyManager\Proxy\LazyLoadingInterface::class, $class, '');
+		$this->assertInstanceOf('Auryn\Test\TestDependency', $class, '');
+		$this->assertInstanceOf('ProxyManager\Proxy\LazyLoadingInterface', $class, '');
 		$this->assertEquals( 'testVal', $class->testProp, '' );
     }
 
 	public function testMakeInstanceInjectsSimpleConcreteDependencyProxy()
 	{
 		$injector = new Injector;
-		$injector->proxy( TestDependency::class );
-		$need_dep = $injector->make( TestNeedsDep::class );
+		$injector->proxy('Auryn\Test\TestDependency');
+		$need_dep = $injector->make('Auryn\Test\TestNeedsDep');
 
-		$this->assertInstanceOf(TestNeedsDep::class, $need_dep, '');
+		$this->assertInstanceOf('Auryn\Test\TestNeedsDep', $need_dep, '');
 	}
 
 	public function testShareInstanceProxy()
 	{
 		$injector = new Injector();
-		$injector->proxy( TestDependency::class );
-		$injector->share(TestDependency::class);
-		$class = $injector->make( TestDependency::class );
-		$class2 = $injector->make( TestDependency::class );
+		$injector->proxy('Auryn\Test\TestDependency');
+		$injector->share('Auryn\Test\TestDependency');
+		$class = $injector->make('Auryn\Test\TestDependency');
+		$class2 = $injector->make('Auryn\Test\TestDependency');
 
 		$this->assertEquals( $class, $class2, '' );
 	}
@@ -1283,13 +1292,13 @@ class InjectorTest extends TestCase
 	{
 		$injector = new Injector();
 		$injector->proxy('Auryn\Test\PreparesImplementationTest');
-		$injector->prepare('Auryn\Test\PreparesImplementationTest', function ($obj, $injector) {
+		$injector->prepare(
+			'Auryn\Test\PreparesImplementationTest',
+			function ( PreparesImplementationTest $obj, $injector) {
 			$obj->testProp = 42;
 		});
 		$obj = $injector->make('Auryn\Test\PreparesImplementationTest');
 
-//		var_dump( $obj );
-//		var_dump( $obj->testProp );
 		$this->assertSame(42, $obj->testProp);
 	}
 }
