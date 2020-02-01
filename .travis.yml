@@ -14,7 +14,7 @@ matrix:
     - php: nightly
 
 before_script:
-  - composer install
+  - composer install --prefer-dist --ignore-platform-reqs
 
 script:
   - vendor/bin/phpunit
