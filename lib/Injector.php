@@ -18,35 +18,34 @@ class Injector
     const I_ALL = 31;
 
     const E_NON_EMPTY_STRING_ALIAS = 1;
-    const M_NON_EMPTY_STRING_ALIAS = "Invalid alias: non-empty string required at arguments 1 and 2";
+    const M_NON_EMPTY_STRING_ALIAS = 'Invalid alias: non-empty string required at arguments 1 and 2';
     const E_SHARED_CANNOT_ALIAS = 2;
-    const M_SHARED_CANNOT_ALIAS = "Cannot alias class %s to %s because it is currently shared";
+    const M_SHARED_CANNOT_ALIAS = 'Cannot alias class %s to %s because it is currently shared';
     const E_SHARE_ARGUMENT = 3;
-    const M_SHARE_ARGUMENT = "%s::share() requires a string class name or object instance at Argument 1; %s specified";
+    const M_SHARE_ARGUMENT = '%s::share() requires a string class name or object instance at Argument 1; %s specified';
     const E_ALIASED_CANNOT_SHARE = 4;
-    const M_ALIASED_CANNOT_SHARE = "Cannot share class %s because it is currently aliased to %s";
+    const M_ALIASED_CANNOT_SHARE = 'Cannot share class %s because it is currently aliased to %s';
     const E_INVOKABLE = 5;
-    const M_INVOKABLE = "Invalid invokable: callable or provisional string required";
+    const M_INVOKABLE = 'Invalid invokable: callable or provisional string required';
     const E_NON_PUBLIC_CONSTRUCTOR = 6;
-    const M_NON_PUBLIC_CONSTRUCTOR = "Cannot instantiate protected/private constructor in class %s";
+    const M_NON_PUBLIC_CONSTRUCTOR = 'Cannot instantiate protected/private constructor in class %s';
     const E_NEEDS_DEFINITION = 7;
-    const M_NEEDS_DEFINITION = "Injection definition required for %s %s";
+    const M_NEEDS_DEFINITION = 'Injection definition required for %s %s';
     const E_MAKE_FAILURE = 8;
-    const M_MAKE_FAILURE = "Could not make %s: %s";
+    const M_MAKE_FAILURE = 'Could not make %s: %s';
     const E_UNDEFINED_PARAM = 9;
-    const M_UNDEFINED_PARAM = "No definition available to provision typeless parameter \$%s at position %d in %s()%s";
+    const M_UNDEFINED_PARAM = 'No definition available to provision typeless parameter $%s at position %d in %s()%s';
     const E_DELEGATE_ARGUMENT = 10;
-    const M_DELEGATE_ARGUMENT = "%s::delegate expects a valid callable or executable class::method string at Argument 2%s";
+    const M_DELEGATE_ARGUMENT = '%s::delegate expects a valid callable or executable class::method string at Argument 2%s';
     const E_CYCLIC_DEPENDENCY = 11;
-    const M_CYCLIC_DEPENDENCY = "Detected a cyclic dependency while provisioning %s";
+    const M_CYCLIC_DEPENDENCY = 'Detected a cyclic dependency while provisioning %s';
     const E_MAKING_FAILED = 12;
     const M_MAKING_FAILED = "Making %s did not result in an object, instead result is of type '%s'";
-	const E_PROXY_ARGUMENT = 13;
-	const M_PROXY_ARGUMENT = "%s::proxy() requires a string class name or object instance at Argument 1; %s specified";
+    const E_PROXY_ARGUMENT = 13;
+    const M_PROXY_ARGUMENT = '%s::proxy() requires a string class name or object instance at Argument 1; %s specified';
 
-
-	private $reflector;
-	private $proxy_manager;
+    private $reflector;
+    private $proxy_manager;
     private $classDefinitions = array();
     private $paramDefinitions = array();
     private $aliases = array();
@@ -57,9 +56,9 @@ class Injector
     private $prepares_proxy = array();
     private $inProgressMakes = array();
 
-	public function __construct(Reflector $reflector = null, Proxy $proxy = null)
+    public function __construct(Reflector $reflector = null, Proxy $proxy = null)
     {
-        $this->reflector = $reflector ?: new CachingReflector;
+        $this->reflector = $reflector ?: new CachingReflector();
         $this->proxy_manager = $proxy ?: new Proxy();
     }
 
@@ -69,10 +68,11 @@ class Injector
     }
 
     /**
-     * Define instantiation directives for the specified class
+     * Define instantiation directives for the specified class.
      *
      * @param string $name The class (or alias) whose constructor arguments we wish to define
-     * @param array $args An array mapping parameter names to values/instructions
+     * @param array  $args An array mapping parameter names to values/instructions
+     *
      * @return self
      */
     public function define($name, array $args)
@@ -84,13 +84,14 @@ class Injector
     }
 
     /**
-     * Assign a global default value for all parameters named $paramName
+     * Assign a global default value for all parameters named $paramName.
      *
      * Global parameter definitions are only used for parameters with no typehint, pre-defined or
      * call-time definition.
      *
      * @param string $paramName The parameter name for which this value applies
-     * @param mixed $value The value to inject for this parameter name
+     * @param mixed  $value     The value to inject for this parameter name
+     *
      * @return self
      */
     public function defineParam($paramName, $value)
@@ -101,13 +102,15 @@ class Injector
     }
 
     /**
-     * Define an alias for all occurrences of a given typehint
+     * Define an alias for all occurrences of a given typehint.
      *
      * Use this method to specify implementation classes for interface and abstract class typehints.
      *
      * @param string $original The typehint to replace
-     * @param string $alias The implementation name
+     * @param string $alias    The implementation name
+     *
      * @throws ConfigException if any argument is empty or not a string
+     *
      * @return self
      */
     public function alias($original, $alias)
@@ -155,10 +158,12 @@ class Injector
     }
 
     /**
-     * Share the specified class/instance across the Injector context
+     * Share the specified class/instance across the Injector context.
      *
      * @param mixed $nameOrInstance The class or object to share
+     *
      * @throws ConfigException if $nameOrInstance is not a string or an object
+     *
      * @return self
      */
     public function share($nameOrInstance)
@@ -218,15 +223,17 @@ class Injector
     }
 
     /**
-     * Register a prepare callable to modify/prepare objects of type $name after instantiation
+     * Register a prepare callable to modify/prepare objects of type $name after instantiation.
      *
      * Any callable or provisionable invokable may be specified. Preparers are passed two
      * arguments: the instantiated object to be mutated and the current Injector instance.
      *
      * @param string $name
-     * @param mixed $callableOrMethodStr Any callable or provisionable invokable method
+     * @param mixed  $callableOrMethodStr Any callable or provisionable invokable method
+     *
      * @throws InjectionException if $callableOrMethodStr is not a callable.
      *                            See https://github.com/rdlowrey/auryn#injecting-for-execution
+     *
      * @return self
      */
     public function prepare($name, $callableOrMethodStr)
@@ -260,11 +267,13 @@ class Injector
     }
 
     /**
-     * Delegate the creation of $name instances to the specified callable
+     * Delegate the creation of $name instances to the specified callable.
      *
      * @param string $name
-     * @param mixed $callableOrMethodStr Any callable or provisionable invokable method
+     * @param mixed  $callableOrMethodStr Any callable or provisionable invokable method
+     *
      * @throws ConfigException if $callableOrMethodStr is not a callable.
+     *
      * @return self
      */
     public function delegate($name, $callableOrMethodStr)
@@ -294,12 +303,13 @@ class Injector
     }
 
     /**
-     * Retrieve stored data for the specified definition type
+     * Retrieve stored data for the specified definition type.
      *
      * Exposes introspection of existing binds/delegates/shares/etc for decoration and composition.
      *
      * @param string $nameFilter An optional class name filter
-     * @param int $typeFilter A bitmask of Injector::* type constant flags
+     * @param int    $typeFilter A bitmask of Injector::* type constant flags
+     *
      * @return array
      */
     public function inspect($nameFilter = null, $typeFilter = null)
@@ -312,11 +322,11 @@ class Injector
         }
 
         $types = array(
-            self::I_BINDINGS => "classDefinitions",
-            self::I_DELEGATES => "delegates",
-            self::I_PREPARES => "prepares",
-            self::I_ALIASES => "aliases",
-            self::I_SHARES => "shares"
+            self::I_BINDINGS => 'classDefinitions',
+            self::I_DELEGATES => 'delegates',
+            self::I_PREPARES => 'prepares',
+            self::I_ALIASES => 'aliases',
+            self::I_SHARES => 'shares',
         );
 
         foreach ($types as $type => $source) {
@@ -339,39 +349,43 @@ class Injector
         }
     }
 
-	/**
-	 * Share the specified class/instance across the Injector context
-	 *
-	 * @param string $name The class or object to share
-	 * @throws ConfigException if $nameOrInstance is not a string or an object
-	 * @return self
-	 */
-	public function proxy($name)
-	{
-		if ( ! is_string( $name ) ) {
-			throw new ConfigException(
-				sprintf(
-					self::M_PROXY_ARGUMENT,
-					__CLASS__,
-					gettype($name)
-				),
-				self::E_PROXY_ARGUMENT
-			);
-		}
+    /**
+     * Share the specified class/instance across the Injector context.
+     *
+     * @param string $name The class or object to share
+     *
+     * @throws ConfigException if $nameOrInstance is not a string or an object
+     *
+     * @return self
+     */
+    public function proxy($name)
+    {
+        if (!is_string($name)) {
+            throw new ConfigException(
+                sprintf(
+                    self::M_PROXY_ARGUMENT,
+                    __CLASS__,
+                    gettype($name)
+                ),
+                self::E_PROXY_ARGUMENT
+            );
+        }
 
-		list($className, $normalizedName) = $this->resolveAlias($name);
+        list($className, $normalizedName) = $this->resolveAlias($name);
 
-		$this->proxies[$normalizedName] = $className;
+        $this->proxies[$normalizedName] = $className;
 
-		return $this;
-	}
+        return $this;
+    }
 
     /**
-     * Instantiate/provision a class instance
+     * Instantiate/provision a class instance.
      *
      * @param string $name
-     * @param array $args
+     * @param array  $args
+     *
      * @throws InjectionException if a cyclic gets detected when provisioning
+     *
      * @return mixed
      */
     public function make($name, array $args = array())
@@ -406,13 +420,13 @@ class Injector
                 $reflectionFunction = $executable->getCallableReflection();
                 $args = $this->provisionFuncArgs($reflectionFunction, $args, null, $className);
                 $obj = call_user_func_array(array($executable, '__invoke'), $args);
-            } elseif(isset($this->proxies[$normalizedClass])) {
-            	if ( isset( $this->prepares[$normalizedClass] ) ) {
-					$this->prepares_proxy[$normalizedClass] = $this->prepares[$normalizedClass];
-				}
-				$obj = $this->resolveProxy($className, $normalizedClass, $args);
-				unset($this->prepares[$normalizedClass]);
-			} else {
+            } elseif (isset($this->proxies[$normalizedClass])) {
+                if (isset($this->prepares[$normalizedClass])) {
+                    $this->prepares_proxy[$normalizedClass] = $this->prepares[$normalizedClass];
+                }
+                $obj = $this->resolveProxy($className, $normalizedClass, $args);
+                unset($this->prepares[$normalizedClass]);
+            } else {
                 $obj = $this->provisionInstance($className, $normalizedClass, $args);
             }
 
@@ -423,12 +437,10 @@ class Injector
             }
 
             unset($this->inProgressMakes[$normalizedClass]);
-        }
-        catch (\Exception $exception) {
-			unset($this->inProgressMakes[$normalizedClass]);
-			throw $exception;
-		}
-        catch (\Throwable $exception) {
+        } catch (\Exception $exception) {
+            unset($this->inProgressMakes[$normalizedClass]);
+            throw $exception;
+        } catch (\Throwable $exception) {
             unset($this->inProgressMakes[$normalizedClass]);
             throw $exception;
         }
@@ -436,29 +448,28 @@ class Injector
         return $obj;
     }
 
-	private function resolveProxy($className, $normalizedClass, array $args)
-	{
-		return $this->proxy_manager->createProxy(
-			$className,
-			function (
-				&$wrappedObject,
-				LazyLoadingInterface $proxy,
-				$method,
-				$parameters,
-				&$initializer
-			) use ($className, $normalizedClass, $args)
-			{
-				$wrappedObject = $this->provisionInstance($className, $normalizedClass, $args);
+    private function resolveProxy($className, $normalizedClass, array $args)
+    {
+        return $this->proxy_manager->createProxy(
+            $className,
+            function (
+                &$wrappedObject,
+                LazyLoadingInterface $proxy,
+                $method,
+                $parameters,
+                &$initializer
+            ) use ($className, $normalizedClass, $args) {
+                $wrappedObject = $this->provisionInstance($className, $normalizedClass, $args);
 
-				if (isset($this->prepares_proxy[$normalizedClass])) {
-					$this->prepares[$normalizedClass] = $this->prepares_proxy[$normalizedClass];
-				}
+                if (isset($this->prepares_proxy[$normalizedClass])) {
+                    $this->prepares[$normalizedClass] = $this->prepares_proxy[$normalizedClass];
+                }
 
-				$wrappedObject = $this->prepareInstance($wrappedObject, $normalizedClass);
-				$initializer   = null;
-			}
-		);
-	}
+                $wrappedObject = $this->prepareInstance($wrappedObject, $normalizedClass);
+                $initializer = null;
+            }
+        );
+    }
 
     private function provisionInstance($className, $normalizedClass, array $definition)
     {
@@ -508,7 +519,7 @@ class Injector
             );
         }
 
-        return new $className;
+        return new $className();
     }
 
     private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition, array $reflParams = null, $className = null)
@@ -529,13 +540,13 @@ class Injector
             } elseif (isset($definition[$name]) || array_key_exists($name, $definition)) {
                 // interpret the param as a class name to be instantiated
                 $arg = $this->make($definition[$name]);
-            } elseif (($prefix = self::A_RAW . $name) && (isset($definition[$prefix]) || array_key_exists($prefix, $definition))) {
+            } elseif (($prefix = self::A_RAW.$name) && (isset($definition[$prefix]) || array_key_exists($prefix, $definition))) {
                 // interpret the param as a raw value to be injected
                 $arg = $definition[$prefix];
-            } elseif (($prefix = self::A_DELEGATE . $name) && isset($definition[$prefix])) {
+            } elseif (($prefix = self::A_DELEGATE.$name) && isset($definition[$prefix])) {
                 // interpret the param as an invokable delegate
                 $arg = $this->buildArgFromDelegate($name, $definition[$prefix]);
-            } elseif (($prefix = self::A_DEFINE . $name) && isset($definition[$prefix])) {
+            } elseif (($prefix = self::A_DEFINE.$name) && isset($definition[$prefix])) {
                 // interpret the param as a class definition
                 $arg = $this->buildArgFromParamDefineArr($definition[$prefix]);
             } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam)) {
@@ -626,12 +637,12 @@ class Injector
         } else {
             $reflFunc = $reflParam->getDeclaringFunction();
             $classDeclare = ($reflFunc instanceof \ReflectionMethod)
-                ? " declared in " . $reflFunc->getDeclaringClass()->name . "::"
-                : "";
-            $classWord = ($reflFunc instanceof \ReflectionMethod)
-                ? $className . '::'
+                ? ' declared in '.$reflFunc->getDeclaringClass()->name.'::'
                 : '';
-            $funcWord = $classWord . $reflFunc->name;
+            $classWord = ($reflFunc instanceof \ReflectionMethod)
+                ? $className.'::'
+                : '';
+            $funcWord = $classWord.$reflFunc->name;
 
             throw new InjectionException(
                 $this->inProgressMakes,
@@ -692,11 +703,13 @@ class Injector
     }
 
     /**
-     * Invoke the specified callable or class::method string, provisioning dependencies along the way
+     * Invoke the specified callable or class::method string, provisioning dependencies along the way.
      *
      * @param mixed $callableOrMethodStr A valid PHP callable or a provisionable ClassName::methodName string
-     * @param array $args Optional array specifying params with which to invoke the provisioned callable
+     * @param array $args                Optional array specifying params with which to invoke the provisioned callable
+     *
      * @throws \Auryn\InjectionException
+     *
      * @return mixed Returns the invocation result returned from calling the generated executable
      */
     public function execute($callableOrMethodStr, array $args = array())
@@ -709,9 +722,10 @@ class Injector
     }
 
     /**
-     * Provision an Executable instance from any valid callable or class::method string
+     * Provision an Executable instance from any valid callable or class::method string.
      *
      * @param mixed $callableOrMethodStr A valid PHP callable or a provisionable ClassName::methodName string
+     *
      * @return \Auryn\Executable
      */
     public function buildExecutable($callableOrMethodStr)
