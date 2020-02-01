@@ -1,8 +1,11 @@
 <?php
 
+declare (strict_types=1);
+
 namespace Auryn;
 
-use ProxyManager\Factory\LazyLoadingValueHolderFactory as Proxy;
+use ProxyManager\Factory\AbstractBaseFactory as BaseProxy;
+use ProxyManager\Factory\LazyLoadingValueHolderFactory;
 use ProxyManager\Proxy\LazyLoadingInterface;
 
 class Injector
@@ -56,10 +59,10 @@ class Injector
     private $prepares_proxy = array();
     private $inProgressMakes = array();
 
-    public function __construct(Reflector $reflector = null, Proxy $proxy = null)
+    public function __construct(Reflector $reflector = null, BaseProxy $proxy = null)
     {
         $this->reflector = $reflector ?: new CachingReflector();
-        $this->proxy_manager = $proxy ?: new Proxy();
+        $this->proxy_manager = $proxy ?: new LazyLoadingValueHolderFactory();
     }
 
     public function __clone()
