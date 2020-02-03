@@ -31,6 +31,7 @@ caches any reflections it generates to minimize the potential performance impact
 **Advanced Usage**
 
 * [Instance Sharing](#instance-sharing)
+* [Instance Proxy](#instance-proxy)
 * [Instantiation Delegates](#instantiation-delegates)
 * [Prepares and Setter Injection](#prepares-and-setter-injection)
 * [Injecting for Execution](#injecting-for-execution)
