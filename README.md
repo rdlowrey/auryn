@@ -526,6 +526,8 @@ only when a call happens.
 > **NOTE:** Using `Auryn\Injector::delegate` will bypass the proxied class, if you want to delegate class instantiation
 with your factory and you want also a proxy version of it you have to create your business logic for handling proxy.
 
+You can find more informations about how proxy and lazy loading work in the [ProxyManager](https://github.com/Ocramius/ProxyManager) documentation.
+
 ### Instantiation Delegates
 
 Often factory classes/methods are used to prepare an object for use after instantiation. auryn
