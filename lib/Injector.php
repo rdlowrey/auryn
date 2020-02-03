@@ -1,12 +1,10 @@
 <?php
-
 declare (strict_types=1);
 
 namespace Auryn;
 
 use ProxyManager\Factory\AbstractBaseFactory as BaseProxy;
 use ProxyManager\Factory\LazyLoadingValueHolderFactory;
-use ProxyManager\Proxy\LazyLoadingInterface;
 
 class Injector
 {
@@ -44,8 +42,6 @@ class Injector
     const M_CYCLIC_DEPENDENCY = 'Detected a cyclic dependency while provisioning %s';
     const E_MAKING_FAILED = 12;
     const M_MAKING_FAILED = "Making %s did not result in an object, instead result is of type '%s'";
-    const E_PROXY_ARGUMENT = 13;
-    const M_PROXY_ARGUMENT = '%s::proxy() requires a string class name or object instance at Argument 1; %s specified';
 
     private $reflector;
     private $proxy_manager;
@@ -59,10 +55,10 @@ class Injector
     private $prepares_proxy = array();
     private $inProgressMakes = array();
 
-    public function __construct(Reflector $reflector = null, BaseProxy $proxy = null)
+    public function __construct(Reflector $reflector = null, ProxyInterface $proxy = null)
     {
         $this->reflector = $reflector ?: new CachingReflector();
-        $this->proxy_manager = $proxy ?: new LazyLoadingValueHolderFactory();
+        $this->proxy_manager = $proxy ?: new Proxy();
     }
 
     public function __clone()
@@ -353,27 +349,14 @@ class Injector
     }
 
     /**
-     * Share the specified class/instance across the Injector context.
+     * Proxy the specified class across the Injector context.
      *
-     * @param string $name The class or object to share
-     *
-     * @throws ConfigException if $nameOrInstance is not a string or an object
-     *
-     * @return self
+     * @param string $name The class to proxy
+	 *
+     * @return Injector
      */
-    public function proxy($name)
+    public function proxy(string $name)
     {
-        if (!is_string($name)) {
-            throw new ConfigException(
-                sprintf(
-                    self::M_PROXY_ARGUMENT,
-                    __CLASS__,
-                    gettype($name)
-                ),
-                self::E_PROXY_ARGUMENT
-            );
-        }
-
         list($className, $normalizedName) = $this->resolveAlias($name);
 
         $this->proxies[$normalizedName] = $className;
@@ -381,16 +364,17 @@ class Injector
         return $this;
     }
 
-    /**
-     * Instantiate/provision a class instance.
-     *
-     * @param string $name
-     * @param array  $args
-     *
-     * @throws InjectionException if a cyclic gets detected when provisioning
-     *
-     * @return mixed
-     */
+	/**
+	 * Instantiate/provision a class instance.
+	 *
+	 * @param string $name
+	 * @param array $args
+	 *
+	 * @return mixed
+	 *
+	 * @throws InjectionException if a cyclic gets detected when provisioning
+	 * @throws \Throwable
+	 */
     public function make($name, array $args = array())
     {
         list($className, $normalizedClass) = $this->resolveAlias($name);
@@ -453,26 +437,46 @@ class Injector
 
     private function resolveProxy($className, $normalizedClass, array $args)
     {
+    	$callback = function ()  use ($className, $normalizedClass, $args) {
+			return $this->buildWrappedObject( $className, $normalizedClass, $args );
+		};
+
+		return $this->proxy_manager->createProxy(
+			$className,
+			$callback
+		);
+
         return $this->proxy_manager->createProxy(
             $className,
             function (
                 &$wrappedObject,
-                LazyLoadingInterface $proxy,
+                $proxy,
                 $method,
                 $parameters,
                 &$initializer
-            ) use ($className, $normalizedClass, $args) {
-                $wrappedObject = $this->provisionInstance($className, $normalizedClass, $args);
-
-                if (isset($this->prepares_proxy[$normalizedClass])) {
-                    $this->prepares[$normalizedClass] = $this->prepares_proxy[$normalizedClass];
-                }
-
-                $wrappedObject = $this->prepareInstance($wrappedObject, $normalizedClass);
+            ) use ($callback) {
+				$wrappedObject = $callback();
                 $initializer = null;
             }
         );
     }
+
+	/**
+	 * @param string $className
+	 * @param string $normalizedClass
+	 * @param array $args
+	 * @return mixed|object
+	 * @throws InjectionException
+	 */
+	private function buildWrappedObject( $className, $normalizedClass, array $args ) {
+		$wrappedObject = $this->provisionInstance( $className, $normalizedClass, $args );
+
+		if ( isset( $this->prepares_proxy[ $normalizedClass ] ) ) {
+			$this->prepares[ $normalizedClass ] = $this->prepares_proxy[ $normalizedClass ];
+		}
+
+		return $this->prepareInstance( $wrappedObject, $normalizedClass );
+	}
 
     private function provisionInstance($className, $normalizedClass, array $definition)
     {
