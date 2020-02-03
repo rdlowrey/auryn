@@ -1,44 +1,64 @@
 <?php
-
 declare (strict_types=1);
 
 namespace Auryn\test;
 
+use Auryn\CachingReflector;
 use Auryn\Injector;
 use Auryn\Proxy;
 use Auryn\ProxyInterface;
-use Auryn\Reflector;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
-use ProxyManager\Factory\AccessInterceptorScopeLocalizerFactory;
-use ProxyManager\Factory\LazyLoadingGhostFactory;
 use ProxyManager\Factory\LazyLoadingValueHolderFactory;
-use ProxyManager\Factory\NullObjectFactory;
-use ProxyManager\Factory\RemoteObjectFactory;
+use ProxyManager\Proxy\LazyLoadingInterface;
 use ProxyManager\Proxy\VirtualProxyInterface;
 
+/**
+ * Class ProxyTest
+ * @package Auryn\test
+ */
 class ProxyTest extends TestCase
 {
+	/**
+	 * @var LazyLoadingValueHolderFactory
+	 */
+	private $lazy_proxy_manage;
+
+	protected function setUp(  )
+	{
+		$this->lazy_proxy_manage = $this->prophesize( LazyLoadingValueHolderFactory::class );
+	}
+
+	protected function tearDown()
+	{
+	}
+
+	protected function lazyProxyManager(): LazyLoadingValueHolderFactory {
+		return $this->lazy_proxy_manage->reveal();
+	}
+
 	public function testProxy() {
-		$proxy = new Proxy();
+		$proxy = new Proxy( $this->lazyProxyManager() );
 		$this->assertInstanceOf( ProxyInterface::class, $proxy, '' );
+		$this->assertInstanceOf( Proxy::class, $proxy, '' );
 	}
 
 	public function testCreateProxy() {
-		$proxy_manager = $this->prophesize( LazyLoadingValueHolderFactory::class );
 		$proxy_manager_return_type = $this->prophesize(VirtualProxyInterface::class);
 
-		$proxy_manager
-			->createProxy( Argument::exact( TestDependency::class), Argument::type('callable') )
-			->will(function ($args) use ($proxy_manager_return_type) {
+		$this->lazy_proxy_manage
+			->createProxy(
+				TestDependency::class,
+				Argument::type('\Closure')
+			)->will(function ($args) use ($proxy_manager_return_type) {
 				// Make sure values passed to the real ProxyManager are correct.
 				Assert::assertEquals( TestDependency::class, $args[0], '');
-				Assert::assertTrue(is_callable($args[1]));
-				return $proxy_manager_return_type;
-			});
+				Assert::assertInstanceOf(\Closure::class, $args[1], '');
+				return $proxy_manager_return_type->reveal();
+			})->shouldBeCalled();
 
-		$proxy = new Proxy( $proxy_manager->reveal() );
+		$proxy = new Proxy( $this->lazyProxyManager() );
 		$proxy->createProxy(
 			TestDependency::class,
 			function () {
@@ -47,83 +67,116 @@ class ProxyTest extends TestCase
 		);
 	}
 
-    public function testInstanceProxy()
+    public function testInstanceReturnedFromProxy()
     {
-        $injector = new Injector();
-        $injector->proxy('Auryn\Test\TestDependency');
-        $class = $injector->make('Auryn\Test\TestDependency');
+        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector->proxy( TestDependency::class);
+        $class = $injector->make( TestDependency::class);
 
-        $this->assertInstanceOf('Auryn\Test\TestDependency', $class, '');
-        $this->assertInstanceOf('ProxyManager\Proxy\LazyLoadingInterface', $class, '');
+        $this->assertInstanceOf( TestDependency::class, $class, '');
+        $this->assertInstanceOf( LazyLoadingInterface::class, $class, '');
         $this->assertEquals('testVal', $class->testProp, '');
     }
 
     public function testMakeInstanceInjectsSimpleConcreteDependencyProxy()
     {
-        $injector = new Injector();
-        $injector->proxy('Auryn\Test\TestDependency');
-        $need_dep = $injector->make('Auryn\Test\TestNeedsDep');
+        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector->proxy( TestDependency::class);
+        $need_dep = $injector->make( TestNeedsDep::class);
 
-        $this->assertInstanceOf('Auryn\Test\TestNeedsDep', $need_dep, '');
+        $this->assertInstanceOf( TestNeedsDep::class, $need_dep, '');
     }
 
     public function testShareInstanceProxy()
     {
-        $injector = new Injector();
-        $injector->proxy('Auryn\Test\TestDependency');
-        $injector->share('Auryn\Test\TestDependency');
-        $class = $injector->make('Auryn\Test\TestDependency');
-        $class2 = $injector->make('Auryn\Test\TestDependency');
+        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector->proxy( TestDependency::class);
+        $injector->share( TestDependency::class);
+        $class = $injector->make( TestDependency::class);
+        $class2 = $injector->make( TestDependency::class);
 
         $this->assertEquals($class, $class2, '');
     }
 
     public function testProxyMakeInstanceReturnsAliasInstanceOnNonConcreteTypehint()
     {
-        $injector = new Injector();
-        $injector->alias('Auryn\Test\DepInterface', 'Auryn\Test\DepImplementation');
-        $injector->proxy('Auryn\Test\DepInterface');
-        $object = $injector->make('Auryn\Test\DepInterface');
+        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector->alias( DepInterface::class, DepImplementation::class);
+        $injector->proxy( DepInterface::class);
+        $object = $injector->make( DepInterface::class);
 
-        $this->assertInstanceOf('Auryn\Test\DepInterface', $object, '');
-        $this->assertInstanceOf('Auryn\Test\DepImplementation', $object, '');
-        $this->assertInstanceOf('ProxyManager\Proxy\LazyLoadingInterface', $object, '');
+        $this->assertInstanceOf( DepInterface::class, $object, '');
+        $this->assertInstanceOf( DepImplementation::class, $object, '');
+        $this->assertInstanceOf( LazyLoadingInterface::class, $object, '');
+    }
+
+    public function testProxyDefinition()
+    {
+        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector->proxy( NoTypehintNoDefaultConstructorClass::class);
+        $injector->define(
+			NoTypehintNoDefaultConstructorClass::class,
+            [
+            	':arg'	=> 42
+			]
+		);
+
+        $obj = $injector->make( NoTypehintNoDefaultConstructorClass::class);
+
+        $this->assertEquals(42, $obj->testParam);
+    }
+
+    public function testProxyInjectionDefinition()
+    {
+        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector->proxy( NoTypehintNoDefaultConstructorClass::class);
+
+        $obj = $injector->make( NoTypehintNoDefaultConstructorClass::class, [
+			':arg'	=> 42
+		]);
+
+        $this->assertEquals(42, $obj->testParam);
+    }
+
+    public function testProxyParamDefinition()
+    {
+        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector->proxy( NoTypehintNoDefaultConstructorClass::class);
+        $injector->defineParam('arg', 42);
+
+        $obj = $injector->make( NoTypehintNoDefaultConstructorClass::class);
+
+        $this->assertEquals(42, $obj->testParam);
     }
 
     public function testProxyPrepare()
     {
-        $injector = new Injector();
-        $injector->proxy('Auryn\Test\PreparesImplementationTest');
+        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector->proxy( PreparesImplementationTest::class);
         $injector->prepare(
-            'Auryn\Test\PreparesImplementationTest',
+            PreparesImplementationTest::class,
             function (PreparesImplementationTest $obj, $injector) {
                 $obj->testProp = 42;
             });
-        $obj = $injector->make('Auryn\Test\PreparesImplementationTest');
+
+        $obj = $injector->make( PreparesImplementationTest::class);
 
         $this->assertSame(42, $obj->testProp);
     }
 
-	public function testGhostProxy() {
+    public function testProxyDelegate()
+    {
+        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector->proxy( PreparesImplementationTest::class);
+        $injector->delegate(
+            PreparesImplementationTest::class,
+            function () {
+                return new PreparesImplementationTest();
+            });
 
-//    	$adapter = $this->prophesize( \ProxyManager\Factory\RemoteObject\AdapterInterface::class );
-//    	$adapter
-//			->call( Argument::type('string'), Argument::type('string'), Argument::type('array') )
-//			->will(function ( $args ) {
-//				var_dump( $args[2][0] );
-//				$args[2][0] = 42;
-//		});
-//
-//		$injector = new Injector( new \Auryn\CachingReflector(), new RemoteObjectFactory($adapter->reveal()) );
-//		$injector = new Injector( new \Auryn\CachingReflector(), new LazyLoadingGhostFactory() );
-//		$injector = new Injector( new \Auryn\CachingReflector(), new NullObjectFactory() );
-//		$injector = new Injector( new \Auryn\CachingReflector(), new AccessInterceptorScopeLocalizerFactory() );
-//		$injector->proxy( PreparesImplementationTest::class );
-//		$class = $injector->make( PreparesImplementationTest::class );
-//		var_dump( $class );
-//
-//		$class->testProp = 42;
-//
-//		var_dump( $class->testProp );
+        $object = $injector->make( PreparesImplementationTest::class);
+
+        $this->assertInstanceOf(PreparesImplementationTest::class, $object, '');
+		$this->assertNotInstanceOf( LazyLoadingInterface::class, $object, '');
     }
 }

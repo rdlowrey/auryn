@@ -5,7 +5,6 @@ namespace Auryn;
 
 use ProxyManager\Factory\AbstractBaseFactory as BaseProxy;
 use ProxyManager\Factory\LazyLoadingValueHolderFactory;
-use ProxyManager\Proxy\VirtualProxyInterface;
 
 /**
  * Class Proxy
@@ -20,15 +19,13 @@ class Proxy implements ProxyInterface
 
 	public function __construct(BaseProxy $proxy = null)
 	{
-		$this->proxy_manager = $proxy ?: new LazyLoadingValueHolderFactory();
+		$this->proxy_manager = $proxy ?? new LazyLoadingValueHolderFactory();
 	}
 
 	/**
-	 * @param string $className
-	 * @param callable $callback
-	 * @return VirtualProxyInterface
+	 * @inheritDoc
 	 */
-	public function createProxy( string $className, callable $callback): VirtualProxyInterface {
+	public function createProxy(string $className, \Closure $callback): object {
 		return $this->proxy_manager->createProxy(
 			$className,
 			function (

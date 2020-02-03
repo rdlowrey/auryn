@@ -3,9 +3,6 @@ declare (strict_types=1);
 
 namespace Auryn;
 
-use ProxyManager\Factory\AbstractBaseFactory as BaseProxy;
-use ProxyManager\Factory\LazyLoadingValueHolderFactory;
-
 class Injector
 {
     const A_RAW = ':';
@@ -435,7 +432,7 @@ class Injector
         return $obj;
     }
 
-    private function resolveProxy($className, $normalizedClass, array $args)
+    private function resolveProxy(string $className, string $normalizedClass, array $args)
     {
     	$callback = function ()  use ($className, $normalizedClass, $args) {
 			return $this->buildWrappedObject( $className, $normalizedClass, $args );
@@ -445,20 +442,6 @@ class Injector
 			$className,
 			$callback
 		);
-
-        return $this->proxy_manager->createProxy(
-            $className,
-            function (
-                &$wrappedObject,
-                $proxy,
-                $method,
-                $parameters,
-                &$initializer
-            ) use ($callback) {
-				$wrappedObject = $callback();
-                $initializer = null;
-            }
-        );
     }
 
 	/**
