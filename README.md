@@ -44,7 +44,7 @@ caches any reflections it generates to minimize the potential performance impact
 
 ## Requirements and Installation
 
-- auryn requires PHP 5.3 or higher.
+- auryn requires PHP 7.2 or higher.
 
 #### Installation
 
@@ -79,7 +79,7 @@ class:
 
 ```php
 <?php
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 ```
 
 ### Basic Instantiation
@@ -90,7 +90,7 @@ the following with equivalent results:
 
 ```php
 <?php
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $obj1 = new SomeNamespace\MyClass;
 $obj2 = $injector->make('SomeNamespace\MyClass');
 
@@ -119,7 +119,7 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $myObj = $injector->make('MyClass');
 
 var_dump($myObj->dep1 instanceof SomeDependency); // true
@@ -153,7 +153,7 @@ class Engine {
     }
 }
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $car = $injector->make('Car');
 var_dump($car instanceof Car); // true
 ```
@@ -190,7 +190,7 @@ ahead of time:
 
 ```php
 <?php
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $injector->define('Car', ['engine' => 'V8']);
 $car = $injector->make('Car');
 
@@ -221,7 +221,7 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $injector->define('MyClass', ['arg2' => 'SomeImplementationClass']);
 
 $myObj = $injector->make('MyClass');
@@ -248,7 +248,7 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $dependencyInstance = new SomeImplementation;
 $injector->define('MyClass', [':dependency' => $dependencyInstance]);
 
@@ -278,7 +278,7 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $myObj = $injector->make('MyClass', ['dependency' => 'SomeImplementationClass']);
 
 var_dump($myObj instanceof MyClass); // true
@@ -309,7 +309,7 @@ class Car {
     }
 }
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 
 // Tell the Injector class to inject an instance of V8 any time
 // it encounters an Engine type-hint
@@ -342,7 +342,7 @@ instance and define its scalar constructor parameters:
 
 ```php
 <?php
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $injector->share('PDO');
 $injector->define('PDO', [
     ':dsn' => 'mysql:dbname=testdb;host=127.0.0.1',
@@ -383,7 +383,7 @@ class MyClass {
     }
 }
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $injector->defineParam('myValue', $myUniversalValue);
 $obj = $injector->make('MyClass');
 var_dump($obj->myValue === 42); // bool(true)
@@ -432,7 +432,7 @@ class MyController {
 
 $db = new PDO('mysql:host=localhost;dbname=mydb', 'user', 'pass');
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $injector->share($db);
 
 $myController = $injector->make('MyController');
@@ -455,7 +455,7 @@ class Person {
     public $name = 'John Snow';
 }
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $injector->share('Person');
 
 $person = $injector->make('Person');
@@ -478,6 +478,52 @@ will cache the shared instance the first time it is asked to create it.
 > **NOTE:** Once the Injector caches a shared instance, call-time definitions passed to
 `Auryn\Injector::make` will have no effect. Once shared, an instance will always be returned for
 instantiations of its type until the object is un-shared or refreshed:
+
+### Instance Proxy
+
+In some case you need to lazy load an instantiation of a class, for example:
+
+* your object takes a lot of time and memory to be initialized (with all dependencies)
+* your object is not always used, and the instantiation overhead is avoidable
+
+Let's look at a very basic example to demonstrate the concept of injection proxy:
+
+```php
+class Dependency
+{
+    public function __construct()
+    {
+        // Do heavy initialization here
+        echo 'Dependency has been initialized' . PHP_EOL;
+    }
+    public function doSomething()
+    {
+    }
+}
+
+class MyClass
+{
+    public $dependency;
+
+    public function __construct(Dependency $dependency)
+    {
+        $this->dependency = $dependency;
+    }
+}
+
+$injector->proxy(Dependency::class); // This will be proxied
+$my_class = $injector->make(MyClass::class);
+
+// It works as expected and $my_class->dependency will be replaced with the original one only when a call happens
+$my_class->dependency->doSomething();
+```
+
+In the above code we proxies `Dependency::class` and once the Injector will instantiate the `MyClass::class` a proxy
+version of `Dependency::class` will be injected and `$my_class->dependency` will be replaced with the original one
+only when a call happens.
+
+> **NOTE:** Using `Auryn\Injector::delegate` will bypass the proxied class, if you want to delegate class instantiation
+with your factory and you want also a proxy version of it you have to create your business logic for handle proxy.
 
 ### Instantiation Delegates
 
@@ -502,7 +548,7 @@ $complexClassFactory = function() {
     return $obj;
 };
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $injector->delegate('MyComplexClass', $complexClassFactory);
 
 $obj = $injector->make('MyComplexClass');
@@ -589,7 +635,7 @@ The following examples all work:
 
 ```php
 <?php
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $injector->execute(function(){});
 $injector->execute([$objectInstance, 'methodName']);
 $injector->execute('globalFunctionName');
@@ -616,7 +662,7 @@ class Example {
     }
 }
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 
 // outputs: int(42)
 var_dump($injector->execute('Example::myMethod', $args = [':arg2' => 42]));
@@ -733,7 +779,7 @@ context of the `Injector`:
 $pdo = new PDO('sqlite:some_sqlite_file.db');
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 
 $injector->share($pdo);
 $mapper = $injector->make('SomeService');
@@ -790,7 +836,7 @@ $request = $requestDetector->detectFromSuperglobal($_SERVER);
 $requestUri = $request->getUri();
 $requestMethod = strtolower($request->getMethod());
 
-$injector = new Auryn\Injector;
+$injector = new Auryn\Injector();
 $injector->share($request);
 
 try {
