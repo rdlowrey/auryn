@@ -41,7 +41,7 @@ class Injector
     const M_MAKING_FAILED = "Making %s did not result in an object, instead result is of type '%s'";
 
     private $reflector;
-    private $proxy_manager;
+    private $proxyManager;
     private $classDefinitions = array();
     private $paramDefinitions = array();
     private $aliases = array();
@@ -49,13 +49,13 @@ class Injector
     private $prepares = array();
     private $delegates = array();
     private $proxies = array();
-    private $prepares_proxy = array();
+    private $preparesProxy = array();
     private $inProgressMakes = array();
 
     public function __construct(Reflector $reflector = null, ProxyInterface $proxy = null)
     {
         $this->reflector = $reflector ?: new CachingReflector();
-        $this->proxy_manager = $proxy ?: new Proxy();
+        $this->proxyManager = $proxy ?: new Proxy();
     }
 
     public function __clone()
@@ -406,7 +406,7 @@ class Injector
                 $obj = call_user_func_array(array($executable, '__invoke'), $args);
             } elseif (isset($this->proxies[$normalizedClass])) {
                 if (isset($this->prepares[$normalizedClass])) {
-                    $this->prepares_proxy[$normalizedClass] = $this->prepares[$normalizedClass];
+                    $this->preparesProxy[$normalizedClass] = $this->prepares[$normalizedClass];
                 }
                 $obj = $this->resolveProxy($className, $normalizedClass, $args);
                 unset($this->prepares[$normalizedClass]);
@@ -438,7 +438,7 @@ class Injector
 			return $this->buildWrappedObject( $className, $normalizedClass, $args );
 		};
 
-		return $this->proxy_manager->createProxy(
+		return $this->proxyManager->createProxy(
 			$className,
 			$callback
 		);
@@ -454,8 +454,8 @@ class Injector
 	private function buildWrappedObject( $className, $normalizedClass, array $args ) {
 		$wrappedObject = $this->provisionInstance( $className, $normalizedClass, $args );
 
-		if ( isset( $this->prepares_proxy[ $normalizedClass ] ) ) {
-			$this->prepares[ $normalizedClass ] = $this->prepares_proxy[ $normalizedClass ];
+		if ( isset( $this->preparesProxy[ $normalizedClass ] ) ) {
+			$this->prepares[ $normalizedClass ] = $this->preparesProxy[ $normalizedClass ];
 		}
 
 		return $this->prepareInstance( $wrappedObject, $normalizedClass );
