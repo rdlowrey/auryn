@@ -46,6 +46,7 @@ class Injector
     private $shares = array();
     private $prepares = array();
     private $delegates = array();
+    private $proxies = array();
     private $inProgressMakes = array();
 
     public function __construct(Reflector $reflector = null)
@@ -250,7 +251,8 @@ class Injector
     }
 
     /**
-     * Delegate the creation of $name instances to the specified callable
+     * Delegate the creation of $name instances to the specified callable, receiving arguments based on the callables
+     * signature.
      *
      * @param string $name
      * @param mixed $callableOrMethodStr Any callable or provisionable invokable method
@@ -259,26 +261,33 @@ class Injector
      */
     public function delegate($name, $callableOrMethodStr)
     {
-        if ($this->isExecutable($callableOrMethodStr) === false) {
-            $errorDetail = '';
-            if (is_string($callableOrMethodStr)) {
-                $errorDetail = " but received '$callableOrMethodStr'";
-            } elseif (is_array($callableOrMethodStr) &&
-                count($callableOrMethodStr) === 2 &&
-                array_key_exists(0, $callableOrMethodStr) &&
-                array_key_exists(1, $callableOrMethodStr)
-            ) {
-                if (is_string($callableOrMethodStr[0]) && is_string($callableOrMethodStr[1])) {
-                    $errorDetail = " but received ['".$callableOrMethodStr[0]."', '".$callableOrMethodStr[1]."']";
-                }
-            }
-            throw new ConfigException(
-                sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__, $errorDetail),
-                self::E_DELEGATE_ARGUMENT
-            );
+        if (!$this->isExecutable($callableOrMethodStr)) {
+            $this->generateInvalidCallableError($callableOrMethodStr);
         }
+
         $normalizedName = $this->normalizeName($name);
         $this->delegates[$normalizedName] = $callableOrMethodStr;
+
+        return $this;
+    }
+
+    /**
+     * Delegate the creation of $name instances to the specified callable, receiving the same arguments as the original
+     * constructor.
+     *
+     * @param string $name
+     * @param mixed $callableOrMethodStr Any callable or provisionable invokable method
+     * @throws ConfigException if $callableOrMethodStr is not a callable.
+     * @return self
+     */
+    public function proxy($name, $callableOrMethodStr)
+    {
+        if (!$this->isExecutable($callableOrMethodStr)) {
+            $this->generateInvalidCallableError($callableOrMethodStr);
+        }
+
+        $normalizedName = $this->normalizeName($name);
+        $this->proxies[$normalizedName] = $callableOrMethodStr;
 
         return $this;
     }
@@ -397,27 +406,51 @@ class Injector
     {
         try {
             $ctor = $this->reflector->getCtor($className);
+            $proxy = isset($this->proxies[$normalizedClass])
+                ? $this->buildExecutable($this->proxies[$normalizedClass])
+                : null;
 
             if (!$ctor) {
-                $obj = $this->instantiateWithoutCtorParams($className);
-            } elseif (!$ctor->isPublic()) {
+                if ($proxy) {
+                    return $proxy(function () use ($className) {
+                        return $this->instantiateWithoutCtorParams($className);
+                    });
+                }
+
+                return $this->instantiateWithoutCtorParams($className);
+            }
+
+            if (!$ctor->isPublic()) {
                 throw new InjectionException(
                     $this->inProgressMakes,
                     sprintf(self::M_NON_PUBLIC_CONSTRUCTOR, $className),
                     self::E_NON_PUBLIC_CONSTRUCTOR
                 );
-            } elseif ($ctorParams = $this->reflector->getCtorParams($className)) {
+            }
+
+            if (($ctorParams = $this->reflector->getCtorParams($className))) {
                 $reflClass = $this->reflector->getClass($className);
                 $definition = isset($this->classDefinitions[$normalizedClass])
                     ? array_replace($this->classDefinitions[$normalizedClass], $definition)
                     : $definition;
                 $args = $this->provisionFuncArgs($ctor, $definition, $ctorParams, $className);
-                $obj = $reflClass->newInstanceArgs($args);
-            } else {
-                $obj = $this->instantiateWithoutCtorParams($className);
+
+                if ($proxy) {
+                    return $proxy(static function () use ($reflClass, $args) {
+                        return $reflClass->newInstanceArgs($args);
+                    });
+                }
+
+                return $reflClass->newInstanceArgs($args);
             }
 
-            return $obj;
+            if ($proxy) {
+                return $proxy(function () use ($className) {
+                    return $this->instantiateWithoutCtorParams($className);
+                });
+            }
+
+            return $this->instantiateWithoutCtorParams($className);
         } catch (\ReflectionException $e) {
             throw new InjectionException(
                 $this->inProgressMakes,
@@ -753,5 +786,30 @@ class Injector
         }
 
         return $executableStruct;
+    }
+
+    /**
+     * @param $callableOrMethodStr
+     *
+     * @throws ConfigException
+     */
+    private function generateInvalidCallableError($callableOrMethodStr)
+    {
+        $errorDetail = '';
+        if (is_string($callableOrMethodStr)) {
+            $errorDetail = " but received '$callableOrMethodStr'";
+        } elseif (is_array($callableOrMethodStr) &&
+            count($callableOrMethodStr) === 2 &&
+            array_key_exists(0, $callableOrMethodStr) &&
+            array_key_exists(1, $callableOrMethodStr)
+        ) {
+            if (is_string($callableOrMethodStr[0]) && is_string($callableOrMethodStr[1])) {
+                $errorDetail = " but received ['" . $callableOrMethodStr[0] . "', '" . $callableOrMethodStr[1] . "']";
+            }
+        }
+        throw new ConfigException(
+            sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__, $errorDetail),
+            self::E_DELEGATE_ARGUMENT
+        );
     }
 }
