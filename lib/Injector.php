@@ -265,24 +265,10 @@ class Injector
      */
     public function delegate($name, $callableOrMethodStr)
     {
-        if ($this->isExecutable($callableOrMethodStr) === false) {
-            $errorDetail = '';
-            if (is_string($callableOrMethodStr)) {
-                $errorDetail = " but received '$callableOrMethodStr'";
-            } elseif (is_array($callableOrMethodStr) &&
-                count($callableOrMethodStr) === 2 &&
-                array_key_exists(0, $callableOrMethodStr) &&
-                array_key_exists(1, $callableOrMethodStr)
-            ) {
-                if (is_string($callableOrMethodStr[0]) && is_string($callableOrMethodStr[1])) {
-                    $errorDetail = " but received ['".$callableOrMethodStr[0]."', '".$callableOrMethodStr[1]."']";
-                }
-            }
-            throw new ConfigException(
-                sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__, $errorDetail),
-                self::E_DELEGATE_ARGUMENT
-            );
-        }
+		if (!$this->isExecutable($callableOrMethodStr)) {
+			$this->generateInvalidCallableError($callableOrMethodStr);
+		}
+
         $normalizedName = $this->normalizeName($name);
         $this->delegates[$normalizedName] = $callableOrMethodStr;
 
@@ -340,13 +326,18 @@ class Injector
 	 *
 	 * @param string $name The class to proxy
 	 *
+	 * @param $callableOrMethodStr
 	 * @return Injector
+	 * @throws ConfigException
 	 */
-	public function proxy(string $name)
+	public function proxy(string $name, $callableOrMethodStr)
 	{
-		list($className, $normalizedName) = $this->resolveAlias($name);
+		if (!$this->isExecutable($callableOrMethodStr)) {
+			$this->generateInvalidCallableError($callableOrMethodStr);
+		}
 
-		$this->proxies[$normalizedName] = $className;
+		list($className, $normalizedName) = $this->resolveAlias($name);
+		$this->proxies[$normalizedName] = $callableOrMethodStr;
 
 		return $this;
 	}
@@ -427,10 +418,9 @@ class Injector
 			return $this->buildWrappedObject( $className, $normalizedClass, $args );
 		};
 
-		return $this->proxyManager->createProxy(
-			$className,
-			$callback
-		);
+		$proxy = $this->proxies[$normalizedClass];
+
+		return $proxy( $className, $callback );
 	}
 
 	/**
@@ -811,4 +801,29 @@ class Injector
 
         return $executableStruct;
     }
+
+	/**
+	 * @param $callableOrMethodStr
+	 *
+	 * @throws ConfigException
+	 */
+	private function generateInvalidCallableError($callableOrMethodStr)
+	{
+		$errorDetail = '';
+		if (is_string($callableOrMethodStr)) {
+			$errorDetail = " but received '$callableOrMethodStr'";
+		} elseif (is_array($callableOrMethodStr) &&
+			count($callableOrMethodStr) === 2 &&
+			array_key_exists(0, $callableOrMethodStr) &&
+			array_key_exists(1, $callableOrMethodStr)
+		) {
+			if (is_string($callableOrMethodStr[0]) && is_string($callableOrMethodStr[1])) {
+				$errorDetail = " but received ['" . $callableOrMethodStr[0] . "', '" . $callableOrMethodStr[1] . "']";
+			}
+		}
+		throw new ConfigException(
+			sprintf(self::M_DELEGATE_ARGUMENT, __CLASS__, $errorDetail),
+			self::E_DELEGATE_ARGUMENT
+		);
+	}
 }
