@@ -41,7 +41,6 @@ class Injector
     const M_MAKING_FAILED = "Making %s did not result in an object, instead result is of type '%s'";
 
 	private $reflector;
-	private $proxyManager;
     private $classDefinitions = array();
     private $paramDefinitions = array();
     private $aliases = array();
@@ -52,10 +51,9 @@ class Injector
 	private $preparesProxy = array();
     private $inProgressMakes = array();
 
-	public function __construct(Reflector $reflector = null, ProxyInterface $proxy = null)
+	public function __construct(Reflector $reflector = null)
     {
         $this->reflector = $reflector ?: new CachingReflector();
-        $this->proxyManager = $proxy ?: new Proxy();
     }
 
     public function __clone()

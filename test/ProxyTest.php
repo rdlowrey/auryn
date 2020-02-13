@@ -20,58 +20,19 @@ use ProxyManager\Proxy\VirtualProxyInterface;
  */
 class ProxyTest extends TestCase
 {
-	/**
-	 * @var LazyLoadingValueHolderFactory
-	 */
-	private $lazy_proxy_manage;
-
 	protected function setUp(  )
 	{
-		$this->lazy_proxy_manage = $this->prophesize( LazyLoadingValueHolderFactory::class );
 	}
 
 	protected function tearDown()
 	{
 	}
 
-	protected function lazyProxyManager(): LazyLoadingValueHolderFactory {
-		return $this->lazy_proxy_manage->reveal();
-	}
-
-	public function testProxy() {
-		$proxy = new Proxy( $this->lazyProxyManager() );
-		$this->assertInstanceOf( ProxyInterface::class, $proxy, '' );
-		$this->assertInstanceOf( Proxy::class, $proxy, '' );
-	}
-
-	public function testCreateProxy() {
-		$proxy_manager_return_type = $this->prophesize(VirtualProxyInterface::class);
-
-		$this->lazy_proxy_manage
-			->createProxy(
-				TestDependency::class,
-				Argument::type('\Closure')
-			)->will(function ($args) use ($proxy_manager_return_type) {
-				// Make sure values passed to the real ProxyManager are correct.
-				Assert::assertEquals( TestDependency::class, $args[0], '');
-				Assert::assertInstanceOf(\Closure::class, $args[1], '');
-				return $proxy_manager_return_type->reveal();
-			})->shouldBeCalled();
-
-		$proxy = new Proxy( $this->lazyProxyManager() );
-		$proxy->createProxy(
-			TestDependency::class,
-			function () {
-				// We don't need to do logic here
-			}
-		);
-	}
-
 	// Integration Tests
 
     public function testInstanceReturnedFromProxy()
     {
-        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector = new Injector();
 
 		$injector->proxy(
 			TestDependency::class,
@@ -93,7 +54,7 @@ class ProxyTest extends TestCase
 
     public function testMakeInstanceInjectsSimpleConcreteDependencyProxy()
     {
-        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector = new Injector();
         $injector->proxy(
         	TestDependency::class,
 			static function ( string $className, callable $callback ) {
@@ -110,7 +71,7 @@ class ProxyTest extends TestCase
 
     public function testShareInstanceProxy()
     {
-        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector = new Injector();
         $injector->proxy(
         	TestDependency::class,
 			static function ( string $className, callable $callback ) {
@@ -129,7 +90,7 @@ class ProxyTest extends TestCase
 
     public function testProxyMakeInstanceReturnsAliasInstanceOnNonConcreteTypehint()
     {
-        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector = new Injector();
         $injector->alias( DepInterface::class, DepImplementation::class);
         $injector->proxy(
         	DepInterface::class,
@@ -149,7 +110,7 @@ class ProxyTest extends TestCase
 
     public function testProxyDefinition()
     {
-        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector = new Injector();
         $injector->proxy(
         	NoTypehintNoDefaultConstructorClass::class,
 			static function ( string $className, callable $callback ) {
@@ -173,7 +134,7 @@ class ProxyTest extends TestCase
 
     public function testProxyInjectionDefinition()
     {
-        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector = new Injector();
         $injector->proxy(
         	NoTypehintNoDefaultConstructorClass::class,
 			static function ( string $className, callable $callback ) {
@@ -193,7 +154,7 @@ class ProxyTest extends TestCase
 
     public function testProxyParamDefinition()
     {
-        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector = new Injector();
         $injector->proxy(
         	NoTypehintNoDefaultConstructorClass::class,
 			static function ( string $className, callable $callback ) {
@@ -213,7 +174,7 @@ class ProxyTest extends TestCase
 
     public function testProxyPrepare()
     {
-        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector = new Injector();
         $injector->proxy(
         	PreparesImplementationTest::class,
 			static function ( string $className, callable $callback ) {
@@ -237,7 +198,7 @@ class ProxyTest extends TestCase
 
     public function testProxyAssertDelegateOverrideProxy()
     {
-        $injector = new Injector(new CachingReflector(), new Proxy(new LazyLoadingValueHolderFactory()));
+        $injector = new Injector();
         $injector->proxy(PreparesImplementationTest::class, function (){});
         $injector->delegate(
             PreparesImplementationTest::class,
