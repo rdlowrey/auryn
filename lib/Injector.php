@@ -254,7 +254,8 @@ class Injector
     }
 
     /**
-     * Delegate the creation of $name instances to the specified callable
+     * Delegate the creation of $name instances to the specified callable, receiving arguments based on the callables
+	 * signature.
      *
      * @param string $name
      * @param mixed $callableOrMethodStr Any callable or provisionable invokable method
