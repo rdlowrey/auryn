@@ -81,7 +81,7 @@ class InjectorTest extends TestCase
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
         $this->expectException(InjectionException::class);
-        $this->expectExceptionMessage('Could not make ClassThatDoesntExist: Class "ClassThatDoesntExist" does not exist');
+        $this->expectExceptionMessageMatches('/Could not make ClassThatDoesntExist.*does not exist/');
         $injector = new Injector;
         $injector->make('ClassThatDoesntExist');
     }
@@ -600,7 +600,7 @@ class InjectorTest extends TestCase
     public function testMissingAlias()
     {
         $this->expectException(InjectionException::class);
-        $this->expectExceptionMessage('Could not make Auryn\Test\TestMissingDependency: Class "Auryn\Test\TypoInTypehint" does not exist');
+        $this->expectExceptionMessageMatches('/Could not make Auryn\Test\TestMissingDependency.*does not exist/');
         $injector = new Injector;
         $testClass = $injector->make(TestMissingDependency::class);
     }
@@ -1087,10 +1087,14 @@ class InjectorTest extends TestCase
     public function testDelegationDoesntMakeObject()
     {
         /** @TODO update code to check for non-object */
-        $this->expectException(\TypeError::class);
-        //$this->expectException(InjectionException::class);
-        //$this->expectExceptionMessage("Making auryn\\test\someclassname did not result in an object, instead result is of type 'NULL'");
-        //$this->expectExceptionCode(Injector::E_MAKING_FAILED);
+        if (PHP_VERSION_ID >= 80000) {
+            $this->expectException(\TypeError::class);
+        } else {
+            $this->expectException(InjectionException::class);
+            $this->expectExceptionMessage("Making auryn\\test\someclassname did not result in an object, instead result is of type 'NULL'");
+            $this->expectExceptionCode(Injector::E_MAKING_FAILED);
+        }
+
         $delegate = function () {
             return null;
         };
