@@ -1,17 +1,16 @@
-dist: trusty
+dist: xenial
 
 language: php
 
 php:
-  - 7.2
   - 7.3
   - 7.4
   - 8.0
 
 matrix:
   include:
-    - php: 5.3
-      dist: precise
+    - php: 7.2
+      dist: xenial
 
 before_script:
   - composer install
