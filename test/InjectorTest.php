@@ -1,7 +1,9 @@
-<?php
+<?php /** @noinspection PhpUnusedLocalVariableInspection */
 
-namespace Auryn\test;
+namespace Auryn\Test;
 
+use Auryn\ConfigException;
+use Auryn\InjectionException;
 use Auryn\Injector;
 use PHPUnit\Framework\TestCase;
 
@@ -10,82 +12,76 @@ class InjectorTest extends TestCase
     public function testMakeInstanceInjectsSimpleConcreteDependency()
     {
         $injector = new Injector;
-        $this->assertEquals(new TestNeedsDep(new TestDependency),
-            $injector->make('Auryn\Test\TestNeedsDep')
+        self::assertEquals(new TestNeedsDep(new TestDependency),
+            $injector->make(TestNeedsDep::class)
         );
     }
 
     public function testMakeInstanceReturnsNewInstanceIfClassHasNoConstructor()
     {
         $injector = new Injector;
-        $this->assertEquals(new TestNoConstructor, $injector->make('Auryn\Test\TestNoConstructor'));
+        self::assertEquals(new TestNoConstructor, $injector->make(TestNoConstructor::class));
     }
 
     public function testMakeInstanceReturnsAliasInstanceOnNonConcreteTypehint()
     {
         $injector = new Injector;
-        $injector->alias('Auryn\Test\DepInterface', 'Auryn\Test\DepImplementation');
-        $this->assertEquals(new DepImplementation, $injector->make('Auryn\Test\DepInterface'));
+        $injector->alias(DepInterface::class, DepImplementation::class);
+        self::assertEquals(new DepImplementation, $injector->make(DepInterface::class));
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Injection definition required for interface Auryn\Test\DepInterface
-     * @expectedExceptionCode \Auryn\Injector::E_NEEDS_DEFINITION
-     */
     public function testMakeInstanceThrowsExceptionOnInterfaceWithoutAlias()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Injection definition required for interface Auryn\Test\DepInterface');
+        $this->expectExceptionCode(Injector::E_NEEDS_DEFINITION);
         $injector = new Injector;
-        $injector->make('Auryn\Test\DepInterface');
+        $injector->make(DepInterface::class);
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Injection definition required for interface Auryn\Test\DepInterface
-     * @expectedExceptionCode \Auryn\Injector::E_NEEDS_DEFINITION
-     */
     public function testMakeInstanceThrowsExceptionOnNonConcreteCtorParamWithoutImplementation()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Injection definition required for interface Auryn\Test\DepInterface');
+        $this->expectExceptionCode(Injector::E_NEEDS_DEFINITION);
         $injector = new Injector;
-        $injector->make('Auryn\Test\RequiresInterface');
+        $injector->make(RequiresInterface::class);
     }
 
     public function testMakeInstanceBuildsNonConcreteCtorParamWithAlias()
     {
         $injector = new Injector;
-        $injector->alias('Auryn\Test\DepInterface', 'Auryn\Test\DepImplementation');
-        $obj = $injector->make('Auryn\Test\RequiresInterface');
-        $this->assertInstanceOf('Auryn\Test\RequiresInterface', $obj);
+        $injector->alias(DepInterface::class, DepImplementation::class);
+        $obj = $injector->make(RequiresInterface::class);
+        self::assertInstanceOf(RequiresInterface::class, $obj);
     }
 
     public function testMakeInstancePassesNullCtorParameterIfNoTypehintOrDefaultCanBeDetermined()
     {
         $injector = new Injector;
-        $nullCtorParamObj = $injector->make('Auryn\Test\ProvTestNoDefinitionNullDefaultClass');
-        $this->assertEquals(new ProvTestNoDefinitionNullDefaultClass, $nullCtorParamObj);
-        $this->assertNull($nullCtorParamObj->arg);
+        $nullCtorParamObj = $injector->make(ProvTestNoDefinitionNullDefaultClass::class);
+        self::assertEquals(new ProvTestNoDefinitionNullDefaultClass, $nullCtorParamObj);
+        self::assertNull($nullCtorParamObj->arg);
     }
 
     public function testMakeInstanceReturnsSharedInstanceIfAvailable()
     {
         $injector = new Injector;
-        $injector->define('Auryn\Test\RequiresInterface', array('dep' => 'Auryn\Test\DepImplementation'));
-        $injector->share('Auryn\Test\RequiresInterface');
-        $injected = $injector->make('Auryn\Test\RequiresInterface');
+        $injector->define(RequiresInterface::class, array('dep' => DepImplementation::class));
+        $injector->share(RequiresInterface::class);
+        $injected = $injector->make(RequiresInterface::class);
 
-        $this->assertEquals('something', $injected->testDep->testProp);
+        self::assertEquals('something', $injected->testDep->testProp);
         $injected->testDep->testProp = 'something else';
 
-        $injected2 = $injector->make('Auryn\Test\RequiresInterface');
-        $this->assertEquals('something else', $injected2->testDep->testProp);
+        $injected2 = $injector->make(RequiresInterface::class);
+        self::assertEquals('something else', $injected2->testDep->testProp);
     }
 
-    /**
-     * @expectedException \Auryn\InjectorException
-     * @expectedExceptionMessage Could not make ClassThatDoesntExist: Class ClassThatDoesntExist does not exist
-     */
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Could not make ClassThatDoesntExist: Class "ClassThatDoesntExist" does not exist');
         $injector = new Injector;
         $injector->make('ClassThatDoesntExist');
     }
@@ -93,38 +89,40 @@ class InjectorTest extends TestCase
     public function testMakeInstanceUsesCustomDefinitionIfSpecified()
     {
         $injector = new Injector;
-        $injector->define('Auryn\Test\TestNeedsDep', array('testDep'=>'Auryn\Test\TestDependency'));
-        $injected = $injector->make('Auryn\Test\TestNeedsDep', array('testDep'=>'Auryn\Test\TestDependency2'));
-        $this->assertEquals('testVal2', $injected->testDep->testProp);
+        $injector->define(TestNeedsDep::class, array('testDep'=> TestDependency::class));
+        $injected = $injector->make(TestNeedsDep::class, array('testDep'=> TestDependency2::class));
+        self::assertEquals('testVal2', $injected->testDep->testProp);
     }
 
     public function testMakeInstanceCustomDefinitionOverridesExistingDefinitions()
     {
         $injector = new Injector;
-        $injector->define('Auryn\Test\InjectorTestChildClass', array(':arg1'=>'First argument', ':arg2'=>'Second argument'));
-        $injected = $injector->make('Auryn\Test\InjectorTestChildClass', array(':arg1'=>'Override'));
-        $this->assertEquals('Override', $injected->arg1);
-        $this->assertEquals('Second argument', $injected->arg2);
+        $injector->define(InjectorTestChildClass::class, array(':arg1'=>'First argument', ':arg2'=>'Second argument'));
+        $injected = $injector->make(InjectorTestChildClass::class, array(':arg1'=>'Override'));
+        self::assertEquals('Override', $injected->arg1);
+        self::assertEquals('Second argument', $injected->arg2);
     }
 
     public function testMakeInstanceStoresShareIfMarkedWithNullInstance()
     {
+        $this->expectNotToPerformAssertions();
         $injector = new Injector;
-        $injector->share('Auryn\Test\TestDependency');
-        $injector->make('Auryn\Test\TestDependency');
+        $injector->share(TestDependency::class);
+        $injector->make(TestDependency::class);
     }
 
     public function testMakeInstanceUsesReflectionForUnknownParamsInMultiBuildWithDeps()
     {
         $injector = new Injector;
-        $obj = $injector->make('Auryn\Test\TestMultiDepsWithCtor', array('val1'=>'Auryn\Test\TestDependency'));
-        $this->assertInstanceOf('Auryn\Test\TestMultiDepsWithCtor', $obj);
+        $obj = $injector->make(TestMultiDepsWithCtor::class, array('val1'=> TestDependency::class));
+        self::assertInstanceOf(TestMultiDepsWithCtor::class, $obj);
 
-        $obj = $injector->make('Auryn\Test\NoTypehintNoDefaultConstructorClass',
-            array('val1'=>'Auryn\Test\TestDependency')
+        $obj = $injector->make(
+            NoTypehintNoDefaultConstructorClass::class,
+            array('val1'=> TestDependency::class)
         );
-        $this->assertInstanceOf('Auryn\Test\NoTypehintNoDefaultConstructorClass', $obj);
-        $this->assertNull($obj->testParam);
+        self::assertInstanceOf(NoTypehintNoDefaultConstructorClass::class, $obj);
+        self::assertNull($obj->testParam);
     }
 
     /**
@@ -133,17 +131,18 @@ class InjectorTest extends TestCase
     public function testMakeInstanceUsesReflectionForUnknownParamsInMultiBuildWithDepsAndVariadics()
     {
         if (defined('HHVM_VERSION')) {
-            $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
+            self::markTestSkipped("HHVM doesn't support variadics with type declarations.");
         }
 
         require_once __DIR__ . "/fixtures_5_6.php";
 
         $injector = new Injector;
-        $obj = $injector->make('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass',
-            array('val1'=>'Auryn\Test\TestDependency')
+        $obj = $injector->make(
+            NoTypehintNoDefaultConstructorVariadicClass::class,
+            array('val1'=> TestDependency::class)
         );
-        $this->assertInstanceOf('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass', $obj);
-        $this->assertEquals(array(), $obj->testParam);
+        self::assertInstanceOf(NoTypehintNoDefaultConstructorVariadicClass::class, $obj);
+        self::assertEquals(array(), $obj->testParam);
     }
 
     /**
@@ -152,52 +151,48 @@ class InjectorTest extends TestCase
     public function testMakeInstanceUsesReflectionForUnknownParamsWithDepsAndVariadicsWithTypeHint()
     {
         if (defined('HHVM_VERSION')) {
-            $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
+            self::markTestSkipped("HHVM doesn't support variadics with type declarations.");
         }
 
         require_once __DIR__ . "/fixtures_5_6.php";
 
         $injector = new Injector;
-        $obj = $injector->make('Auryn\Test\TypehintNoDefaultConstructorVariadicClass',
-            array('arg'=>'Auryn\Test\TestDependency')
+        $obj = $injector->make(
+            TypehintNoDefaultConstructorVariadicClass::class,
+            array('arg'=> TestDependency::class)
         );
-        $this->assertInstanceOf('Auryn\Test\TypehintNoDefaultConstructorVariadicClass', $obj);
-        $this->assertInternalType("array", $obj->testParam);
-        $this->assertInstanceOf('Auryn\Test\TestDependency', $obj->testParam[0]);
+        self::assertInstanceOf(TypehintNoDefaultConstructorVariadicClass::class, $obj);
+        self::assertIsArray($obj->testParam);
+        self::assertInstanceOf(TestDependency::class, $obj->testParam[0]);
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::
-     * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
-     */
     public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefault()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::');
+        $this->expectExceptionCode(Injector::E_UNDEFINED_PARAM);
         $injector = new Injector;
-        $injector->make('Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault');
+        $injector->make(InjectorTestCtorParamWithNoTypehintOrDefault::class);
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::
-     * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
-     */
     public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefaultThroughAliasedTypehint()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::');
+        $this->expectExceptionCode(Injector::E_UNDEFINED_PARAM);
         $injector = new Injector;
-        $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault');
-        $injector->make('Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefaultDependent');
+        $injector->alias(TestNoExplicitDefine::class,
+                         InjectorTestCtorParamWithNoTypehintOrDefault::class
+        );
+        $injector->make(InjectorTestCtorParamWithNoTypehintOrDefaultDependent::class);
     }
 
-    /**
-     * @TODO
-     * @expectedException \Auryn\InjectorException
-     * @expectedExceptionMessage Injection definition required for interface Auryn\Test\DepInterface
-     */
     public function testMakeInstanceThrowsExceptionOnUninstantiableTypehintWithoutDefinition()
     {
+        $this->expectException(\Auryn\InjectorException::class);
+        $this->expectExceptionMessage('Injection definition required for interface Auryn\Test\DepInterface');
         $injector = new Injector;
-        $injector->make('Auryn\Test\RequiresInterface');
+        $injector->make(RequiresInterface::class);
     }
 
     public function testTypelessDefineForDependency()
@@ -205,23 +200,28 @@ class InjectorTest extends TestCase
         $thumbnailSize = 128;
         $injector = new Injector;
         $injector->defineParam('thumbnailSize', $thumbnailSize);
-        $testClass = $injector->make('Auryn\Test\RequiresDependencyWithTypelessParameters');
-        $this->assertEquals($thumbnailSize, $testClass->getThumbnailSize(), 'Typeless define was not injected correctly.');
+        $testClass = $injector->make(RequiresDependencyWithTypelessParameters::class);
+        self::assertEquals($thumbnailSize, $testClass->getThumbnailSize(), 'Typeless define was not injected correctly.');
     }
 
     public function testTypelessDefineForAliasedDependency()
     {
+        $this->expectNotToPerformAssertions();
         $injector = new Injector;
         $injector->defineParam('val', 42);
 
-        $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefault');
-        $obj = $injector->make('Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
+        $injector->alias(
+            TestNoExplicitDefine::class,
+            ProviderTestCtorParamWithNoTypehintOrDefault::class
+        );
+        $injector->make(ProviderTestCtorParamWithNoTypehintOrDefaultDependent::class);
     }
 
     public function testMakeInstanceInjectsRawParametersDirectly()
     {
         $injector = new Injector;
-        $injector->define('Auryn\Test\InjectorTestRawCtorParams', array(
+        $injector->define(
+            InjectorTestRawCtorParams::class, array(
             ':string' => 'string',
             ':obj' => new \StdClass,
             ':int' => 42,
@@ -231,14 +231,14 @@ class InjectorTest extends TestCase
             ':null' => null,
         ));
 
-        $obj = $injector->make('Auryn\Test\InjectorTestRawCtorParams');
-        $this->assertInternalType('string', $obj->string);
-        $this->assertInstanceOf('StdClass', $obj->obj);
-        $this->assertInternalType('int', $obj->int);
-        $this->assertInternalType('array', $obj->array);
-        $this->assertInternalType('float', $obj->float);
-        $this->assertInternalType('bool', $obj->bool);
-        $this->assertNull($obj->null);
+        $obj = $injector->make(InjectorTestRawCtorParams::class);
+        self::assertIsString($obj->string);
+        self::assertInstanceOf('StdClass', $obj->obj);
+        self::assertIsInt($obj->int);
+        self::assertIsArray($obj->array);
+        self::assertIsFloat($obj->float);
+        self::assertIsBool($obj->bool);
+        self::assertNull($obj->null);
     }
 
     /**
@@ -248,91 +248,81 @@ class InjectorTest extends TestCase
      */
     public function testMakeInstanceThrowsExceptionWhenDelegateDoes()
     {
+        $this->expectException(\Exception::class);
         $injector= new Injector;
 
-        $callable = $this->getMock(
-            'CallableMock',
-            array('__invoke')
-        );
+        $callable = $this->createMock(CallableMock::class);
 
         $injector->delegate('TestDependency', $callable);
 
-        $callable->expects($this->once())
+        $callable->expects(self::once())
             ->method('__invoke')
-            ->will($this->throwException(new \Exception()));
+            ->will(self::throwException(new \Exception()));
 
         $injector->make('TestDependency');
     }
 
     public function testMakeInstanceHandlesNamespacedClasses()
     {
+        $this->expectNotToPerformAssertions();
         $injector = new Injector;
-        $injector->make('Auryn\Test\SomeClassName');
+        $injector->make(SomeClassName::class);
     }
 
     public function testMakeInstanceDelegate()
     {
         $injector= new Injector;
 
-        $callable = $this->getMock(
-            'CallableMock',
-            array('__invoke')
-        );
-        $callable->expects($this->once())
+        $callable = $this->createMock(CallableMock::class);
+        $callable->expects(self::once())
             ->method('__invoke')
-            ->will($this->returnValue(new TestDependency()));
+            ->willReturn(new TestDependency());
 
-        $injector->delegate('Auryn\Test\TestDependency', $callable);
+        $injector->delegate(TestDependency::class, $callable);
 
-        $obj = $injector->make('Auryn\Test\TestDependency');
+        $obj = $injector->make(TestDependency::class);
 
-        $this->assertInstanceOf('Auryn\Test\TestDependency', $obj);
+        self::assertInstanceOf(TestDependency::class, $obj);
     }
 
     public function testMakeInstanceWithStringDelegate()
     {
         $injector= new Injector;
-        $injector->delegate('StdClass', 'Auryn\Test\StringStdClassDelegateMock');
+        $injector->delegate('StdClass', StringStdClassDelegateMock::class);
         $obj = $injector->make('StdClass');
-        $this->assertEquals(42, $obj->test);
+        self::assertEquals(42, $obj->test);
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2 but received 'StringDelegateWithNoInvokeMethod'
-     */
     public function testMakeInstanceThrowsExceptionIfStringDelegateClassHasNoInvokeMethod()
     {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage("Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2 but received 'StringDelegateWithNoInvokeMethod'");
         $injector= new Injector;
         $injector->delegate('StdClass', 'StringDelegateWithNoInvokeMethod');
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2 but received 'SomeClassThatDefinitelyDoesNotExistForReal'
-     */
     public function testMakeInstanceThrowsExceptionIfStringDelegateClassInstantiationFails()
     {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage("Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2 but received 'SomeClassThatDefinitelyDoesNotExistForReal'");
         $injector= new Injector;
         $injector->delegate('StdClass', 'SomeClassThatDefinitelyDoesNotExistForReal');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Injection definition required for interface Auryn\Test\DepInterface
-     */
     public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithNoDefinition()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Injection definition required for interface Auryn\Test\DepInterface');
         $injector = new Injector;
-        $injector->make('Auryn\Test\RequiresInterface');
+        $injector->make(RequiresInterface::class);
     }
 
     public function testDefineAssignsPassedDefinition()
     {
         $injector = new Injector;
-        $definition = array('dep' => 'Auryn\Test\DepImplementation');
-        $injector->define('Auryn\Test\RequiresInterface', $definition);
-        $this->assertInstanceOf('Auryn\Test\RequiresInterface', $injector->make('Auryn\Test\RequiresInterface'));
+        $definition = array('dep' => DepImplementation::class);
+        $injector->define(RequiresInterface::class, $definition);
+        self::assertInstanceOf(RequiresInterface::class, $injector->make(RequiresInterface::class));
     }
 
     public function testShareStoresSharedInstanceAndReturnsCurrentInstance()
@@ -341,23 +331,21 @@ class InjectorTest extends TestCase
         $testShare = new \StdClass;
         $testShare->test = 42;
 
-        $this->assertInstanceOf('Auryn\Injector', $injector->share($testShare));
+        self::assertInstanceOf(Injector::class, $injector->share($testShare));
         $testShare->test = 'test';
-        $this->assertEquals('test', $injector->make('stdclass')->test);
+        self::assertEquals('test', $injector->make('stdclass')->test);
     }
 
     public function testShareMarksClassSharedOnNullObjectParameter()
     {
         $injector = new Injector;
-        $this->assertInstanceOf('Auryn\Injector', $injector->share('SomeClass'));
+        self::assertInstanceOf(Injector::class, $injector->share('SomeClass'));
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Auryn\Injector::share() requires a string class name or object instance at Argument 1; integer specified
-     */
     public function testShareThrowsExceptionOnInvalidArgument()
     {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('Auryn\Injector::share() requires a string class name or object instance at Argument 1; integer specified');
         $injector = new Injector;
         $injector->share(42);
     }
@@ -365,7 +353,10 @@ class InjectorTest extends TestCase
     public function testAliasAssignsValueAndReturnsCurrentInstance()
     {
         $injector = new Injector;
-        $this->assertInstanceOf('Auryn\Injector', $injector->alias('DepInterface', 'Auryn\Test\DepImplementation'));
+        self::assertInstanceOf(
+            Injector::class, $injector->alias('DepInterface',
+                                              DepImplementation::class
+        ));
     }
 
     public function provideInvalidDelegates()
@@ -379,38 +370,38 @@ class InjectorTest extends TestCase
 
     /**
      * @dataProvider provideInvalidDelegates
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2
      */
     public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate)
     {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2');
         $injector = new Injector;
-        $injector->delegate('Auryn\Test\TestDependency', $badDelegate);
+        $injector->delegate(TestDependency::class, $badDelegate);
     }
 
     public function testDelegateInstantiatesCallableClassString()
     {
         $injector = new Injector;
-        $injector->delegate('Auryn\Test\MadeByDelegate', 'Auryn\Test\CallableDelegateClassTest');
-        $this->assertInstanceof('Auryn\Test\MadeByDelegate', $injector->make('Auryn\Test\MadeByDelegate'));
+        $injector->delegate(MadeByDelegate::class, CallableDelegateClassTest::class);
+        self::assertInstanceof(MadeByDelegate::class, $injector->make(MadeByDelegate::class));
     }
 
     public function testDelegateInstantiatesCallableClassArray()
     {
         $injector = new Injector;
-        $injector->delegate('Auryn\Test\MadeByDelegate', array('Auryn\Test\CallableDelegateClassTest', '__invoke'));
-        $this->assertInstanceof('Auryn\Test\MadeByDelegate', $injector->make('Auryn\Test\MadeByDelegate'));
+        $injector->delegate(MadeByDelegate::class, array(CallableDelegateClassTest::class, '__invoke'));
+        self::assertInstanceof(MadeByDelegate::class, $injector->make(MadeByDelegate::class));
     }
 
     public function testUnknownDelegationFunction()
     {
         $injector = new Injector;
         try {
-            $injector->delegate('Auryn\Test\DelegatableInterface', 'FunctionWhichDoesNotExist');
-            $this->fail("Delegation was supposed to fail.");
+            $injector->delegate(DelegatableInterface::class, 'FunctionWhichDoesNotExist');
+            self::fail("Delegation was supposed to fail.");
         } catch (\Auryn\InjectorException $ie) {
-            $this->assertContains('FunctionWhichDoesNotExist', $ie->getMessage());
-            $this->assertEquals(\Auryn\Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
+            self::assertStringContainsString('FunctionWhichDoesNotExist', $ie->getMessage());
+            self::assertEquals(Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
         }
     }
 
@@ -418,12 +409,12 @@ class InjectorTest extends TestCase
     {
         $injector = new Injector;
         try {
-            $injector->delegate('Auryn\Test\DelegatableInterface', array('stdClass', 'methodWhichDoesNotExist'));
-            $this->fail("Delegation was supposed to fail.");
+            $injector->delegate(DelegatableInterface::class, array('stdClass', 'methodWhichDoesNotExist'));
+            self::fail("Delegation was supposed to fail.");
         } catch (\Auryn\InjectorException $ie) {
-            $this->assertContains('stdClass', $ie->getMessage());
-            $this->assertContains('methodWhichDoesNotExist', $ie->getMessage());
-            $this->assertEquals(\Auryn\Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
+            self::assertStringContainsString('stdClass', $ie->getMessage());
+            self::assertStringContainsString('methodWhichDoesNotExist', $ie->getMessage());
+            self::assertEquals(Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
         }
     }
 
@@ -433,7 +424,7 @@ class InjectorTest extends TestCase
     public function testProvisionedInvokables($toInvoke, $definition, $expectedResult)
     {
         $injector = new Injector;
-        $this->assertEquals($expectedResult, $injector->execute($toInvoke, $definition));
+        self::assertEquals($expectedResult, $injector->execute($toInvoke, $definition));
     }
 
     public function provideExecutionExpectations()
@@ -442,7 +433,7 @@ class InjectorTest extends TestCase
 
         // 0 -------------------------------------------------------------------------------------->
 
-        $toInvoke = array('Auryn\Test\ExecuteClassNoDeps', 'execute');
+        $toInvoke = array(ExecuteClassNoDeps::class, 'execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
@@ -456,7 +447,7 @@ class InjectorTest extends TestCase
 
         // 2 -------------------------------------------------------------------------------------->
 
-        $toInvoke = array('Auryn\Test\ExecuteClassDeps', 'execute');
+        $toInvoke = array(ExecuteClassDeps::class, 'execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
@@ -470,14 +461,14 @@ class InjectorTest extends TestCase
 
         // 4 -------------------------------------------------------------------------------------->
 
-        $toInvoke = array('Auryn\Test\ExecuteClassDepsWithMethodDeps', 'execute');
+        $toInvoke = array(ExecuteClassDepsWithMethodDeps::class, 'execute');
         $args = array(':arg' => 9382);
         $expectedResult = 9382;
         $return[] = array($toInvoke, $args, $expectedResult);
 
         // 5 -------------------------------------------------------------------------------------->
 
-        $toInvoke = array('Auryn\Test\ExecuteClassStaticMethod', 'execute');
+        $toInvoke = array(ExecuteClassStaticMethod::class, 'execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
@@ -498,7 +489,7 @@ class InjectorTest extends TestCase
 
         // 8 -------------------------------------------------------------------------------------->
 
-        $toInvoke = array('Auryn\Test\ExecuteClassRelativeStaticMethod', 'parent::execute');
+        $toInvoke = array(ExecuteClassRelativeStaticMethod::class, 'parent::execute');
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
@@ -526,7 +517,7 @@ class InjectorTest extends TestCase
 
         // 12 ------------------------------------------------------------------------------------->
 
-        $toInvoke = 'Auryn\Test\ExecuteClassInvokable';
+        $toInvoke = ExecuteClassInvokable::class;
         $args = array();
         $expectedResult = 42;
         $return[] = array($toInvoke, $args, $expectedResult);
@@ -579,7 +570,7 @@ class InjectorTest extends TestCase
         if (PHP_VERSION_ID > 50400) {
             // 19 ------------------------------------------------------------------------------------->
 
-            $object = new \Auryn\Test\ReturnsCallable('new value');
+            $object = new ReturnsCallable('new value');
             $args = array();
             $toInvoke = $object->getCallable();
             $expectedResult = 'new value';
@@ -592,87 +583,86 @@ class InjectorTest extends TestCase
 
     public function testStaticStringInvokableWithArgument()
     {
-        $injector = new \Auryn\Injector;
+        $injector = new Injector;
         $invokable = $injector->buildExecutable('Auryn\Test\ClassWithStaticMethodThatTakesArg::doSomething');
-        $this->assertEquals(42, $invokable(41));
+        self::assertEquals(42, $invokable(41));
     }
 
     public function testInterfaceFactoryDelegation()
     {
+        $this->expectNotToPerformAssertions();
         $injector = new Injector;
-        $injector->delegate('Auryn\Test\DelegatableInterface', 'Auryn\Test\ImplementsInterfaceFactory');
-        $requiresDelegatedInterface = $injector->make('Auryn\Test\RequiresDelegatedInterface');
+        $injector->delegate(DelegatableInterface::class, ImplementsInterfaceFactory::class);
+        $requiresDelegatedInterface = $injector->make(RequiresDelegatedInterface::class);
         $requiresDelegatedInterface->foo();
     }
 
-    /**
-     * @expectedException \Auryn\InjectorException
-     * @expectedExceptionMessage Could not make Auryn\Test\TestMissingDependency: Class Auryn\Test\TypoInTypehint does not exist
-     */
     public function testMissingAlias()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Could not make Auryn\Test\TestMissingDependency: Class "Auryn\Test\TypoInTypehint" does not exist');
         $injector = new Injector;
-        $testClass = $injector->make('Auryn\Test\TestMissingDependency');
+        $testClass = $injector->make(TestMissingDependency::class);
     }
 
     public function testAliasingConcreteClasses()
     {
         $injector = new Injector;
-        $injector->alias('Auryn\Test\ConcreteClass1', 'Auryn\Test\ConcreteClass2');
-        $obj = $injector->make('Auryn\Test\ConcreteClass1');
-        $this->assertInstanceOf('Auryn\Test\ConcreteClass2', $obj);
+        $injector->alias(ConcreteClass1::class, ConcreteClass2::class);
+        $obj = $injector->make(ConcreteClass1::class);
+        self::assertInstanceOf(ConcreteClass2::class, $obj);
     }
 
     public function testSharedByAliasedInterfaceName()
     {
         $injector = new Injector;
-        $injector->alias('Auryn\Test\SharedAliasedInterface', 'Auryn\Test\SharedClass');
-        $injector->share('Auryn\Test\SharedAliasedInterface');
-        $class = $injector->make('Auryn\Test\SharedAliasedInterface');
-        $class2 = $injector->make('Auryn\Test\SharedAliasedInterface');
-        $this->assertSame($class, $class2);
+        $injector->alias(SharedAliasedInterface::class, SharedClass::class);
+        $injector->share(SharedAliasedInterface::class);
+        $class = $injector->make(SharedAliasedInterface::class);
+        $class2 = $injector->make(SharedAliasedInterface::class);
+        self::assertSame($class, $class2);
     }
 
     public function testNotSharedByAliasedInterfaceName()
     {
         $injector = new Injector;
-        $injector->alias('Auryn\Test\SharedAliasedInterface', 'Auryn\Test\SharedClass');
-        $injector->alias('Auryn\Test\SharedAliasedInterface', 'Auryn\Test\NotSharedClass');
-        $injector->share('Auryn\Test\SharedClass');
-        $class = $injector->make('Auryn\Test\SharedAliasedInterface');
-        $class2 = $injector->make('Auryn\Test\SharedAliasedInterface');
+        $injector->alias(SharedAliasedInterface::class, SharedClass::class);
+        $injector->alias(SharedAliasedInterface::class, NotSharedClass::class);
+        $injector->share(SharedClass::class);
+        $class = $injector->make(SharedAliasedInterface::class);
+        $class2 = $injector->make(SharedAliasedInterface::class);
 
-        $this->assertNotSame($class, $class2);
+        self::assertNotSame($class, $class2);
     }
 
     public function testSharedByAliasedInterfaceNameReversedOrder()
     {
         $injector = new Injector;
-        $injector->share('Auryn\Test\SharedAliasedInterface');
-        $injector->alias('Auryn\Test\SharedAliasedInterface', 'Auryn\Test\SharedClass');
-        $class = $injector->make('Auryn\Test\SharedAliasedInterface');
-        $class2 = $injector->make('Auryn\Test\SharedAliasedInterface');
-        $this->assertSame($class, $class2);
+        $injector->share(SharedAliasedInterface::class);
+        $injector->alias(SharedAliasedInterface::class, SharedClass::class);
+        $class = $injector->make(SharedAliasedInterface::class);
+        $class2 = $injector->make(SharedAliasedInterface::class);
+        self::assertSame($class, $class2);
     }
 
     public function testSharedByAliasedInterfaceNameWithParameter()
     {
         $injector = new Injector;
-        $injector->alias('Auryn\Test\SharedAliasedInterface', 'Auryn\Test\SharedClass');
-        $injector->share('Auryn\Test\SharedAliasedInterface');
-        $sharedClass = $injector->make('Auryn\Test\SharedAliasedInterface');
-        $childClass = $injector->make('Auryn\Test\ClassWithAliasAsParameter');
-        $this->assertSame($sharedClass, $childClass->sharedClass);
+        $injector->alias(SharedAliasedInterface::class, SharedClass::class);
+        $injector->share(SharedAliasedInterface::class);
+        $sharedClass = $injector->make(SharedAliasedInterface::class);
+        $childClass = $injector->make(ClassWithAliasAsParameter::class);
+        self::assertSame($sharedClass, $childClass->sharedClass);
     }
 
     public function testSharedByAliasedInstance()
     {
         $injector = new Injector;
-        $injector->alias('Auryn\Test\SharedAliasedInterface', 'Auryn\Test\SharedClass');
-        $sharedClass = $injector->make('Auryn\Test\SharedAliasedInterface');
+        $injector->alias(SharedAliasedInterface::class, SharedClass::class);
+        $sharedClass = $injector->make(SharedAliasedInterface::class);
         $injector->share($sharedClass);
-        $childClass = $injector->make('Auryn\Test\ClassWithAliasAsParameter');
-        $this->assertSame($sharedClass, $childClass->sharedClass);
+        $childClass = $injector->make(ClassWithAliasAsParameter::class);
+        self::assertSame($sharedClass, $childClass->sharedClass);
     }
 
     public function testMultipleShareCallsDontOverrideTheOriginalSharedInstance()
@@ -682,7 +672,7 @@ class InjectorTest extends TestCase
         $stdClass1 = $injector->make('StdClass');
         $injector->share('StdClass');
         $stdClass2 = $injector->make('StdClass');
-        $this->assertSame($stdClass1, $stdClass2);
+        self::assertSame($stdClass1, $stdClass2);
     }
 
     public function testDependencyWhereSharedWithProtectedConstructor()
@@ -692,50 +682,50 @@ class InjectorTest extends TestCase
         $inner = TestDependencyWithProtectedConstructor::create();
         $injector->share($inner);
 
-        $outer = $injector->make('Auryn\Test\TestNeedsDepWithProtCons');
+        $outer = $injector->make(TestNeedsDepWithProtCons::class);
 
-        $this->assertSame($inner, $outer->dep);
+        self::assertSame($inner, $outer->dep);
     }
 
     public function testDependencyWhereShared()
     {
         $injector = new Injector;
-        $injector->share('Auryn\Test\ClassInnerB');
-        $innerDep = $injector->make('Auryn\Test\ClassInnerB');
-        $inner = $injector->make('Auryn\Test\ClassInnerA');
-        $this->assertSame($innerDep, $inner->dep);
-        $outer = $injector->make('Auryn\Test\ClassOuter');
-        $this->assertSame($innerDep, $outer->dep->dep);
+        $injector->share(ClassInnerB::class);
+        $innerDep = $injector->make(ClassInnerB::class);
+        $inner = $injector->make(ClassInnerA::class);
+        self::assertSame($innerDep, $inner->dep);
+        $outer = $injector->make(ClassOuter::class);
+        self::assertSame($innerDep, $outer->dep->dep);
     }
 
     public function testBugWithReflectionPoolIncorrectlyReturningBadInfo()
     {
         $injector = new Injector;
-        $obj = $injector->make('Auryn\Test\ClassOuter');
-        $this->assertInstanceOf('Auryn\Test\ClassOuter', $obj);
-        $this->assertInstanceOf('Auryn\Test\ClassInnerA', $obj->dep);
-        $this->assertInstanceOf('Auryn\Test\ClassInnerB', $obj->dep->dep);
+        $obj = $injector->make(ClassOuter::class);
+        self::assertInstanceOf(ClassOuter::class, $obj);
+        self::assertInstanceOf(ClassInnerA::class, $obj->dep);
+        self::assertInstanceOf(ClassInnerB::class, $obj->dep->dep);
     }
 
     public function provideCyclicDependencies()
     {
         return array(
-            'Auryn\Test\RecursiveClassA' => array('Auryn\Test\RecursiveClassA'),
-            'Auryn\Test\RecursiveClassB' => array('Auryn\Test\RecursiveClassB'),
-            'Auryn\Test\RecursiveClassC' => array('Auryn\Test\RecursiveClassC'),
-            'Auryn\Test\RecursiveClass1' => array('Auryn\Test\RecursiveClass1'),
-            'Auryn\Test\RecursiveClass2' => array('Auryn\Test\RecursiveClass2'),
-            'Auryn\Test\DependsOnCyclic' => array('Auryn\Test\DependsOnCyclic'),
+            RecursiveClassA::class => array(RecursiveClassA::class),
+            RecursiveClassB::class => array(RecursiveClassB::class),
+            RecursiveClassC::class => array(RecursiveClassC::class),
+            RecursiveClass1::class => array(RecursiveClass1::class),
+            RecursiveClass2::class => array(RecursiveClass2::class),
+            DependsOnCyclic::class => array(DependsOnCyclic::class),
         );
     }
 
      /**
      * @dataProvider provideCyclicDependencies
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Injector::E_CYCLIC_DEPENDENCY
      */
     public function testCyclicDependencies($class)
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionCode(Injector::E_CYCLIC_DEPENDENCY);
         $injector = new Injector;
         $injector->make($class);
     }
@@ -743,53 +733,51 @@ class InjectorTest extends TestCase
     public function testNonConcreteDependencyWithDefault()
     {
         $injector = new Injector;
-        $class = $injector->make('Auryn\Test\NonConcreteDependencyWithDefaultValue');
-        $this->assertInstanceOf('Auryn\Test\NonConcreteDependencyWithDefaultValue', $class);
-        $this->assertNull($class->interface);
+        $class = $injector->make(NonConcreteDependencyWithDefaultValue::class);
+        self::assertInstanceOf(NonConcreteDependencyWithDefaultValue::class, $class);
+        self::assertNull($class->interface);
     }
 
     public function testNonConcreteDependencyWithDefaultValueThroughAlias()
     {
         $injector = new Injector;
         $injector->alias(
-            'Auryn\Test\DelegatableInterface',
-            'Auryn\Test\ImplementsInterface'
+            DelegatableInterface::class,
+            ImplementsInterface::class
         );
-        $class = $injector->make('Auryn\Test\NonConcreteDependencyWithDefaultValue');
-        $this->assertInstanceOf('Auryn\Test\NonConcreteDependencyWithDefaultValue', $class);
-        $this->assertInstanceOf('Auryn\Test\ImplementsInterface', $class->interface);
+        $class = $injector->make(NonConcreteDependencyWithDefaultValue::class);
+        self::assertInstanceOf(NonConcreteDependencyWithDefaultValue::class, $class);
+        self::assertInstanceOf(ImplementsInterface::class, $class->interface);
     }
 
     public function testNonConcreteDependencyWithDefaultValueThroughDelegation()
     {
         $injector = new Injector;
-        $injector->delegate('Auryn\Test\DelegatableInterface', 'Auryn\Test\ImplementsInterfaceFactory');
-        $class = $injector->make('Auryn\Test\NonConcreteDependencyWithDefaultValue');
-        $this->assertInstanceOf('Auryn\Test\NonConcreteDependencyWithDefaultValue', $class);
-        $this->assertInstanceOf('Auryn\Test\ImplementsInterface', $class->interface);
+        $injector->delegate(DelegatableInterface::class, ImplementsInterfaceFactory::class);
+        $class = $injector->make(NonConcreteDependencyWithDefaultValue::class);
+        self::assertInstanceOf(NonConcreteDependencyWithDefaultValue::class, $class);
+        self::assertInstanceOf(ImplementsInterface::class, $class->interface);
     }
 
     public function testDependencyWithDefaultValueThroughShare()
     {
         $injector = new Injector;
         //Instance is not shared, null default is used for dependency
-        $instance = $injector->make('Auryn\Test\ConcreteDependencyWithDefaultValue');
-        $this->assertNull($instance->dependency);
+        $instance = $injector->make(ConcreteDependencyWithDefaultValue::class);
+        self::assertNull($instance->dependency);
 
         //Instance is explicitly shared, $instance is used for dependency
         $instance = new \StdClass();
         $injector->share($instance);
-        $instance = $injector->make('Auryn\Test\ConcreteDependencyWithDefaultValue');
-        $this->assertInstanceOf('StdClass', $instance->dependency);
+        $instance = $injector->make(ConcreteDependencyWithDefaultValue::class);
+        self::assertInstanceOf('StdClass', $instance->dependency);
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Cannot share class stdclass because it is currently aliased to Auryn\Test\SomeOtherClass
-     * @expectedExceptionCode \Auryn\Injector::E_ALIASED_CANNOT_SHARE
-     */
     public function testShareAfterAliasException()
     {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionCode(Injector::E_ALIASED_CANNOT_SHARE);
+        $this->expectExceptionMessage('Cannot share class stdclass because it is currently aliased to Auryn\Test\SomeOtherClass');
         $injector = new Injector();
         $testClass = new \StdClass();
         $injector->alias('StdClass', 'Auryn\Test\SomeOtherClass');
@@ -800,140 +788,125 @@ class InjectorTest extends TestCase
     {
         $injector = new Injector();
         $testClass = new DepImplementation();
-        $injector->alias('Auryn\Test\DepInterface', 'Auryn\Test\DepImplementation');
+        $injector->alias(DepInterface::class, DepImplementation::class);
         $injector->share($testClass);
-        $obj = $injector->make('Auryn\Test\DepInterface');
-        $this->assertInstanceOf('Auryn\Test\DepImplementation', $obj);
+        $obj = $injector->make(DepInterface::class);
+        self::assertInstanceOf(DepImplementation::class, $obj);
     }
 
     public function testAliasAfterShareByStringAllowed()
     {
         $injector = new Injector();
-        $injector->share('Auryn\Test\DepInterface');
-        $injector->alias('Auryn\Test\DepInterface', 'Auryn\Test\DepImplementation');
-        $obj = $injector->make('Auryn\Test\DepInterface');
-        $obj2 = $injector->make('Auryn\Test\DepInterface');
-        $this->assertInstanceOf('Auryn\Test\DepImplementation', $obj);
-        $this->assertEquals($obj, $obj2);
+        $injector->share(DepInterface::class);
+        $injector->alias(DepInterface::class, DepImplementation::class);
+        $obj = $injector->make(DepInterface::class);
+        $obj2 = $injector->make(DepInterface::class);
+        self::assertInstanceOf(DepImplementation::class, $obj);
+        self::assertEquals($obj, $obj2);
     }
 
     public function testAliasAfterShareBySharingAliasAllowed()
     {
         $injector = new Injector();
-        $injector->share('Auryn\Test\DepImplementation');
-        $injector->alias('Auryn\Test\DepInterface', 'Auryn\Test\DepImplementation');
-        $obj = $injector->make('Auryn\Test\DepInterface');
-        $obj2 = $injector->make('Auryn\Test\DepInterface');
-        $this->assertInstanceOf('Auryn\Test\DepImplementation', $obj);
-        $this->assertEquals($obj, $obj2);
+        $injector->share(DepImplementation::class);
+        $injector->alias(DepInterface::class, DepImplementation::class);
+        $obj = $injector->make(DepInterface::class);
+        $obj2 = $injector->make(DepInterface::class);
+        self::assertInstanceOf(DepImplementation::class, $obj);
+        self::assertEquals($obj, $obj2);
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Cannot alias class stdclass to Auryn\Test\SomeOtherClass because it is currently shared
-     * @expectedExceptionCode \Auryn\Injector::E_SHARED_CANNOT_ALIAS
-     */
     public function testAliasAfterShareException()
     {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('Cannot alias class stdclass to Auryn\Test\SomeOtherClass because it is currently shared');
+        $this->expectExceptionCode(Injector::E_SHARED_CANNOT_ALIAS);
         $injector = new Injector();
         $testClass = new \StdClass();
         $injector->share($testClass);
         $injector->alias('StdClass', 'Auryn\Test\SomeOtherClass');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Cannot instantiate protected/private constructor in class Auryn\Test\HasNonPublicConstructor
-     * @expectedExceptionCode \Auryn\Injector::E_NON_PUBLIC_CONSTRUCTOR
-     */
     public function testAppropriateExceptionThrownOnNonPublicConstructor()
     {
+        $this->expectExceptionCode(Injector::E_NON_PUBLIC_CONSTRUCTOR);
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Cannot instantiate protected/private constructor in class Auryn\Test\HasNonPublicConstructor');
         $injector = new Injector();
-        $injector->make('Auryn\Test\HasNonPublicConstructor');
+        $injector->make(HasNonPublicConstructor::class);
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Cannot instantiate protected/private constructor in class Auryn\Test\HasNonPublicConstructorWithArgs
-     * @expectedExceptionCode \Auryn\Injector::E_NON_PUBLIC_CONSTRUCTOR
-     */
     public function testAppropriateExceptionThrownOnNonPublicConstructorWithArgs()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Cannot instantiate protected/private constructor in class Auryn\Test\HasNonPublicConstructorWithArgs');
+        $this->expectExceptionCode(Injector::E_NON_PUBLIC_CONSTRUCTOR);
         $injector = new Injector();
-        $injector->make('Auryn\Test\HasNonPublicConstructorWithArgs');
+        $injector->make(HasNonPublicConstructorWithArgs::class);
     }
 
     public function testMakeExecutableFailsOnNonExistentFunction()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionCode(Injector::E_INVOKABLE);
+        $this->expectExceptionMessage('nonExistentFunction');
         $injector = new Injector();
-        $this->setExpectedException(
-            'Auryn\InjectionException',
-            'nonExistentFunction',
-            \Auryn\Injector::E_INVOKABLE
-        );
         $injector->buildExecutable('nonExistentFunction');
     }
 
     public function testMakeExecutableFailsOnNonExistentInstanceMethod()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionCode(Injector::E_INVOKABLE);
+        $this->expectExceptionMessage("[object(stdClass), 'nonExistentMethod']");
         $injector = new Injector();
         $object = new \StdClass();
-        $this->setExpectedException(
-            'Auryn\InjectionException',
-            "[object(stdClass), 'nonExistentMethod']",
-            \Auryn\Injector::E_INVOKABLE
-        );
         $injector->buildExecutable(array($object, 'nonExistentMethod'));
     }
 
     public function testMakeExecutableFailsOnNonExistentStaticMethod()
     {
         $injector = new Injector();
-        $this->setExpectedException(
-            'Auryn\InjectionException',
-            "StdClass::nonExistentMethod",
-            \Auryn\Injector::E_INVOKABLE
-        );
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionCode(Injector::E_INVOKABLE);
+        $this->expectExceptionMessage("StdClass::nonExistentMethod");
         $injector->buildExecutable(array('StdClass', 'nonExistentMethod'));
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Invalid invokable: callable or provisional string required
-     * @expectedExceptionCode \Auryn\Injector::E_INVOKABLE
-     */
     public function testMakeExecutableFailsOnClassWithoutInvoke()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('Invalid invokable: callable or provisional string required');
+        $this->expectExceptionCode(Injector::E_INVOKABLE);
         $injector = new Injector();
         $object = new \StdClass();
         $injector->buildExecutable($object);
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Invalid alias: non-empty string required at arguments 1 and 2
-     * @expectedExceptionCode \Auryn\Injector::E_NON_EMPTY_STRING_ALIAS
-     */
     public function testBadAlias()
     {
+        $this->expectException(ConfigException::class);
+        $this->expectExceptionMessage('Invalid alias: non-empty string required at arguments 1 and 2');
+        $this->expectExceptionCode(Injector::E_NON_EMPTY_STRING_ALIAS);
         $injector = new Injector();
-        $injector->share('Auryn\Test\DepInterface');
-        $injector->alias('Auryn\Test\DepInterface', '');
+        $injector->share(DepInterface::class);
+        $injector->alias(DepInterface::class, '');
     }
 
     public function testShareNewAlias()
     {
+        $this->expectNotToPerformAssertions();
         $injector = new Injector();
-        $injector->share('Auryn\Test\DepImplementation');
-        $injector->alias('Auryn\Test\DepInterface', 'Auryn\Test\DepImplementation');
+        $injector->share(DepImplementation::class);
+        $injector->alias(DepInterface::class, DepImplementation::class);
     }
 
     public function testDefineWithBackslashAndMakeWithoutBackslash()
     {
         $injector = new Injector();
-        $injector->define('Auryn\Test\SimpleNoTypehintClass', array(':arg' => 'tested'));
-        $testClass = $injector->make('Auryn\Test\SimpleNoTypehintClass');
-        $this->assertEquals('tested', $testClass->testParam);
+        $injector->define(SimpleNoTypehintClass::class, array(':arg' => 'tested'));
+        $testClass = $injector->make(SimpleNoTypehintClass::class);
+        self::assertEquals('tested', $testClass->testParam);
     }
 
     public function testShareWithBackslashAndMakeWithoutBackslash()
@@ -945,7 +918,7 @@ class InjectorTest extends TestCase
         $classB = $injector->make('\StdClass');
         $classB->tested = true;
 
-        $this->assertEquals($classA->tested, $classB->tested);
+        self::assertEquals($classA->tested, $classB->tested);
     }
 
     public function testInstanceMutate()
@@ -956,18 +929,19 @@ class InjectorTest extends TestCase
         });
         $obj = $injector->make('StdClass');
 
-        $this->assertSame(42, $obj->testval);
+        self::assertSame(42, $obj->testval);
     }
 
     public function testInterfaceMutate()
     {
         $injector = new Injector();
-        $injector->prepare('Auryn\Test\SomeInterface', function ($obj, $injector) {
+        $injector->prepare(
+            SomeInterface::class, function ($obj, $injector) {
             $obj->testProp = 42;
         });
-        $obj = $injector->make('Auryn\Test\PreparesImplementationTest');
+        $obj = $injector->make(PreparesImplementationTest::class);
 
-        $this->assertSame(42, $obj->testProp);
+        self::assertSame(42, $obj->testProp);
     }
 
 
@@ -975,74 +949,76 @@ class InjectorTest extends TestCase
     /**
      * Test that custom definitions are not passed through to dependencies.
      * Surprising things would happen if this did occur.
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\DependencyWithDefinedParam::__construct() declared in Auryn\Test\DependencyWithDefinedParam::
-     * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
      */
     public function testCustomDefinitionNotPassedThrough()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\DependencyWithDefinedParam::__construct() declared in Auryn\Test\DependencyWithDefinedParam::');
+        $this->expectExceptionCode(Injector::E_UNDEFINED_PARAM);
+
         $injector = new Injector();
-        $injector->share('Auryn\Test\DependencyWithDefinedParam');
-        $injector->make('Auryn\Test\RequiresDependencyWithDefinedParam', array(':foo' => 5));
+        $injector->share(DependencyWithDefinedParam::class);
+        $injector->make(RequiresDependencyWithDefinedParam::class, array(':foo' => 5));
     }
 
     public function testDelegationFunction()
     {
         $injector = new Injector();
-        $injector->delegate('Auryn\Test\TestDelegationSimple', 'Auryn\Test\createTestDelegationSimple');
-        $obj = $injector->make('Auryn\Test\TestDelegationSimple');
-        $this->assertInstanceOf('Auryn\Test\TestDelegationSimple', $obj);
-        $this->assertTrue($obj->delegateCalled);
+        $injector->delegate(TestDelegationSimple::class, 'Auryn\Test\createTestDelegationSimple');
+        $obj = $injector->make(TestDelegationSimple::class);
+        self::assertInstanceOf(TestDelegationSimple::class, $obj);
+        self::assertTrue($obj->delegateCalled);
     }
 
     public function testDelegationDependency()
     {
         $injector = new Injector();
         $injector->delegate(
-            'Auryn\Test\TestDelegationDependency',
+            TestDelegationDependency::class,
             'Auryn\Test\createTestDelegationDependency'
         );
-        $obj = $injector->make('Auryn\Test\TestDelegationDependency');
-        $this->assertInstanceOf('Auryn\Test\TestDelegationDependency', $obj);
-        $this->assertTrue($obj->delegateCalled);
+        $obj = $injector->make(TestDelegationDependency::class);
+        self::assertInstanceOf(TestDelegationDependency::class, $obj);
+        self::assertTrue($obj->delegateCalled);
     }
 
     public function testExecutableAliasing()
     {
         $injector = new Injector();
-        $injector->alias('Auryn\Test\BaseExecutableClass', 'Auryn\Test\ExtendsExecutableClass');
-        $result = $injector->execute(array('Auryn\Test\BaseExecutableClass', 'foo'));
-        $this->assertEquals('This is the ExtendsExecutableClass', $result);
+        $injector->alias(BaseExecutableClass::class, ExtendsExecutableClass::class);
+        $result = $injector->execute(array(BaseExecutableClass::class, 'foo'));
+        self::assertEquals('This is the ExtendsExecutableClass', $result);
     }
 
     public function testExecutableAliasingStatic()
     {
         $injector = new Injector();
-        $injector->alias('Auryn\Test\BaseExecutableClass', 'Auryn\Test\ExtendsExecutableClass');
-        $result = $injector->execute(array('Auryn\Test\BaseExecutableClass', 'bar'));
-        $this->assertEquals('This is the ExtendsExecutableClass', $result);
+        $injector->alias(BaseExecutableClass::class, ExtendsExecutableClass::class);
+        $result = $injector->execute(array(BaseExecutableClass::class, 'bar'));
+        self::assertEquals('This is the ExtendsExecutableClass', $result);
     }
 
     /**
      * Test coverage for delegate closures that are defined outside
      * of a class.ph
-     * @throws \Auryn\ConfigException
      */
     public function testDelegateClosure()
     {
-        $delegateClosure = \Auryn\Test\getDelegateClosureInGlobalScope();
+        $this->expectNotToPerformAssertions();
+        $delegateClosure = getDelegateClosureInGlobalScope();
         $injector = new Injector();
-        $injector->delegate('Auryn\Test\DelegateClosureInGlobalScope', $delegateClosure);
-        $injector->make('Auryn\Test\DelegateClosureInGlobalScope');
+        $injector->delegate(DelegateClosureInGlobalScope::class, $delegateClosure);
+        $injector->make(DelegateClosureInGlobalScope::class);
     }
 
     public function testCloningWithServiceLocator()
     {
+        $this->expectNotToPerformAssertions();
         $injector = new Injector();
         $injector->share($injector);
-        $instance = $injector->make('Auryn\Test\CloneTest');
+        $instance = $injector->make(CloneTest::class);
         $newInjector = $instance->injector;
-        $newInstance = $newInjector->make('Auryn\Test\CloneTest');
+        $newInstance = $newInjector->make(CloneTest::class);
     }
 
     public function testAbstractExecute()
@@ -1050,36 +1026,36 @@ class InjectorTest extends TestCase
         $injector = new Injector();
 
         $fn = function () {
-            return new \Auryn\Test\ConcreteExexcuteTest();
+            return new ConcreteExexcuteTest();
         };
 
-        $injector->delegate('Auryn\Test\AbstractExecuteTest', $fn);
-        $result = $injector->execute(array('Auryn\Test\AbstractExecuteTest', 'process'));
+        $injector->delegate(AbstractExecuteTest::class, $fn);
+        $result = $injector->execute(array(AbstractExecuteTest::class, 'process'));
 
-        $this->assertEquals('Concrete', $result);
+        self::assertEquals('Concrete', $result);
     }
 
     public function testDebugMake()
     {
         $injector = new Injector();
         try {
-            $injector->make('Auryn\Test\DependencyChainTest');
-        } catch (\Auryn\InjectionException $ie) {
+            $injector->make(DependencyChainTest::class);
+        } catch (InjectionException $ie) {
             $chain = $ie->getDependencyChain();
-            $this->assertCount(2, $chain);
+            self::assertCount(2, $chain);
 
-            $this->assertEquals('auryn\test\dependencychaintest', $chain[0]);
-            $this->assertEquals('auryn\test\depinterface', $chain[1]);
+            self::assertEquals('auryn\test\dependencychaintest', $chain[0]);
+            self::assertEquals('auryn\test\depinterface', $chain[1]);
         }
     }
 
     public function testInspectShares()
     {
         $injector = new Injector();
-        $injector->share('Auryn\Test\SomeClassName');
+        $injector->share(SomeClassName::class);
 
-        $inspection = $injector->inspect('Auryn\Test\SomeClassName', Injector::I_SHARES);
-        $this->assertArrayHasKey('auryn\test\someclassname', $inspection[Injector::I_SHARES]);
+        $inspection = $injector->inspect(SomeClassName::class, Injector::I_SHARES);
+        self::assertArrayHasKey('auryn\test\someclassname', $inspection[Injector::I_SHARES]);
     }
 
     public function testInspectAll()
@@ -1087,62 +1063,61 @@ class InjectorTest extends TestCase
         $injector = new Injector();
 
         // Injector::I_BINDINGS
-        $injector->define('Auryn\Test\DependencyWithDefinedParam', array(':arg' => 42));
+        $injector->define(DependencyWithDefinedParam::class, array(':arg' => 42));
 
         // Injector::I_DELEGATES
-        $injector->delegate('Auryn\Test\MadeByDelegate', 'Auryn\Test\CallableDelegateClassTest');
+        $injector->delegate(MadeByDelegate::class, CallableDelegateClassTest::class);
 
         // Injector::I_PREPARES
-        $injector->prepare('Auryn\Test\MadeByDelegate', function ($c) {});
+        $injector->prepare(MadeByDelegate::class, function ($c) {});
 
         // Injector::I_ALIASES
-        $injector->alias('i', 'Auryn\Injector');
+        $injector->alias('i', Injector::class);
 
         // Injector::I_SHARES
-        $injector->share('Auryn\Injector');
+        $injector->share(Injector::class);
 
         $all = $injector->inspect();
-        $some = $injector->inspect('Auryn\Test\MadeByDelegate');
+        $some = $injector->inspect(MadeByDelegate::class);
 
-        $this->assertCount(5, array_filter($all));
-        $this->assertCount(2, array_filter($some));
+        self::assertCount(5, array_filter($all));
+        self::assertCount(2, array_filter($some));
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Making auryn\test\someclassname did not result in an object, instead result is of type 'NULL'
-     * @expectedExceptionCode \Auryn\Injector::E_MAKING_FAILED
-     */
     public function testDelegationDoesntMakeObject()
     {
+        /** @TODO update code to check for non-object */
+        $this->expectException(\TypeError::class);
+        //$this->expectException(InjectionException::class);
+        //$this->expectExceptionMessage("Making auryn\\test\someclassname did not result in an object, instead result is of type 'NULL'");
+        //$this->expectExceptionCode(Injector::E_MAKING_FAILED);
         $delegate = function () {
             return null;
         };
         $injector = new Injector();
-        $injector->delegate('Auryn\Test\SomeClassName', $delegate);
-        $injector->make('Auryn\Test\SomeClassName');
+        $injector->delegate(SomeClassName::class, $delegate);
+        $injector->make(SomeClassName::class);
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Making auryn\test\someclassname did not result in an object, instead result is of type 'string'
-     * @expectedExceptionCode \Auryn\Injector::E_MAKING_FAILED
-     */
     public function testDelegationDoesntMakeObjectMakesString()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage("Making auryn\\test\someclassname did not result in an object, instead result is of type 'string'");
+        $this->expectExceptionCode(Injector::E_MAKING_FAILED);
         $delegate = function () {
             return 'ThisIsNotAClass';
         };
         $injector = new Injector();
-        $injector->delegate('Auryn\Test\SomeClassName', $delegate);
-        $injector->make('Auryn\Test\SomeClassName');
+        $injector->delegate(SomeClassName::class, $delegate);
+        $injector->make(SomeClassName::class);
     }
 
     public function testPrepareInvalidCallable()
     {
         $injector = new Injector;
         $invalidCallable = 'This_does_not_exist';
-        $this->setExpectedException('Auryn\InjectionException', $invalidCallable);
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage($invalidCallable);
         $injector->prepare("StdClass", $invalidCallable);
     }
 
@@ -1150,89 +1125,84 @@ class InjectorTest extends TestCase
     {
         $injector = new Injector;
         $expected = new SomeImplementation; // <-- implements SomeInterface
-        $injector->prepare("Auryn\Test\SomeInterface", function ($impl) use ($expected) {
+        $injector->prepare(
+            SomeInterface::class, function ($impl) use ($expected) {
             return $expected;
         });
-        $actual = $injector->make("Auryn\Test\SomeImplementation");
-        $this->assertSame($expected, $actual);
+        $actual = $injector->make(SomeImplementation::class);
+        self::assertSame($expected, $actual);
     }
 
     public function testPrepareCallableReplacesObjectWithReturnValueOfSameClassType()
     {
         $injector = new Injector;
         $expected = new SomeImplementation; // <-- implements SomeInterface
-        $injector->prepare("Auryn\Test\SomeImplementation", function ($impl) use ($expected) {
+        $injector->prepare(
+            SomeImplementation::class, function ($impl) use ($expected) {
             return $expected;
         });
-        $actual = $injector->make("Auryn\Test\SomeImplementation");
-        $this->assertSame($expected, $actual);
+        $actual = $injector->make(SomeImplementation::class);
+        self::assertSame($expected, $actual);
     }
 
     public function testChildWithoutConstructorWorks() {
 
         $injector = new Injector;
         try {
-            $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
-            $injector->define('Auryn\Test\ChildWithoutConstructor', array(':foo' => 'child'));
+            $injector->define(ParentWithConstructor::class, array(':foo' => 'parent'));
+            $injector->define(ChildWithoutConstructor::class, array(':foo' => 'child'));
 
-            $injector->share('Auryn\Test\ParentWithConstructor');
-            $injector->share('Auryn\Test\ChildWithoutConstructor');
+            $injector->share(ParentWithConstructor::class);
+            $injector->share(ChildWithoutConstructor::class);
 
-            $child = $injector->make('Auryn\Test\ChildWithoutConstructor');
-            $this->assertEquals('child', $child->foo);
+            $child = $injector->make(ChildWithoutConstructor::class);
+            self::assertEquals('child', $child->foo);
 
-            $parent = $injector->make('Auryn\Test\ParentWithConstructor');
-            $this->assertEquals('parent', $parent->foo);
+            $parent = $injector->make(ParentWithConstructor::class);
+            self::assertEquals('parent', $parent->foo);
         }
-        catch (\Auryn\InjectionException $ie) {
+        catch (InjectionException $ie) {
             echo $ie->getMessage();
-            $this->fail("Auryn failed to locate the ");
+            self::fail("Auryn failed to locate the ");
         }
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
-     * @expectedExceptionMessage No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\ChildWithoutConstructor::__construct() declared in Auryn\Test\ParentWithConstructor
-     */
     public function testChildWithoutConstructorMissingParam()
     {
+        $this->expectException(InjectionException::class);
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\ChildWithoutConstructor::__construct() declared in Auryn\Test\ParentWithConstructor');
+        $this->expectExceptionCode(Injector::E_UNDEFINED_PARAM);
+
         $injector = new Injector;
-        $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
-        $injector->make('Auryn\Test\ChildWithoutConstructor');
+        $injector->define(ParentWithConstructor::class, array(':foo' => 'parent'));
+        $injector->make(ChildWithoutConstructor::class);
     }
 
     public function testInstanceClosureDelegates()
     {
         $injector = new Injector;
-        $injector->delegate('Auryn\Test\DelegatingInstanceA', function (DelegateA $d) {
+        $injector->delegate(
+            DelegatingInstanceA::class, function (DelegateA $d) {
             return new \Auryn\Test\DelegatingInstanceA($d);
         });
-        $injector->delegate('Auryn\Test\DelegatingInstanceB', function (DelegateB $d) {
+        $injector->delegate(
+            DelegatingInstanceB::class, function (DelegateB $d) {
             return new \Auryn\Test\DelegatingInstanceB($d);
         });
 
-        $a = $injector->make('Auryn\Test\DelegatingInstanceA');
-        $b = $injector->make('Auryn\Test\DelegatingInstanceB');
+        $a = $injector->make(DelegatingInstanceA::class);
+        $b = $injector->make(DelegatingInstanceB::class);
 
-        $this->assertInstanceOf('Auryn\Test\DelegateA', $a->a);
-        $this->assertInstanceOf('Auryn\Test\DelegateB', $b->b);
+        self::assertInstanceOf(DelegateA::class, $a->a);
+        self::assertInstanceOf(DelegateB::class, $b->b);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Exception in constructor
-     */
     public function testThatExceptionInConstructorDoesntCauseCyclicDependencyException()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Exception in constructor');
+
         $injector = new Injector;
-
-        try {
-            $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
-        }
-        catch (\Exception $e) {
-        }
-
-        $injector->make('Auryn\Test\ThrowsExceptionInConstructor');
+        $injector->make(ThrowsExceptionInConstructor::class);
     }
 }

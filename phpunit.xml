@@ -1,43 +1,26 @@
-<phpunit backupGlobals="false"
-         backupStaticAttributes="false"
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpunit bootstrap="vendor/autoload.php"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="./vendor/phpunit/phpunit/phpunit.xsd"
          colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         processIsolation="false"
-         stopOnFailure="false"
-         syntaxCheck="false"
-         bootstrap="vendor/autoload.php"
-        >
+>
     <testsuites>
         <testsuite name="Unit-Tests">
             <directory>./test</directory>
         </testsuite>
     </testsuites>
-    <filter>
-        <whitelist addUncoveredFilesFromWhitelist="true">
-            <directory>./lib</directory>
-        </whitelist>
-    </filter>
-    
-    <logging>
-        <log
-            type="coverage-text"
-            target="php://stdout"
-            lowUpperBound="35"
-            highLowerBound="75"
-        />
-        <!-- uncomment below to generate HTML code coverage reports in ./test/coverage -->
-        <!--
-        <log
-            type="coverage-html"
-            target="./test/coverage"
-            charset="UTF-8"
-            yui="true"
-            lowUpperBound="35"
-            highLowerBound="70"
-            showUncoveredFiles="true"
-        />
-        -->
-    </logging>
+<!--    <filter>-->
+<!--        <whitelist addUncoveredFilesFromWhitelist="true">-->
+<!--            <directory>./lib</directory>-->
+<!--        </whitelist>-->
+<!--    </filter>-->
+
+    <coverage>
+        <include>
+            <directory>lib</directory>
+        </include>
+        <report>
+            <text outputFile="php://stdout" showUncoveredFiles="true"/>
+        </report>
+    </coverage>
 </phpunit>
