@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ php8 ]
   pull_request:
-    branches: [ master ]
+    branches: [ php8 ]
 
 jobs:
   build-test:
