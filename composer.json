@@ -29,7 +29,6 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",
-        "fabpot/php-cs-fixer": "^2.16",
         "athletic/athletic": "~0.1"
     },
     "autoload": {
