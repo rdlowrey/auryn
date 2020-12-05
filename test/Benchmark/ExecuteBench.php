@@ -2,25 +2,23 @@
 
 namespace Auryn\Test\Benchmark;
 
-use Athletic\AthleticEvent;
 use Auryn\Injector;
 
-class ExecuteBenchmark extends AthleticEvent
+class ExecuteBench
 {
     private $injector;
     private $noop;
 
-    public function classSetUp()
+    public function __construct()
     {
         $this->injector = new Injector();
         $this->noop = new Noop();
     }
 
     /**
-     * @baseline
-     * @iterations 10000
+     * @Revs(10000)
      */
-    public function native_invoke_closure()
+    public function benchnative_invoke_closure()
     {
         call_user_func(function () {
             // call-target, intenionally left empty
@@ -28,17 +26,17 @@ class ExecuteBenchmark extends AthleticEvent
     }
 
     /**
-     * @iterations 10000
+     * @Revs(10000)
      */
-    public function native_invoke_method()
+    public function benchnative_invoke_method()
     {
         call_user_func(array($this->noop, 'noop'));
     }
 
     /**
-     * @iterations 10000
+     * @Revs(10000)
      */
-    public function invoke_closure()
+    public function benchinvoke_closure()
     {
         $this->injector->execute(function () {
             // call-target, intenionally left empty
@@ -46,18 +44,34 @@ class ExecuteBenchmark extends AthleticEvent
     }
 
     /**
-     * @iterations 10000
+     * @Revs(10000)
      */
-    public function invoke_method()
+    public function benchinvoke_method()
     {
         $this->injector->execute(array($this->noop, 'noop'));
     }
 
     /**
-     * @iterations 10000
+     * @Revs(10000)
      */
-    public function invoke_with_named_parameters()
+    public function benchinvoke_with_named_parameters()
     {
         $this->injector->execute(array($this->noop, 'namedNoop'), array(':name' => 'foo'));
+    }
+
+    /**
+     * @Revs(10000)
+     */
+    public function bench_make_noop()
+    {
+        $this->injector->make(Noop::class);
+    }
+
+    /**
+     * @Revs(10000)
+     */
+    public function bench_make_two_dependency_object()
+    {
+        $this->injector->make(TwoDeps::class);
     }
 }

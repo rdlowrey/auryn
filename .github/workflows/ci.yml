@@ -34,3 +34,6 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/phpunit
+
+      - name: Execute benchmarks
+        run: vendor/bin/phpbench run
