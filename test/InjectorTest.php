@@ -5,6 +5,7 @@ namespace Auryn\Test;
 use Auryn\ConfigException;
 use Auryn\InjectionException;
 use Auryn\Injector;
+use Auryn\InjectorException;
 use PHPUnit\Framework\TestCase;
 
 class InjectorTest extends TestCase
@@ -189,7 +190,7 @@ class InjectorTest extends TestCase
 
     public function testMakeInstanceThrowsExceptionOnUninstantiableTypehintWithoutDefinition()
     {
-        $this->expectException(\Auryn\InjectorException::class);
+        $this->expectException(InjectorException::class);
         $this->expectExceptionMessage('Injection definition required for interface Auryn\Test\DepInterface');
         $injector = new Injector;
         $injector->make(RequiresInterface::class);
@@ -241,11 +242,6 @@ class InjectorTest extends TestCase
         self::assertNull($obj->null);
     }
 
-    /**
-     * @TODO
-     * @expectedException \Exception
-     * @expectedExceptionMessage
-     */
     public function testMakeInstanceThrowsExceptionWhenDelegateDoes()
     {
         $this->expectException(\Exception::class);
@@ -399,7 +395,7 @@ class InjectorTest extends TestCase
         try {
             $injector->delegate(DelegatableInterface::class, 'FunctionWhichDoesNotExist');
             self::fail("Delegation was supposed to fail.");
-        } catch (\Auryn\InjectorException $ie) {
+        } catch (InjectorException $ie) {
             self::assertStringContainsString('FunctionWhichDoesNotExist', $ie->getMessage());
             self::assertEquals(Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
         }
@@ -411,7 +407,7 @@ class InjectorTest extends TestCase
         try {
             $injector->delegate(DelegatableInterface::class, array('stdClass', 'methodWhichDoesNotExist'));
             self::fail("Delegation was supposed to fail.");
-        } catch (\Auryn\InjectorException $ie) {
+        } catch (InjectorException $ie) {
             self::assertStringContainsString('stdClass', $ie->getMessage());
             self::assertStringContainsString('methodWhichDoesNotExist', $ie->getMessage());
             self::assertEquals(Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
@@ -1187,11 +1183,11 @@ class InjectorTest extends TestCase
         $injector = new Injector;
         $injector->delegate(
             DelegatingInstanceA::class, function (DelegateA $d) {
-            return new \Auryn\Test\DelegatingInstanceA($d);
+            return new DelegatingInstanceA($d);
         });
         $injector->delegate(
             DelegatingInstanceB::class, function (DelegateB $d) {
-            return new \Auryn\Test\DelegatingInstanceB($d);
+            return new DelegatingInstanceB($d);
         });
 
         $a = $injector->make(DelegatingInstanceA::class);
