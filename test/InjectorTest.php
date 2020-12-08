@@ -596,7 +596,7 @@ class InjectorTest extends TestCase
     public function testMissingAlias()
     {
         $this->expectException(InjectionException::class);
-        $this->expectExceptionMessageMatches('/Could not make Auryn\\\\Test\\\\TypoInTypehint.*does not exist/');
+        $this->expectExceptionMessageMatches('/Could not make Auryn\\Test\\TypoInTypehint.*does not exist/');
         $injector = new Injector;
         $testClass = $injector->make(TestMissingDependency::class);
     }
