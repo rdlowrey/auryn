@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Auryn\Test\Benchmark;
-
 
 class TwoDeps
 {
