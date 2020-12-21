@@ -9,11 +9,6 @@
             <directory>./test</directory>
         </testsuite>
     </testsuites>
-<!--    <filter>-->
-<!--        <whitelist addUncoveredFilesFromWhitelist="true">-->
-<!--            <directory>./lib</directory>-->
-<!--        </whitelist>-->
-<!--    </filter>-->
 
     <coverage>
         <include>
