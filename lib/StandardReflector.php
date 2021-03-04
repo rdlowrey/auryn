@@ -27,15 +27,21 @@ class StandardReflector implements Reflector
     {
         // php 8 deprecates getClass method
         if (PHP_VERSION_ID >= 80000) {
-            $reflectionClass = $param->getType() ? (string) $param->getType() : null;
+            $type = $param->getType();
+            if ($type instanceof \ReflectionNamedType && $type->isBuiltin()) {
+                return null;
+            }
+
+            return $type ? (string) $type : null;
         } else {
             /** @var ?\ReflectionClass $reflectionClass */
             $reflectionClass = $param->getClass();
             if ($reflectionClass) {
-                $reflectionClass = $reflectionClass->getName();
+                return $reflectionClass->getName();
             }
+
+            return null;
         }
-        return $reflectionClass ?? null;
     }
 
     public function getFunction($functionName)
