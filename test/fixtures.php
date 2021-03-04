@@ -426,6 +426,11 @@ class ExecuteClassInvokable
     }
 }
 
+function hasArrayDependency(array $parameter)
+{
+    return 42;
+}
+
 function testExecuteFunction()
 {
     return 42;

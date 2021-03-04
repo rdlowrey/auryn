@@ -7,6 +7,13 @@ use PHPUnit\Framework\TestCase;
 
 class InjectorTest extends TestCase
 {
+    public function testArrayTypehintDoesNotEvaluatesAsClass()
+    {
+        $injector = new Injector;
+        $injector->defineParam('parameter', []);
+        $injector->execute('Auryn\Test\hasArrayDependency');
+    }
+
     public function testMakeInstanceInjectsSimpleConcreteDependency()
     {
         $injector = new Injector;
