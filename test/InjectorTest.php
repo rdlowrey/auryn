@@ -5,6 +5,10 @@ namespace Auryn\test;
 use Auryn\Injector;
 use PHPUnit\Framework\TestCase;
 
+require_once __DIR__."/fixtures.php";
+require_once __DIR__."/fixtures_5_6.php";
+require_once __DIR__."/fixtures_8_0.php";
+
 class InjectorTest extends TestCase
 {
     public function testMakeInstanceInjectsSimpleConcreteDependency()
@@ -13,6 +17,13 @@ class InjectorTest extends TestCase
         $this->assertEquals(new TestNeedsDep(new TestDependency),
             $injector->make('Auryn\Test\TestNeedsDep')
         );
+    }
+
+    public function testArrayTypehintDoesNotEvaluatesAsClass()
+    {
+      $injector = new Injector;
+      $injector->defineParam('parameter', []);
+      $injector->execute('Auryn\Test\hasArrayDependency');
     }
 
     public function testMakeInstanceReturnsNewInstanceIfClassHasNoConstructor()
@@ -28,24 +39,20 @@ class InjectorTest extends TestCase
         $this->assertEquals(new DepImplementation, $injector->make('Auryn\Test\DepInterface'));
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Injection definition required for interface Auryn\Test\DepInterface
-     * @expectedExceptionCode \Auryn\Injector::E_NEEDS_DEFINITION
-     */
     public function testMakeInstanceThrowsExceptionOnInterfaceWithoutAlias()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_NEEDS_DEFINITION);
+        $this->expectExceptionMessage("Injection definition required for interface Auryn\Test\DepInterface");
         $injector = new Injector;
         $injector->make('Auryn\Test\DepInterface');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Injection definition required for interface Auryn\Test\DepInterface
-     * @expectedExceptionCode \Auryn\Injector::E_NEEDS_DEFINITION
-     */
     public function testMakeInstanceThrowsExceptionOnNonConcreteCtorParamWithoutImplementation()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_NEEDS_DEFINITION);
+        $this->expectExceptionMessage("Injection definition required for interface Auryn\Test\DepInterface");
         $injector = new Injector;
         $injector->make('Auryn\Test\RequiresInterface');
     }
@@ -80,12 +87,10 @@ class InjectorTest extends TestCase
         $this->assertEquals('something else', $injected2->testDep->testProp);
     }
 
-    /**
-     * @expectedException \Auryn\InjectorException
-     * @expectedExceptionMessage Could not make ClassThatDoesntExist: Class ClassThatDoesntExist does not exist
-     */
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
+        $this->expectExceptionMessage('Could not make ClassThatDoesntExist: Class "ClassThatDoesntExist" does not exist');
+        $this->expectException(\Auryn\InjectorException::class);
         $injector = new Injector;
         $injector->make('ClassThatDoesntExist');
     }
@@ -136,8 +141,6 @@ class InjectorTest extends TestCase
             $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
         }
 
-        require_once __DIR__ . "/fixtures_5_6.php";
-
         $injector = new Injector;
         $obj = $injector->make('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass',
             array('val1'=>'Auryn\Test\TestDependency')
@@ -155,35 +158,29 @@ class InjectorTest extends TestCase
             $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
         }
 
-        require_once __DIR__ . "/fixtures_5_6.php";
-
         $injector = new Injector;
         $obj = $injector->make('Auryn\Test\TypehintNoDefaultConstructorVariadicClass',
             array('arg'=>'Auryn\Test\TestDependency')
         );
         $this->assertInstanceOf('Auryn\Test\TypehintNoDefaultConstructorVariadicClass', $obj);
-        $this->assertInternalType("array", $obj->testParam);
+        $this->assertIsArray($obj->testParam);
         $this->assertInstanceOf('Auryn\Test\TestDependency', $obj->testParam[0]);
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::
-     * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
-     */
     public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefault()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_UNDEFINED_PARAM);
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::');
         $injector = new Injector;
         $injector->make('Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::
-     * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
-     */
     public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefaultThroughAliasedTypehint()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_UNDEFINED_PARAM);
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::');
         $injector = new Injector;
         $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault');
         $injector->make('Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefaultDependent');
@@ -191,11 +188,11 @@ class InjectorTest extends TestCase
 
     /**
      * @TODO
-     * @expectedException \Auryn\InjectorException
-     * @expectedExceptionMessage Injection definition required for interface Auryn\Test\DepInterface
      */
     public function testMakeInstanceThrowsExceptionOnUninstantiableTypehintWithoutDefinition()
     {
+        $this->expectException(\Auryn\InjectorException::class);
+        $this->expectExceptionMessage("Injection definition required for interface Auryn\Test\DepInterface");
         $injector = new Injector;
         $injector->make('Auryn\Test\RequiresInterface');
     }
@@ -232,26 +229,27 @@ class InjectorTest extends TestCase
         ));
 
         $obj = $injector->make('Auryn\Test\InjectorTestRawCtorParams');
-        $this->assertInternalType('string', $obj->string);
-        $this->assertInstanceOf('StdClass', $obj->obj);
-        $this->assertInternalType('int', $obj->int);
-        $this->assertInternalType('array', $obj->array);
-        $this->assertInternalType('float', $obj->float);
-        $this->assertInternalType('bool', $obj->bool);
+        $this->assertIsString($obj->string);
+        $this->assertInstanceOf(\StdClass::class, $obj->obj);
+        $this->assertIsInt($obj->int);
+        $this->assertIsArray($obj->array);
+        $this->assertIsFloat($obj->float);
+        $this->assertIsBool($obj->bool);
         $this->assertNull($obj->null);
     }
 
     /**
      * @TODO
-     * @expectedException \Exception
-     * @expectedExceptionMessage
      */
     public function testMakeInstanceThrowsExceptionWhenDelegateDoes()
     {
+        $this->expectExceptionMessage("");
+        $this->expectException(\Exception::class);
+
         $injector= new Injector;
 
-        $callable = $this->getMock(
-            'CallableMock',
+        $callable = $this->createMock(
+          \Auryn\Test\CallableMock::class,
             array('__invoke')
         );
 
@@ -274,8 +272,8 @@ class InjectorTest extends TestCase
     {
         $injector= new Injector;
 
-        $callable = $this->getMock(
-            'CallableMock',
+        $callable = $this->createMock(
+          \Auryn\Test\CallableMock::class,
             array('__invoke')
         );
         $callable->expects($this->once())
@@ -297,32 +295,26 @@ class InjectorTest extends TestCase
         $this->assertEquals(42, $obj->test);
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2 but received 'StringDelegateWithNoInvokeMethod'
-     */
     public function testMakeInstanceThrowsExceptionIfStringDelegateClassHasNoInvokeMethod()
     {
+        $this->expectException(\Auryn\ConfigException::class);
+        $this->expectExceptionMessage("Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2 but received 'StringDelegateWithNoInvokeMethod'");
         $injector= new Injector;
         $injector->delegate('StdClass', 'StringDelegateWithNoInvokeMethod');
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2 but received 'SomeClassThatDefinitelyDoesNotExistForReal'
-     */
     public function testMakeInstanceThrowsExceptionIfStringDelegateClassInstantiationFails()
     {
+        $this->expectException(\Auryn\ConfigException::class);
+        $this->expectExceptionMessage("Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2 but received 'SomeClassThatDefinitelyDoesNotExistForReal'");
         $injector= new Injector;
         $injector->delegate('StdClass', 'SomeClassThatDefinitelyDoesNotExistForReal');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Injection definition required for interface Auryn\Test\DepInterface
-     */
     public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithNoDefinition()
     {
+        $this->expectExceptionMessage("Injection definition required for interface Auryn\Test\DepInterface");
+        $this->expectException(\Auryn\InjectionException::class);
         $injector = new Injector;
         $injector->make('Auryn\Test\RequiresInterface');
     }
@@ -352,12 +344,10 @@ class InjectorTest extends TestCase
         $this->assertInstanceOf('Auryn\Injector', $injector->share('SomeClass'));
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Auryn\Injector::share() requires a string class name or object instance at Argument 1; integer specified
-     */
     public function testShareThrowsExceptionOnInvalidArgument()
     {
+        $this->expectException(\Auryn\ConfigException::class);
+        $this->expectExceptionMessage("Auryn\Injector::share() requires a string class name or object instance at Argument 1; integer specified");
         $injector = new Injector;
         $injector->share(42);
     }
@@ -379,11 +369,11 @@ class InjectorTest extends TestCase
 
     /**
      * @dataProvider provideInvalidDelegates
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2
      */
     public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate)
     {
+        $this->expectException(\Auryn\ConfigException::class);
+        $this->expectExceptionMessage("Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2");
         $injector = new Injector;
         $injector->delegate('Auryn\Test\TestDependency', $badDelegate);
     }
@@ -409,7 +399,7 @@ class InjectorTest extends TestCase
             $injector->delegate('Auryn\Test\DelegatableInterface', 'FunctionWhichDoesNotExist');
             $this->fail("Delegation was supposed to fail.");
         } catch (\Auryn\InjectorException $ie) {
-            $this->assertContains('FunctionWhichDoesNotExist', $ie->getMessage());
+            $this->assertStringContainsString('FunctionWhichDoesNotExist', $ie->getMessage());
             $this->assertEquals(\Auryn\Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
         }
     }
@@ -421,8 +411,8 @@ class InjectorTest extends TestCase
             $injector->delegate('Auryn\Test\DelegatableInterface', array('stdClass', 'methodWhichDoesNotExist'));
             $this->fail("Delegation was supposed to fail.");
         } catch (\Auryn\InjectorException $ie) {
-            $this->assertContains('stdClass', $ie->getMessage());
-            $this->assertContains('methodWhichDoesNotExist', $ie->getMessage());
+            $this->assertStringContainsString('stdClass', $ie->getMessage());
+            $this->assertStringContainsString('methodWhichDoesNotExist', $ie->getMessage());
             $this->assertEquals(\Auryn\Injector::E_DELEGATE_ARGUMENT, $ie->getCode());
         }
     }
@@ -605,12 +595,10 @@ class InjectorTest extends TestCase
         $requiresDelegatedInterface->foo();
     }
 
-    /**
-     * @expectedException \Auryn\InjectorException
-     * @expectedExceptionMessage Could not make Auryn\Test\TestMissingDependency: Class Auryn\Test\TypoInTypehint does not exist
-     */
     public function testMissingAlias()
     {
+        $this->expectException(\Auryn\InjectorException::class);
+        $this->expectExceptionMessage('Could not make Auryn\Test\TypoInTypehint: Class "Auryn\Test\TypoInTypehint" does not exist');
         $injector = new Injector;
         $testClass = $injector->make('Auryn\Test\TestMissingDependency');
     }
@@ -730,12 +718,12 @@ class InjectorTest extends TestCase
     }
 
      /**
-     * @dataProvider provideCyclicDependencies
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Injector::E_CYCLIC_DEPENDENCY
-     */
+      * @dataProvider provideCyclicDependencies
+      */
     public function testCyclicDependencies($class)
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_CYCLIC_DEPENDENCY);
         $injector = new Injector;
         $injector->make($class);
     }
@@ -783,13 +771,11 @@ class InjectorTest extends TestCase
         $this->assertInstanceOf('StdClass', $instance->dependency);
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Cannot share class stdclass because it is currently aliased to Auryn\Test\SomeOtherClass
-     * @expectedExceptionCode \Auryn\Injector::E_ALIASED_CANNOT_SHARE
-     */
     public function testShareAfterAliasException()
     {
+        $this->expectException(\Auryn\ConfigException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_ALIASED_CANNOT_SHARE);
+        $this->expectExceptionMessage("Cannot share class stdclass because it is currently aliased to Auryn\Test\SomeOtherClass");
         $injector = new Injector();
         $testClass = new \StdClass();
         $injector->alias('StdClass', 'Auryn\Test\SomeOtherClass');
@@ -828,94 +814,78 @@ class InjectorTest extends TestCase
         $this->assertEquals($obj, $obj2);
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Cannot alias class stdclass to Auryn\Test\SomeOtherClass because it is currently shared
-     * @expectedExceptionCode \Auryn\Injector::E_SHARED_CANNOT_ALIAS
-     */
     public function testAliasAfterShareException()
     {
+        $this->expectException(\Auryn\ConfigException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_SHARED_CANNOT_ALIAS);
+        $this->expectExceptionMessage("Cannot alias class stdclass to Auryn\Test\SomeOtherClass because it is currently shared");
         $injector = new Injector();
         $testClass = new \StdClass();
         $injector->share($testClass);
         $injector->alias('StdClass', 'Auryn\Test\SomeOtherClass');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Cannot instantiate protected/private constructor in class Auryn\Test\HasNonPublicConstructor
-     * @expectedExceptionCode \Auryn\Injector::E_NON_PUBLIC_CONSTRUCTOR
-     */
     public function testAppropriateExceptionThrownOnNonPublicConstructor()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_NON_PUBLIC_CONSTRUCTOR);
+        $this->expectExceptionMessage("Cannot instantiate protected/private constructor in class Auryn\Test\HasNonPublicConstructor");
         $injector = new Injector();
         $injector->make('Auryn\Test\HasNonPublicConstructor');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Cannot instantiate protected/private constructor in class Auryn\Test\HasNonPublicConstructorWithArgs
-     * @expectedExceptionCode \Auryn\Injector::E_NON_PUBLIC_CONSTRUCTOR
-     */
     public function testAppropriateExceptionThrownOnNonPublicConstructorWithArgs()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_NON_PUBLIC_CONSTRUCTOR);
+        $this->expectExceptionMessage("Cannot instantiate protected/private constructor in class Auryn\Test\HasNonPublicConstructorWithArgs");
         $injector = new Injector();
         $injector->make('Auryn\Test\HasNonPublicConstructorWithArgs');
     }
 
     public function testMakeExecutableFailsOnNonExistentFunction()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_INVOKABLE);
+        $this->expectExceptionMessage('nonExistentFunction');
         $injector = new Injector();
-        $this->setExpectedException(
-            'Auryn\InjectionException',
-            'nonExistentFunction',
-            \Auryn\Injector::E_INVOKABLE
-        );
         $injector->buildExecutable('nonExistentFunction');
     }
 
     public function testMakeExecutableFailsOnNonExistentInstanceMethod()
     {
-        $injector = new Injector();
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_INVOKABLE);
+        $this->expectExceptionMessage('nonExistentMethod');
         $object = new \StdClass();
-        $this->setExpectedException(
-            'Auryn\InjectionException',
-            "[object(stdClass), 'nonExistentMethod']",
-            \Auryn\Injector::E_INVOKABLE
-        );
+        $injector = new Injector();
         $injector->buildExecutable(array($object, 'nonExistentMethod'));
     }
 
     public function testMakeExecutableFailsOnNonExistentStaticMethod()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_INVOKABLE);
+        $this->expectExceptionMessage('nonExistentMethod');
         $injector = new Injector();
-        $this->setExpectedException(
-            'Auryn\InjectionException',
-            "StdClass::nonExistentMethod",
-            \Auryn\Injector::E_INVOKABLE
-        );
         $injector->buildExecutable(array('StdClass', 'nonExistentMethod'));
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Invalid invokable: callable or provisional string required
-     * @expectedExceptionCode \Auryn\Injector::E_INVOKABLE
-     */
     public function testMakeExecutableFailsOnClassWithoutInvoke()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_INVOKABLE);
+        $this->expectExceptionMessage("Invalid invokable: callable or provisional string required");
         $injector = new Injector();
         $object = new \StdClass();
         $injector->buildExecutable($object);
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Invalid alias: non-empty string required at arguments 1 and 2
-     * @expectedExceptionCode \Auryn\Injector::E_NON_EMPTY_STRING_ALIAS
-     */
     public function testBadAlias()
     {
+        $this->expectException(\Auryn\ConfigException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_NON_EMPTY_STRING_ALIAS);
+        $this->expectExceptionMessage("Invalid alias: non-empty string required at arguments 1 and 2");
         $injector = new Injector();
         $injector->share('Auryn\Test\DepInterface');
         $injector->alias('Auryn\Test\DepInterface', '');
@@ -970,17 +940,15 @@ class InjectorTest extends TestCase
         $this->assertSame(42, $obj->testProp);
     }
 
-
-
     /**
      * Test that custom definitions are not passed through to dependencies.
      * Surprising things would happen if this did occur.
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\DependencyWithDefinedParam::__construct() declared in Auryn\Test\DependencyWithDefinedParam::
-     * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
      */
     public function testCustomDefinitionNotPassedThrough()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_UNDEFINED_PARAM);
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\DependencyWithDefinedParam::__construct() declared in Auryn\Test\DependencyWithDefinedParam::');
         $injector = new Injector();
         $injector->share('Auryn\Test\DependencyWithDefinedParam');
         $injector->make('Auryn\Test\RequiresDependencyWithDefinedParam', array(':foo' => 5));
@@ -1108,13 +1076,11 @@ class InjectorTest extends TestCase
         $this->assertCount(2, array_filter($some));
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Making auryn\test\someclassname did not result in an object, instead result is of type 'NULL'
-     * @expectedExceptionCode \Auryn\Injector::E_MAKING_FAILED
-     */
     public function testDelegationDoesntMakeObject()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_MAKING_FAILED);
+        $this->expectExceptionMessage('Making auryn\test\someclassname did not result in an object, instead result is of type \'NULL\'');
         $delegate = function () {
             return null;
         };
@@ -1123,13 +1089,11 @@ class InjectorTest extends TestCase
         $injector->make('Auryn\Test\SomeClassName');
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionMessage Making auryn\test\someclassname did not result in an object, instead result is of type 'string'
-     * @expectedExceptionCode \Auryn\Injector::E_MAKING_FAILED
-     */
     public function testDelegationDoesntMakeObjectMakesString()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_MAKING_FAILED);
+        $this->expectExceptionMessage('Making auryn\test\someclassname did not result in an object, instead result is of type \'string\'');
         $delegate = function () {
             return 'ThisIsNotAClass';
         };
@@ -1140,9 +1104,10 @@ class InjectorTest extends TestCase
 
     public function testPrepareInvalidCallable()
     {
-        $injector = new Injector;
         $invalidCallable = 'This_does_not_exist';
-        $this->setExpectedException('Auryn\InjectionException', $invalidCallable);
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionMessage($invalidCallable);
+        $injector = new Injector;
         $injector->prepare("StdClass", $invalidCallable);
     }
 
@@ -1190,13 +1155,11 @@ class InjectorTest extends TestCase
         }
     }
 
-    /**
-     * @expectedException \Auryn\InjectionException
-     * @expectedExceptionCode \Auryn\Injector::E_UNDEFINED_PARAM
-     * @expectedExceptionMessage No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\ChildWithoutConstructor::__construct() declared in Auryn\Test\ParentWithConstructor
-     */
     public function testChildWithoutConstructorMissingParam()
     {
+        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectExceptionCode(\Auryn\Injector::E_UNDEFINED_PARAM);
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\ChildWithoutConstructor::__construct() declared in Auryn\Test\ParentWithConstructor');
         $injector = new Injector;
         $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
         $injector->make('Auryn\Test\ChildWithoutConstructor');
@@ -1219,12 +1182,10 @@ class InjectorTest extends TestCase
         $this->assertInstanceOf('Auryn\Test\DelegateB', $b->b);
     }
 
-    /**
-     * @expectedException \Exception
-     * @expectedExceptionMessage Exception in constructor
-     */
     public function testThatExceptionInConstructorDoesntCauseCyclicDependencyException()
     {
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage("Exception in constructor");
         $injector = new Injector;
 
         try {

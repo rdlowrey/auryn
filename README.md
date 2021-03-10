@@ -845,3 +845,13 @@ eliminate evil Singletons using the sharing capabilities of the auryn DIC. In th
 code, we share the request object so that any classes instantiated by the `Auryn\Injector` that ask
 for a `Request` will receive the same instance. This feature not only helps eliminate Singletons,
 but also the need for hard-to-test `static` properties.
+
+## Contributing
+
+To make contributing easier, a docker container has been provided with the necessary dependencies.
+
+
+```
+$ docker build -t auryn-php-cli .
+$ docker run --rm -v $(pwd):/srv auryn-php-cli --filter=
+```

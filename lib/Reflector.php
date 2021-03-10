@@ -16,7 +16,7 @@ interface Reflector
      * Retrieves and caches the constructor (ReflectionMethod) for the specified class
      *
      * @param string $class
-     * @return \ReflectionMethod
+     * @return \ReflectionMethod|null
      */
     public function getCtor($class);
 
