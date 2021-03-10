@@ -30,10 +30,9 @@ class StandardReflector implements Reflector
           if ($type instanceof \ReflectionNamedType && $type->isBuiltin()) {
             return null;
           }
-
-          return $type ? (string) $type : null;
+          return $type? ltrim((string)$type, '?'): null;
         } else {
-            /** @var ?\ReflectionClass $reflectionClass */
+            /* @var ?\ReflectionClass $reflectionClass */
             $reflectionClass = $param->getClass();
             return $reflectionClass? $reflectionClass->getName(): null;
         }

@@ -19,6 +19,25 @@ class InjectorTest extends TestCase
         );
     }
 
+    public function testMakeInstanceWithParamDefaultBeingExplicitlySetToNullWithAutoloading()
+    {
+      $injector = new Injector();
+      /* @var \InjectorTestNullableParams $obj */
+      $obj = $injector->make(\InjectorTestNullableParams::class);
+
+      $this->assertInstanceOf(\TestInstance::class, $obj->instance);
+    }
+
+    public function testMakeInstanceWithParamDefaultBeingExplicitlySetToNullWithShareAvailable()
+    {
+      $injector = new Injector();
+      $injector->share(\TestInstance::class);
+      /* @var \InjectorTestNullableParams $obj */
+      $obj = $injector->make(\InjectorTestNullableParams::class);
+
+      $this->assertInstanceOf(\TestInstance::class, $obj->instance);
+    }
+
     public function testArrayTypehintDoesNotEvaluatesAsClass()
     {
       $injector = new Injector;
