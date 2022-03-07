@@ -3,6 +3,18 @@
 auryn is a recursive dependency injector. Use auryn to bootstrap and wire together
 S.O.L.I.D., object-oriented PHP applications.
 
+## Maintenance status
+
+`rdlowrey/auryn` is no longer maintained. For a repo that is still under maintenance you have two 
+options:
+
+* Switch to [`amphp/injector`](https://github.com/amphp/injector). It is a significant rewrite and
+  uses a new namespace and slightly different interfaces, requiring you to update your code. It
+  will introduce new features and diverge over time from this repo.
+* Use [`martin-hughes/auryn`](https://github.com/martin-hughes/auryn). It is a fork from this repo
+  and maintains the current namespace and interfaces. It is unlikely to introduce significant new 
+  features, instead focussing on bugfixes and testing.
+
 ##### How It Works
 
 Among other things, auryn recursively instantiates class dependencies based on the parameter
