@@ -1,8 +1,11 @@
 {
-    "name": "rdlowrey/auryn",
-    "homepage": "https://github.com/rdlowrey/auryn",
+    "name": "martin-hughes/auryn",
+    "homepage": "https://github.com/martin-hughes/auryn",
     "description": "Auryn is a dependency injector for bootstrapping object-oriented PHP applications.",
     "keywords": ["dependency injection", "dic", "ioc"],
+    "replace": {
+        "rdlowrey/auryn": "^1.4.4"
+    },
     "license": "MIT",
     "authors": [
         {
@@ -22,6 +25,12 @@
             "email": "Danack@basereality.com",
             "homepage": "http://www.basereality.com",
             "role": "Developer"
+        },
+        {
+            "name": "Martin Hughes",
+            "email": "martin-hughes@users.noreply.github.com",
+            "homepage": "https://github.com/martin-hughes",
+            "role": "Maintainer"
         }
     ],
     "require": {
