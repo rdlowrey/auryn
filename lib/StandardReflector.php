@@ -11,8 +11,7 @@ class StandardReflector implements Reflector
 
     public function getCtor($class)
     {
-        $reflectionClass = new \ReflectionClass($class);
-
+        $reflectionClass = $this->getClass($class);
         return $reflectionClass->getConstructor();
     }
 
@@ -32,15 +31,11 @@ class StandardReflector implements Reflector
                 return null;
             }
 
-            return $type ? (string) $type : null;
+            return $type ? ltrim((string)$type, '?') : null;
         } else {
-            /** @var ?\ReflectionClass $reflectionClass */
+            /* @var ?\ReflectionClass $reflectionClass */
             $reflectionClass = $param->getClass();
-            if ($reflectionClass) {
-                return $reflectionClass->getName();
-            }
-
-            return null;
+            return $reflectionClass ? $reflectionClass->getName() : null;
         }
     }
 

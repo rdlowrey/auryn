@@ -67,7 +67,7 @@ class Injector
      */
     public function define($name, array $args)
     {
-        list(, $normalizedName) = $this->resolveAlias($name);
+        [, $normalizedName] = $this->resolveAlias($name);
         $this->classDefinitions[$normalizedName] = $args;
 
         return $this;
@@ -141,7 +141,7 @@ class Injector
 
     private function normalizeName($className)
     {
-        return ltrim(strtolower($className), '\\');
+        return ltrim(strtolower($className), '?\\');
     }
 
     /**
@@ -173,10 +173,8 @@ class Injector
 
     private function shareClass($nameOrInstance)
     {
-        list(, $normalizedName) = $this->resolveAlias($nameOrInstance);
-        $this->shares[$normalizedName] = isset($this->shares[$normalizedName])
-            ? $this->shares[$normalizedName]
-            : null;
+        [, $normalizedName] = $this->resolveAlias($nameOrInstance);
+        $this->shares[$normalizedName] = isset($this->shares[$normalizedName])? $this->shares[$normalizedName]: null;
     }
 
     private function resolveAlias($name)
@@ -228,7 +226,7 @@ class Injector
             );
         }
 
-        list(, $normalizedName) = $this->resolveAlias($name);
+        [, $normalizedName] = $this->resolveAlias($name);
         $this->prepares[$normalizedName] = $callableOrMethodStr;
 
         return $this;
@@ -339,7 +337,7 @@ class Injector
      */
     public function make($name, array $args = array())
     {
-        list($className, $normalizedClass) = $this->resolveAlias($name);
+        [$className, $normalizedClass] = $this->resolveAlias($name);
 
         if (isset($this->inProgressMakes[$normalizedClass])) {
             throw new InjectionException(
@@ -393,7 +391,15 @@ class Injector
         return $obj;
     }
 
-    private function provisionInstance($className, $normalizedClass, array $definition)
+    /**
+     * Provision is called before prepare, but how do they differ?
+     * The reflector is a wrapper around \Reflection classes (at least StandardReflector is) and so can support alterations to functionality
+     * such as being able to use caching.
+     * Provisioning looks ate the constructor (if there is one) and instantiates the $className using the $args and class definitions that
+     * have possibly been configured before using `->define()` or `...`
+     *
+     */
+    private function provisionInstance($className, $normalizedClass, array $args)
     {
         try {
             $ctor = $this->reflector->getCtor($className);
@@ -407,12 +413,10 @@ class Injector
                     self::E_NON_PUBLIC_CONSTRUCTOR
                 );
             } elseif ($ctorParams = $this->reflector->getCtorParams($className)) {
-                $reflClass = $this->reflector->getClass($className);
-                $definition = isset($this->classDefinitions[$normalizedClass])
-                    ? array_replace($this->classDefinitions[$normalizedClass], $definition)
-                    : $definition;
-                $args = $this->provisionFuncArgs($ctor, $definition, $ctorParams, $className);
-                $obj = $reflClass->newInstanceArgs($args);
+                $aggregatedArgs = isset($this->classDefinitions[$normalizedClass])? array_replace($this->classDefinitions[$normalizedClass], $args): $args;
+                $obj = $this->reflector
+                  ->getClass($className)
+                  ->newInstanceArgs($this->provisionFuncArgs($ctor, $aggregatedArgs, $ctorParams, $className));
             } else {
                 $obj = $this->instantiateWithoutCtorParams($className);
             }
@@ -444,33 +448,38 @@ class Injector
         return new $className;
     }
 
-    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition, array $reflParams = null, $className = null)
+    /**
+     * Iterate over all of the function paramters for the supplied reflection function (usually a constructor)
+     */
+    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition, ?array $reflParams = null, ?string $className = null)
     {
         $args = array();
 
         // @TODO store this in ReflectionStorage
-        if (!isset($reflParams)) {
-            $reflParams = $reflFunc->getParameters();
-        }
+        $reflParams ??= $reflFunc->getParameters();
 
         foreach ($reflParams as $i => $reflParam) {
-            $name = $reflParam->name;
+            $paramName = $reflParam->name;
 
             if (isset($definition[$i]) || array_key_exists($i, $definition)) {
                 // indexed arguments take precedence over named parameters
                 $arg = $definition[$i];
-            } elseif (isset($definition[$name]) || array_key_exists($name, $definition)) {
+            } elseif (isset($definition[$paramName]) || array_key_exists($paramName, $definition)) {
                 // interpret the param as a class name to be instantiated
-                $arg = $this->make($definition[$name]);
-            } elseif (($prefix = self::A_RAW . $name) && (isset($definition[$prefix]) || array_key_exists($prefix, $definition))) {
+                $arg = $this->make($definition[$paramName]);
+            } elseif (($prefix = self::A_RAW . $paramName) && (isset($definition[$prefix]) || array_key_exists($prefix, $definition))) {
                 // interpret the param as a raw value to be injected
                 $arg = $definition[$prefix];
-            } elseif (($prefix = self::A_DELEGATE . $name) && isset($definition[$prefix])) {
+            } elseif (($prefix = self::A_DELEGATE . $paramName) && isset($definition[$prefix])) {
                 // interpret the param as an invokable delegate
-                $arg = $this->buildArgFromDelegate($name, $definition[$prefix]);
-            } elseif (($prefix = self::A_DEFINE . $name) && isset($definition[$prefix])) {
+                $arg = $this->buildArgFromDelegate($paramName, $definition[$prefix]);
+            } elseif (($prefix = self::A_DEFINE . $paramName) && isset($definition[$prefix])) {
                 // interpret the param as a class definition
                 $arg = $this->buildArgFromParamDefineArr($definition[$prefix]);
+            /**
+             * This will look for a share, then a delegate, and then attempt an autoload if none were found.
+             * Failing all that it will use the default value...
+             */
             } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam)) {
                 $arg = $this->buildArgFromReflParam($reflParam, $className);
 
@@ -503,7 +512,7 @@ class Injector
             );
         }
 
-        list($class, $definition) = $definition;
+        [$class, $definition] = $definition;
 
         return $this->make($class, $definition);
     }
@@ -525,18 +534,19 @@ class Injector
     private function buildArgFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam)
     {
         $typeHint = $this->reflector->getParamTypeHint($reflFunc, $reflParam);
-
         if (!$typeHint) {
             $obj = null;
         } elseif ($reflParam->isDefaultValueAvailable()) {
             $normalizedName = $this->normalizeName($typeHint);
             // Injector has been told explicitly how to make this type
-            if (isset($this->aliases[$normalizedName]) ||
-                isset($this->delegates[$normalizedName]) ||
-                isset($this->shares[$normalizedName])) {
+            if (array_key_exists($normalizedName, $this->aliases) ||
+                array_key_exists($normalizedName, $this->delegates) ||
+                array_key_exists($normalizedName, $this->shares) ||
+                class_exists($typeHint)) {
                 $obj = $this->make($typeHint);
-            } else {
-                $obj = $reflParam->getDefaultValue();
+            }
+            else {
+              $obj = $reflParam->getDefaultValue();
             }
         } else {
             $obj = $this->make($typeHint);
@@ -593,7 +603,7 @@ class Injector
             }
         }
 
-        $interfaces = @class_implements($obj);
+        $interfaces = is_object($obj)? @class_implements($obj): false;
 
         if ($interfaces === false) {
             throw new InjectionException(
@@ -634,7 +644,7 @@ class Injector
      */
     public function execute($callableOrMethodStr, array $args = array())
     {
-        list($reflFunc, $invocationObj) = $this->buildExecutableStruct($callableOrMethodStr);
+        [$reflFunc, $invocationObj] = $this->buildExecutableStruct($callableOrMethodStr);
         $executable = new Executable($reflFunc, $invocationObj);
         $args = $this->provisionFuncArgs($reflFunc, $args, null, $invocationObj === null ? null : get_class($invocationObj));
 
@@ -650,7 +660,7 @@ class Injector
     public function buildExecutable($callableOrMethodStr)
     {
         try {
-            list($reflFunc, $invocationObj) = $this->buildExecutableStruct($callableOrMethodStr);
+            [$reflFunc, $invocationObj] = $this->buildExecutableStruct($callableOrMethodStr);
         } catch (\ReflectionException $e) {
             throw InjectionException::fromInvalidCallable(
                 $this->inProgressMakes,
@@ -698,7 +708,7 @@ class Injector
             $callableRefl = $this->reflector->getMethod($invocationObj, '__invoke');
             $executableStruct = array($callableRefl, $invocationObj);
         } elseif (strpos($stringExecutable, '::') !== false) {
-            list($class, $method) = explode('::', $stringExecutable, 2);
+            [$class, $method] = explode('::', $stringExecutable, 2);
             $executableStruct = $this->buildStringClassMethodCallable($class, $method);
         } else {
             throw InjectionException::fromInvalidCallable(
@@ -720,7 +730,7 @@ class Injector
             $method = substr($method, $relativeStaticMethodStartPos + 8);
         }
 
-        list($className, $normalizedClass) = $this->resolveAlias($class);
+        [$className, $normalizedClass] = $this->resolveAlias($class);
         $reflectionMethod = $this->reflector->getMethod($className, $method);
 
         if ($reflectionMethod->isStatic()) {
@@ -738,7 +748,7 @@ class Injector
 
     private function buildExecutableStructFromArray($arrayExecutable)
     {
-        list($classOrObj, $method) = $arrayExecutable;
+        [$classOrObj, $method] = $arrayExecutable;
 
         if (is_object($classOrObj) && method_exists($classOrObj, $method)) {
             $callableRefl = $this->reflector->getMethod($classOrObj, $method);
