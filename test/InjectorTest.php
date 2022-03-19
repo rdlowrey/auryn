@@ -16,6 +16,7 @@ class InjectorTest extends TestCase
         $injector = new Injector;
         $injector->defineParam('parameter', []);
         $injector->execute('Auryn\Test\hasArrayDependency');
+        $this->expectNotToPerformAssertions();
     }
 
     public function testMakeInstanceInjectsSimpleConcreteDependency()
@@ -108,7 +109,7 @@ class InjectorTest extends TestCase
 
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
-        $this->expectExceptionMessage('Could not make ClassThatDoesntExist: Class "ClassThatDoesntExist" does not exist');
+        $this->expectExceptionMessageMatches('/^Could not make ClassThatDoesntExist: Class "?ClassThatDoesntExist"? does not exist$/');
         $this->expectException(\Auryn\InjectorException::class);
         $injector = new Injector;
         $injector->make('ClassThatDoesntExist');
@@ -136,6 +137,7 @@ class InjectorTest extends TestCase
         $injector = new Injector;
         $injector->share('Auryn\Test\TestDependency');
         $injector->make('Auryn\Test\TestDependency');
+        $this->expectNotToPerformAssertions();
     }
 
     public function testMakeInstanceUsesReflectionForUnknownParamsInMultiBuildWithDeps()
@@ -232,6 +234,7 @@ class InjectorTest extends TestCase
 
         $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefault');
         $obj = $injector->make('Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
+        $this->expectNotToPerformAssertions();
     }
 
     public function testMakeInstanceInjectsRawParametersDirectly()
@@ -285,6 +288,7 @@ class InjectorTest extends TestCase
     {
         $injector = new Injector;
         $injector->make('Auryn\Test\SomeClassName');
+        $this->expectNotToPerformAssertions();
     }
 
     public function testMakeInstanceDelegate()
@@ -612,12 +616,18 @@ class InjectorTest extends TestCase
         $injector->delegate('Auryn\Test\DelegatableInterface', 'Auryn\Test\ImplementsInterfaceFactory');
         $requiresDelegatedInterface = $injector->make('Auryn\Test\RequiresDelegatedInterface');
         $requiresDelegatedInterface->foo();
+        $this->expectNotToPerformAssertions();
     }
 
     public function testMissingAlias()
     {
         $this->expectException(\Auryn\InjectorException::class);
-        $this->expectExceptionMessage('Could not make Auryn\Test\TypoInTypehint: Class "Auryn\Test\TypoInTypehint" does not exist');
+        // There's a difference in reported class between PHP 7.4 and 8.0:
+        // In PHP 7.4, the missing word is "TestMissingDependency"
+        // In PHP 8.0+ it's "TypoInTypehint"
+        //
+        // Also, use a dot rather than trying to faff around with many backslashes.
+        $this->expectExceptionMessageMatches('/^Could not make Auryn.Test.[A-Za-z]+: Class "?Auryn.Test.TypoInTypehint"? does not exist$/');
         $injector = new Injector;
         $testClass = $injector->make('Auryn\Test\TestMissingDependency');
     }
@@ -778,16 +788,24 @@ class InjectorTest extends TestCase
 
     public function testDependencyWithDefaultValueThroughShare()
     {
+        // Remember that if there's a type hint, it is constructed even if there's a default value:
+        //
+        // From the documentation ("Dependency resolution"):
+        // ... others ...
+        // 5:  If a dependency is type-hinted, the Injector will recursively instantiate it subject to any
+        // implementations or definitions
+        // 6: If no type-hint exists and the parameter has a default value, the default value is injected
+        /// ... more ...
         $injector = new Injector;
         //Instance is not shared, null default is used for dependency
         $instance = $injector->make('Auryn\Test\ConcreteDependencyWithDefaultValue');
-        $this->assertNull($instance->dependency);
+        $this->assertInstanceOf('StdClass', $instance->dependency);
 
         //Instance is explicitly shared, $instance is used for dependency
-        $instance = new \StdClass();
-        $injector->share($instance);
+        $dependency = new \StdClass();
+        $injector->share($dependency);
         $instance = $injector->make('Auryn\Test\ConcreteDependencyWithDefaultValue');
-        $this->assertInstanceOf('StdClass', $instance->dependency);
+        $this->assertSame($dependency, $instance->dependency);
     }
 
     public function testShareAfterAliasException()
@@ -915,6 +933,7 @@ class InjectorTest extends TestCase
         $injector = new Injector();
         $injector->share('Auryn\Test\DepImplementation');
         $injector->alias('Auryn\Test\DepInterface', 'Auryn\Test\DepImplementation');
+        $this->expectNotToPerformAssertions();
     }
 
     public function testDefineWithBackslashAndMakeWithoutBackslash()
@@ -1021,6 +1040,7 @@ class InjectorTest extends TestCase
         $injector = new Injector();
         $injector->delegate('Auryn\Test\DelegateClosureInGlobalScope', $delegateClosure);
         $injector->make('Auryn\Test\DelegateClosureInGlobalScope');
+        $this->expectNotToPerformAssertions();
     }
 
     public function testCloningWithServiceLocator()
@@ -1030,6 +1050,7 @@ class InjectorTest extends TestCase
         $instance = $injector->make('Auryn\Test\CloneTest');
         $newInjector = $instance->injector;
         $newInstance = $newInjector->make('Auryn\Test\CloneTest');
+        $this->expectNotToPerformAssertions();
     }
 
     public function testAbstractExecute()

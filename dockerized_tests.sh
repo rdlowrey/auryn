@@ -12,15 +12,16 @@ TEST_IMAGES=(
 
 FAILED=()
 
-echo $TEST_IMAGES
-
 for IMAGE in ${TEST_IMAGES[@]}
 do
+  echo
   echo Running $IMAGE
+  echo
   docker run --rm --mount type=bind,source="$(pwd)",target="/code" -w /code $IMAGE /code/vendor/phpunit/phpunit/phpunit
   RESULT=$?
-  if [[ !$RESULT ]]
+  if [[ $RESULT != 0 ]]
   then
+    echo $RESULT
     echo $IMAGE failed
     FAILED+=("$IMAGE")
   fi
@@ -37,4 +38,7 @@ then
   do
     echo $IMAGE
   done
+else
+  echo
+  echo All test runs passed
 fi
