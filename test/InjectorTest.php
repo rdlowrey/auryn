@@ -86,8 +86,13 @@ class InjectorTest extends TestCase
 
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
+        $classname = 'Auryn\Test\TypoInTypehint';
+        if (PHP_VERSION_ID >= 80000) {
+            $classname = "\n" . $classname . "\n";
+        }
+
         $this->expectException(\Auryn\InjectorException::class);
-        $this->expectExceptionMessage("Could not make ClassThatDoesntExist: Class \"ClassThatDoesntExist\" does not exist");
+        $this->expectExceptionMessage("Could not make ClassThatDoesntExist: Class $classname does not exist");
 
         $injector = new Injector;
         $injector->make('ClassThatDoesntExist');
@@ -615,8 +620,15 @@ class InjectorTest extends TestCase
 
     public function testMissingAlias()
     {
+        $classname = 'Auryn\Test\TypoInTypehint';
+        if (PHP_VERSION_ID >= 80000) {
+            $classname = "\n" . $classname . "\n";
+        }
+
         $this->expectException(\Auryn\InjectorException::class);
-        $this->expectExceptionMessage('Could not make Auryn\Test\TypoInTypehint: Class "Auryn\Test\TypoInTypehint" does not exist');
+        $this->expectExceptionMessage(
+            "Could not make Auryn\Test\TypoInTypehint: Class $classname does not exist"
+        );
 
         $injector = new Injector;
         $testClass = $injector->make('Auryn\Test\TestMissingDependency');
