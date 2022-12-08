@@ -593,7 +593,13 @@ class Injector
             }
         }
 
-        $interfaces = @class_implements($obj);
+        // TODO - this is inelegant
+        if ($obj === null) {
+            $interfaces = false;
+        }
+        else {
+            $interfaces = @class_implements($obj);
+        }
 
         if ($interfaces === false) {
             throw new InjectionException(
