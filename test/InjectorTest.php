@@ -256,8 +256,8 @@ class InjectorTest extends TestCase
     {
         $injector= new Injector;
 
-        $callable = $this->getMock(
-            'CallableMock',
+        $callable = $this->createPartialMock(
+            'Auryn\test\CallableMock',
             array('__invoke')
         );
 
@@ -284,10 +284,11 @@ class InjectorTest extends TestCase
     {
         $injector= new Injector;
 
-        $callable = $this->getMock(
-            'CallableMock',
+        $callable = $this->createPartialMock(
+            'Auryn\test\CallableMock',
             array('__invoke')
         );
+
         $callable->expects($this->once())
             ->method('__invoke')
             ->will($this->returnValue(new TestDependency()));
