@@ -158,7 +158,7 @@ class SpecdTestDependency extends TestDependency
 
 class TestNeedsDep
 {
-    private $testDep;
+    public $testDep;
 
     public function __construct(TestDependency $testDep)
     {
@@ -234,7 +234,7 @@ class DepImplementation implements DepInterface
 class RequiresInterface
 {
     public $dep;
-    private $testDep;
+    public $testDep;
     public function __construct(DepInterface $dep)
     {
         $this->testDep = $dep;
@@ -266,7 +266,7 @@ class ClassOuter
 
 class ProvTestNoDefinitionNullDefaultClass
 {
-    private $arg;
+    public $arg;
     public function __construct($arg = null)
     {
         $this->arg = $arg;
@@ -319,6 +319,7 @@ class InjectorTestRawCtorParams
 
 class InjectorTestParentClass
 {
+    public $arg1;
     public function __construct($arg1)
     {
         $this->arg1 = $arg1;
@@ -327,8 +328,8 @@ class InjectorTestParentClass
 
 class InjectorTestChildClass extends InjectorTestParentClass
 {
-    private $arg1;
-    private $arg2;
+    public $arg1;
+    public $arg2;
     public function __construct($arg1, $arg2)
     {
         parent::__construct($arg1);
@@ -580,7 +581,7 @@ class TestDependencyWithProtectedConstructor
 
 class TestNeedsDepWithProtCons
 {
-    private $dep;
+    public $dep;
     public function __construct(TestDependencyWithProtectedConstructor $dep)
     {
         $this->dep = $dep;
@@ -729,7 +730,7 @@ class ChildWithoutConstructor extends ParentWithConstructor {
 
 class DelegateA {}
 class DelegatingInstanceA {
-    private $a;
+    public $a;
     public function __construct(DelegateA $a) {
         $this->a = $a;
     }
@@ -737,7 +738,7 @@ class DelegatingInstanceA {
 
 class DelegateB {}
 class DelegatingInstanceB {
-    private $b;
+    public $b;
     public function __construct(DelegateB $b) {
         $this->b = $b;
     }
