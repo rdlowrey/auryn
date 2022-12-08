@@ -24,7 +24,7 @@ jobs:
           - '7.4'
           - '8.0'
           - '8.1'
-        experimental: [false]
+        experimental: [true]
 
     steps:
       - name: "Checkout code"
