@@ -758,7 +758,6 @@ class InjectorTest extends TestCase
 
     public function testNonConcreteDependencyWithDefaultValueThroughAlias()
     {
-        $this->markTestSkipped("seems to be a legitimate failure");
         $injector = new Injector;
         $injector->alias(
             'Auryn\Test\DelegatableInterface',
