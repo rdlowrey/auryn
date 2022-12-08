@@ -1,0 +1,52 @@
+name: "CI"
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: "PHP ${{ matrix.php-version }}"
+
+    runs-on: 'ubuntu-latest'
+
+    continue-on-error: ${{ matrix.experimental }}
+
+    strategy:
+      matrix:
+        php-version:
+          - '7.1.28'
+          - '7.2.5'
+          - '7.3'
+          - '7.4'
+          - '8.0'
+          - '8.1'
+        experimental: [false]
+
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v2
+
+      - name: "Install PHP with extensions"
+        uses: shivammathur/setup-php@v2
+        with:
+          coverage: "none"
+          php-version: ${{ matrix.php-version }}
+          ini-values: memory_limit=-1
+
+      - name: "Add PHPUnit matcher"
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - run: composer install
+
+      - name: "Install PHPUnit"
+        run: vendor/bin/simple-phpunit install
+
+      - name: "PHPUnit version"
+        run: vendor/bin/simple-phpunit --version
+
+      - name: "Run tests"
+        run: vendor/bin/simple-phpunit
