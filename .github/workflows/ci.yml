@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   tests:
-    name: "PHP ${{ matrix.php-version }}"
+    name: "Test on PHP ${{ matrix.php-version }}"
 
     runs-on: 'ubuntu-latest'
 
