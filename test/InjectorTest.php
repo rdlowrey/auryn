@@ -84,10 +84,6 @@ class InjectorTest extends TestCase
         $this->assertEquals('something else', $injected2->testDep->testProp);
     }
 
-    /**
-     * @expectedException \Auryn\InjectorException
-     * @expectedExceptionMessage Could not make ClassThatDoesntExist: Class ClassThatDoesntExist does not exist
-     */
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
         $this->expectException(\Auryn\InjectorException::class);
@@ -196,16 +192,10 @@ class InjectorTest extends TestCase
         $injector->make('Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefaultDependent');
     }
 
-    /**
-     * @TODO
-     * @expectedException
-     * @expectedExceptionMessage
-     */
     public function testMakeInstanceThrowsExceptionOnUninstantiableTypehintWithoutDefinition()
     {
         $this->expectException(\Auryn\InjectorException::class);
         $this->expectExceptionMessage("Injection definition required for interface Auryn\Test\DepInterface");
-
 
         $injector = new Injector;
         $injector->make('Auryn\Test\RequiresInterface');
@@ -318,10 +308,6 @@ class InjectorTest extends TestCase
         $injector->delegate('StdClass', 'StringDelegateWithNoInvokeMethod');
     }
 
-    /**
-     * @expectedException \Auryn\ConfigException
-     * @expectedExceptionMessage Auryn\Injector::delegate expects a valid callable or executable class::method string at Argument 2 but received 'SomeClassThatDefinitelyDoesNotExistForReal'
-     */
     public function testMakeInstanceThrowsExceptionIfStringDelegateClassInstantiationFails()
     {
         $this->expectException(\Auryn\ConfigException::class);
@@ -391,8 +377,6 @@ class InjectorTest extends TestCase
 
     /**
      * @dataProvider provideInvalidDelegates
-     * @expectedException
-     * @expectedExceptionMessage
      */
     public function testDelegateThrowsExceptionIfDelegateIsNotCallableOrString($badDelegate)
     {
@@ -867,11 +851,6 @@ class InjectorTest extends TestCase
         $injector->alias('StdClass', 'Auryn\Test\SomeOtherClass');
     }
 
-    /**
-     * @expectedException
-     * @expectedExceptionMessage
-     * @expectedExceptionCode
-     */
     public function testAppropriateExceptionThrownOnNonPublicConstructor()
     {
         $this->expectException(\Auryn\InjectionException::class);
