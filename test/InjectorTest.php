@@ -86,9 +86,9 @@ class InjectorTest extends TestCase
 
     public function testMakeInstanceThrowsExceptionOnClassLoadFailure()
     {
-        $classname = 'Auryn\Test\TypoInTypehint';
+        $classname = 'ClassThatDoesntExist';
         if (PHP_VERSION_ID >= 80000) {
-            $classname = "\n" . $classname . "\n";
+            $classname = "\"" . $classname . "\"";
         }
 
         $this->expectException(\Auryn\InjectorException::class);
@@ -622,7 +622,7 @@ class InjectorTest extends TestCase
     {
         $classname = 'Auryn\Test\TypoInTypehint';
         if (PHP_VERSION_ID >= 80000) {
-            $classname = "\n" . $classname . "\n";
+            $classname = "\"" . $classname . "\"";
         }
 
         $this->expectException(\Auryn\InjectorException::class);
