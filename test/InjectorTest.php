@@ -1161,7 +1161,7 @@ class InjectorTest extends TestCase
     {
         $injector = new Injector;
         $invalidCallable = 'This_does_not_exist';
-        $this->expectException(\Auryn\InjectionException::class);
+        $this->expectException(\Auryn\ConfigException::class);
         $this->expectExceptionMessage($invalidCallable);
 
         $injector->prepare("StdClass", $invalidCallable);

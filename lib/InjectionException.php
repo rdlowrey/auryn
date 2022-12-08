@@ -14,14 +14,8 @@ class InjectionException extends InjectorException
         parent::__construct($message, $code, $previous);
     }
 
-    /**
-     * Add a human readable version of the invalid callable to the standard 'invalid invokable' message.
-     */
-    public static function fromInvalidCallable(
-        array $inProgressMakes,
-        $callableOrMethodStr,
-        \Exception $previous = null
-    ) {
+    public static function getInvalidCallableMessage($callableOrMethodStr)
+    {
         $callableString = null;
 
         if (is_string($callableOrMethodStr)) {
@@ -42,14 +36,27 @@ class InjectionException extends InjectorException
         if ($callableString) {
             // Prevent accidental usage of long strings from filling logs.
             $callableString = substr($callableString, 0, 250);
-            $message = sprintf(
+            return sprintf(
                 "%s. Invalid callable was '%s'",
                 Injector::M_INVOKABLE,
                 $callableString
             );
-        } else {
-            $message = \Auryn\Injector::M_INVOKABLE;
         }
+
+        return Injector::M_INVOKABLE;
+    }
+
+    /**
+     * Add a human readable version of the invalid callable to the standard 'invalid invokable' message.
+     */
+    public static function fromInvalidCallable(
+        array $inProgressMakes,
+        $callableOrMethodStr,
+        \Exception $previous = null
+    ) {
+        $message = self::getInvalidCallableMessage(
+            $callableOrMethodStr
+        );
 
         return new self($inProgressMakes, $message, Injector::E_INVOKABLE, $previous);
     }
