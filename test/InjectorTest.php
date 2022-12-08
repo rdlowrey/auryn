@@ -627,7 +627,7 @@ class InjectorTest extends TestCase
 
         $this->expectException(\Auryn\InjectorException::class);
         $this->expectExceptionMessage(
-            "Could not make Auryn\Test\TypoInTypehint: Class $classname does not exist"
+            "Could not make Auryn\\Test\\TestMissingDependency: Class $classname does not exist"
         );
 
         $injector = new Injector;
