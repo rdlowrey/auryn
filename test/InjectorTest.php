@@ -782,7 +782,6 @@ class InjectorTest extends TestCase
 
     public function testNonConcreteDependencyWithDefaultValueThroughDelegation()
     {
-        $this->markTestSkipped("seems to be a legitimate failure");
         $injector = new Injector;
         $injector->delegate('Auryn\Test\DelegatableInterface', 'Auryn\Test\ImplementsInterfaceFactory');
         $class = $injector->make('Auryn\Test\NonConcreteDependencyWithDefaultValue');
@@ -792,7 +791,6 @@ class InjectorTest extends TestCase
 
     public function testDependencyWithDefaultValueThroughShare()
     {
-        $this->markTestSkipped("seems to be a legitimate failure");
         $injector = new Injector;
         //Instance is not shared, null default is used for dependency
         $instance = $injector->make('Auryn\Test\ConcreteDependencyWithDefaultValue');
