@@ -620,14 +620,16 @@ class InjectorTest extends TestCase
 
     public function testMissingAlias()
     {
+        $reportedClassname = 'TestMissingDependency';
         $classname = 'Auryn\Test\TypoInTypehint';
         if (PHP_VERSION_ID >= 80000) {
             $classname = "\"" . $classname . "\"";
+            $reportedClassname = 'TypoInTypehint';
         }
 
         $this->expectException(\Auryn\InjectorException::class);
         $this->expectExceptionMessage(
-            "Could not make Auryn\\Test\\TestMissingDependency: Class $classname does not exist"
+            "Could not make Auryn\\Test\\$reportedClassname: Class $classname does not exist"
         );
 
         $injector = new Injector;
