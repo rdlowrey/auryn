@@ -92,7 +92,7 @@ To allow an appropriate version of PHPUnit to be installed across all of the sup
 versions of PHP, instead of directly depending on PHPUnit, Auryn instead depends on
 simple-phpunit. 
 
-After doing composer update, you need to tell simple-phpunit to install an PHPUnit for you: 
+After doing composer update, you need to tell simple-phpunit to install PHPUnit: 
 
 ```bash
 vendor/bin/simple-phpunit install
