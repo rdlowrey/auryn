@@ -41,5 +41,11 @@ jobs:
 
       - run: composer install
 
+      - name: "Install PHPUnit"
+        run: vendor/bin/simple-phpunit install
+
+      - name: "PHPUnit version"
+        run: vendor/bin/simple-phpunit --version
+
       - name: "Run tests"
-        run: vendor/bin/phpunit
+        run: vendor/bin/simple-phpunit

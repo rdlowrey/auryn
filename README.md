@@ -86,6 +86,27 @@ Archived tagged release versions are also available for manual download on the p
 [tags page](https://github.com/rdlowrey/auryn/tags)
 
 
+##### Running tests
+
+To allow an appropriate version of PHPUnit to be installed across all of the supported 
+versions of PHP, instead of directly depending on PHPUnit, Auryn instead depends on
+simple-phpunit. 
+
+After doing composer update, you need to tell simple-phpunit to install an PHPUnit for you: 
+
+```bash
+vendor/bin/simple-phpunit install
+
+vendor/bin/simple-phpunit --version
+```
+
+The tests can then be run with the command:
+
+```bash
+vendor/bin/simple-phpunit
+```
+
+
 ## Basic Usage
 
 To start using the injector, simply create a new instance of the `Auryn\Injector` ("the Injector")
