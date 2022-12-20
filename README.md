@@ -6,13 +6,20 @@ S.O.L.I.D., object-oriented PHP applications.
 ## Maintenance status
 
 `rdlowrey/auryn` is in low maintenance mode. i.e. new features are very unlikely to be added, and
-new releases to support new versions of PHP are not guaranteed to be timely.
+new releases to support new versions of PHP are not guaranteed to be timely. Notes on why some
+features were not added to Auryn are listed [here](https://github.com/rdlowrey/excluded_features.md).
 
 There are similar libraries available at:
 
 * [`martin-hughes/auryn`](https://github.com/martin-hughes/auryn) is a fork from this repo
   and maintains the current namespace and interfaces. It is unlikely to introduce significant new
   features, instead focussing on bugfixes and testing.
+
+* [`overclokk/auryn`](https://github.com/overclokk/auryn) is a fork from this repo
+  and maintains the current namespace and interfaces. It has added the ability to lazy
+  instantiate dependencies using
+  [`Ocramius/ProxyManager`](https://github.com/Ocramius/ProxyManager). 
+
 * [`amphp/injector`](https://github.com/amphp/injector) is a significant rewrite using a new 
   namespace and slightly different interfaces, requiring you to update your code. It  will 
   introduce new features and diverge over time from this repo.
