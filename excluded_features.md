@@ -9,6 +9,8 @@ The notes below try to describe the feature, explain why it was not included, an
 
 ## Lazy instantiation
 
+Original discussion: https://github.com/rdlowrey/auryn/issues/143
+
 ### Description
 
 Some dependencies can be costly to create, either in terms of CPU time or memory, or both. 
@@ -76,3 +78,65 @@ Although people frown on Service Locators, using the injector in a factory class
 * Fewer dependencies is nicer. Having Auryn remain a library with zero external dependencies is nicer than having a non-trivial external dependency.
 * Debugging problems inside the injector is a nightmare. Due to how complicated the call-stack is within the injector itself, it can be quite hard to understand what the problem is when an error occurs. By using a factory class, any problem should be a lot easier to debug.
 * The alternative solution is trivial and better. In particular, it leaves the place where your code is going to have a costly instantiation of an object obvious, rather than it becoming hidden magic.
+
+
+## Resolving dependencies based on constructor chain
+
+Original discussion https://github.com/rdlowrey/auryn/issues/35
+
+### Description
+
+Imagine you have two classes that each depend on a UtilityClass:
+
+```php
+interface Logger{}
+
+class UtilityClass {
+    function __construct(private Logger $logger) {}
+    
+    function foo() {
+        $this->logger->log(Logger::info, "About to foo.");
+    }
+}
+
+class ClassThatIsWorkingCorrectly{
+    function __construct(UtilityClass $utilityClass) {}
+}
+
+class ClassRelatedToReportedBugs{
+    function __construct(UtilityClass $utilityClass) {}
+}
+```
+
+One of the classes is working correctly and you aren't interested in logging information it generates. The other class is misbehaving slightly.
+
+Being able to configure the injector so that:
+
+* the 'Logger' injected into most classes is a logger that only reports notices at the 'error' level.
+
+* any 'Logger' created by 'ClassRelatedToReportedBugs' or any of its dependencies uses a Logger that reports notices at the 'info' level.
+
+would allow you to manage your logging behaviour, so that your log files only contain relevant info.
+
+### Alternative solutions
+
+#### Get a more powerful logger or logging system
+
+One example would be the `FingersCrossedHandler` listed in the [Monolog wiki](https://seldaek.github.io/monolog/doc/02-handlers-formatters-processors.html). It allows you to configure logging so that log messages are only actually logged if a certain triggering event has occurred.
+
+Most hosted logging systems are quite powerful and can be configured in real-time, without having to touch the config of individual servers.
+
+#### Use more contextual logging
+
+Logging plain text is just not great. Due to it lacking structure, it makes it harder than it could be to filter, display and understand the logging information. Instead of logging plain text, logging structured data that other tools can understand programmatically makes understanding what is happening in your application much easier.
+
+### Why it wasn't included
+
+Mostly, it's just too much complexity for an injector. Although the complexity needs to live somewhere, it should be in the logger code and infrastructure, not in the injector.
+
+Also, as only one person has requested this feature, it sounds like it shouldn't be included.
+
+
+
+
+
