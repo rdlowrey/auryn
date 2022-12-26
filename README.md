@@ -1,4 +1,4 @@
-# auryn [![Build Status](https://github.com/Danack/Auryn/actions/workflows/ci.yml/badge.svg?branch=adding_ci)](https://github.com/Danack/Auryn/actions)
+# auryn [![Build Status](https://github.com/rdlowrey/Auryn/actions/workflows/ci.yml/badge.svg?branch=adding_ci)](https://github.com/rdlowrey/Auryn/actions)
 
 auryn is a recursive dependency injector. Use auryn to bootstrap and wire together
 S.O.L.I.D., object-oriented PHP applications.
