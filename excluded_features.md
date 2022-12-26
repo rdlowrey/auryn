@@ -82,7 +82,7 @@ Although people frown on Service Locators, using the injector in a factory class
 
 ## Resolving dependencies based on constructor chain
 
-Original discussion https://github.com/rdlowrey/auryn/issues/35
+Original discussion: https://github.com/rdlowrey/auryn/issues/35
 
 ### Description
 
@@ -137,6 +137,99 @@ Mostly, it's just too much complexity for an injector. Although the complexity n
 Also, as only one person has requested this feature, it sounds like it shouldn't be included.
 
 
+## Variadic dependencies
 
+Original discussion: https://github.com/rdlowrey/auryn/issues/134
 
+### Description
 
+Sometimes, particularly when dealing with legacy code, you might have a dependency on multiple instances on the same type of object:
+
+```php
+
+interface Repository {
+    function findInfo(): Info|null;
+}
+
+class Foo {
+    public function __construct(Repository ...$repositories) {
+        // ...
+    }
+}
+```
+
+Auryn does not support injecting variadic dependencies, so any class that has variadic dependencies cannot be directly instantiated by Auryn.
+
+### Alternative solutions
+
+#### Use a delegate method
+
+The simplest work around is to use a delegate function for creating objects that have variadic dependencies: 
+
+```php
+function createFoo(RepositoryLocator $repoLocator)
+{
+    // Or whatever code is needed to find the repos.
+    $repositories = $repoLocator->getRepos('Foo');
+
+    return new Foo($repositories);
+}
+
+$injector->delegate('Foo', 'createFoo');
+```
+
+#### Use an object that collects the variadic dependencies
+
+If you have many objects that have variadic dependencies, creating a separate delegate function for each of them might be a tedious task.
+
+Instead of that, creating a single class that collects the variadic dependencies, and then can be injected through autowiring into other classes, could be substantially less work and also easier to understand.
+
+```php
+interface Repository {
+    public function findInfo(): Info|null {} 
+}
+
+class RepositoryCollection {
+    private $repos = [];
+
+    public function __construct(Repository ...$repositories) {
+        foreach ($repositories as $repo) {
+            $this->repos[] =  $repo;
+        }
+    }
+
+    public function findInfo(): Info|null {
+        foreach ($this->repos as $repo) {
+            $info = $repo->findInfo();
+            if ($info !== null) {
+                return $info;
+            }
+        }
+        
+        return null;
+    }
+} 
+
+class Foo {
+    public function __construct(RepositoryCollection $repositories) {
+        // ...
+    }
+}
+
+function createRepositoryCollection(RepositoryLocator $repoLocator)
+{
+    // Or whatever code is needed to find the repos.
+    $repositories = $repoLocator->getRepos('Foo');
+
+    return new Foo($repositories);
+}
+
+$injector->delegate(RepositoryCollection::class, 'createRepositoryCollection');
+
+```
+
+### Why support for variadic dependency  wasn't included
+
+Variadics aren't a type and so can't be reasoned about by a dependency injector.
+
+People should either use delegation or contexts to achieve what they're trying to do in a way that is comportable with dependency injection.
