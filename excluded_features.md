@@ -347,6 +347,6 @@ The choice for this library is that all configuration must be explicit, which he
 
 If you wanted to see what class was going to be created for an interface, not being able to inspect the configuration of the injector, and instead having to either search through the code or run some test code would be 'ungood'. 
 
-Additionally, if a second class that implements the interface was added, the injector would need to either pick one or throw an exception of "multiple available types". Either choice would be quite surprising and take more time to resolve than sim
+Additionally, if a second class that implements the interface was added, the injector would need to either pick one or throw an exception of "multiple available types". Either choice would be quite surprising and take more time to resolve than simply writing the explicit configuration.
 
 
