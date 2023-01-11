@@ -233,3 +233,120 @@ $injector->delegate(RepositoryCollection::class, 'createRepositoryCollection');
 Variadics aren't a type and so can't be reasoned about by a dependency injector.
 
 People should either use delegation or contexts to achieve what they're trying to do in a way that is comportable with dependency injection.
+
+## Parameter definitions not inherited from parent classes
+
+Original discussion: https://github.com/rdlowrey/auryn/issues/133
+
+### Description
+
+Some people expect classes to 'inherit' definitions when definitions exist for their parent class.
+
+```php
+class Foo
+{
+    public function __construct($key) { }
+}
+
+class Bar extends Foo
+{
+}
+
+$injector = new Auryn\Injector;
+$injector->define('Foo', [
+    ':key' => 'secret',
+]);
+
+$foo_object = $injector->make(Foo::class);
+$bar_object = $injector->make(Bar::class);
+
+// Gives error:
+// Uncaught Auryn\InjectionException: No definition available to provision
+// typeless parameter $key at position 0 in Bar::__construct() declared in...
+```
+
+### Why support for parameter definitions are not inherited from parent classes
+
+The choice for this library is that all configuration must be explicit, which helps make it easier to reason about the configuration.
+
+If a class 'inherited' parameter definitions from a parent class, you would have to know that it had a parent class, and that a definition existed for that to be able to understand what parameters the object was going to receive.  
+
+### Alternative solutions
+
+#### Explicit definition
+
+Just define parameters for each class that needs them.
+
+```php
+$injector->define('Foo', [':key' => 'secret']);
+$injector->define('Bar', [':key' => 'secret']);
+```
+
+#### Wrap values in a type and share it
+
+As types can be shared, that can avoid needing to define a scalar value multiple times.
+
+```php
+class ApiKey
+{
+    public function __construct(private string $value) {}
+
+    public function getValue(): string
+    {
+        return $this->value;
+    }
+}
+
+class Foo
+{
+    public function __construct(ApiKey $apiKey) { }
+}
+
+class Bar extends Foo
+{
+}
+
+$injector = new Auryn\Injector;
+$injector->share(new ApiKey('secret'));
+
+$foo_object = $injector->make(Foo::class);
+$bar_object = $injector->make(Bar::class);
+```
+
+## Resolve interfaces and abstracts to shared instances
+
+Original discussion: https://github.com/rdlowrey/auryn/issues/145
+
+### Description
+
+Some people expect an injector to find classes that implement an interface whe
+
+```php
+interface A { }
+class B implements A { }
+class C {
+    function __construct(A $a) { }
+}
+
+$b = new B();
+$injector->share($b);
+
+$injector->make(C::class);
+
+// Gives error:
+// Uncaught Auryn\InjectionException: Injection definition required for interface A in...
+```
+
+### Alternative solutions
+
+Just define aliases for each interface to a concrete class. That will only take a few minutes per environment your code runs in.
+
+### Why support for Resolve interfaces and abstracts to shared instances wasn't included
+
+The choice for this library is that all configuration must be explicit, which helps make it easier to reason about the configuration.
+
+If you wanted to see what class was going to be created for an interface, not being able to inspect the configuration of the injector, and instead having to either search through the code or run some test code would be 'ungood'. 
+
+Additionally, if a second class that implements the interface was added, the injector would need to either pick one or throw an exception of "multiple available types". Either choice would be quite surprising and take more time to resolve than sim
+
+
