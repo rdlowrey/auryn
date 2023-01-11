@@ -76,7 +76,7 @@ class Injector
     /**
      * Assign a global default value for all parameters named $paramName
      *
-     * Global parameter definitions are only used for parameters with no typehint, pre-defined or
+     * Global parameter definitions are only used for parameters with no type, pre-defined or
      * call-time definition.
      *
      * @param string $paramName The parameter name for which this value applies
@@ -91,11 +91,11 @@ class Injector
     }
 
     /**
-     * Define an alias for all occurrences of a given typehint
+     * Define an alias for all occurrences of a given type
      *
-     * Use this method to specify implementation classes for interface and abstract class typehints.
+     * Use this method to specify implementation classes for interface and abstract class types.
      *
-     * @param string $original The typehint to replace
+     * @param string $original The type to replace
      * @param string $alias The implementation name
      * @throws ConfigException if any argument is empty or not a string
      * @return self
@@ -471,7 +471,7 @@ class Injector
             } elseif (($prefix = self::A_DEFINE . $name) && isset($definition[$prefix])) {
                 // interpret the param as a class definition
                 $arg = $this->buildArgFromParamDefineArr($definition[$prefix]);
-            } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam)) {
+            } elseif (!$arg = $this->buildArgFromType($reflFunc, $reflParam)) {
                 $arg = $this->buildArgFromReflParam($reflParam, $className);
 
                 if ($arg === null && (PHP_VERSION_ID >= 50600 && $reflParam->isVariadic() || $reflParam->isOptional())) {
@@ -522,24 +522,24 @@ class Injector
         return $executable($paramName, $this);
     }
 
-    private function buildArgFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam)
+    private function buildArgFromType(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam)
     {
-        $typeHint = $this->reflector->getParamTypeHint($reflFunc, $reflParam);
+        $type = $this->reflector->getParamType($reflFunc, $reflParam);
 
-        if (!$typeHint) {
+        if (!$type) {
             $obj = null;
         } elseif ($reflParam->isDefaultValueAvailable()) {
-            $normalizedName = $this->normalizeName($typeHint);
+            $normalizedName = $this->normalizeName($type);
             // Injector has been told explicitly how to make this type
             if (isset($this->aliases[$normalizedName]) ||
                 isset($this->delegates[$normalizedName]) ||
                 isset($this->shares[$normalizedName])) {
-                $obj = $this->make($typeHint);
+                $obj = $this->make($type);
             } else {
                 $obj = $reflParam->getDefaultValue();
             }
         } else {
-            $obj = $this->make($typeHint);
+            $obj = $this->make($type);
         }
 
         return $obj;

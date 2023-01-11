@@ -166,7 +166,7 @@ class TestNeedsDep
     }
 }
 
-class TestClassWithNoCtorTypehints
+class TestClassWithNoCtorTypes
 {
     public function __construct($val = 42)
     {
@@ -194,7 +194,7 @@ class TestMultiDepsWithCtor
     }
 }
 
-class NoTypehintNullDefaultConstructorClass
+class NoTypeNullDefaultConstructorClass
 {
     public $testParam = 1;
     public function __construct(TestDependency $val1, $arg=42)
@@ -203,7 +203,7 @@ class NoTypehintNullDefaultConstructorClass
     }
 }
 
-class NoTypehintNoDefaultConstructorClass
+class NoTypeNoDefaultConstructorClass
 {
     public $testParam = 1;
     public function __construct(TestDependency $val1, $arg = null)
@@ -277,7 +277,7 @@ interface TestNoExplicitDefine
 {
 }
 
-class InjectorTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine
+class InjectorTestCtorParamWithNoTypeOrDefault implements TestNoExplicitDefine
 {
     public $val = 42;
     public function __construct($val)
@@ -286,7 +286,7 @@ class InjectorTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefi
     }
 }
 
-class InjectorTestCtorParamWithNoTypehintOrDefaultDependent
+class InjectorTestCtorParamWithNoTypeOrDefaultDependent
 {
     private $param;
     public function __construct(TestNoExplicitDefine $param)
@@ -344,7 +344,7 @@ class CallableMock
     }
 }
 
-class ProviderTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine
+class ProviderTestCtorParamWithNoTypeOrDefault implements TestNoExplicitDefine
 {
     public $val = 42;
     public function __construct($val)
@@ -353,7 +353,7 @@ class ProviderTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefi
     }
 }
 
-class ProviderTestCtorParamWithNoTypehintOrDefaultDependent
+class ProviderTestCtorParamWithNoTypeOrDefaultDependent
 {
     private $param;
     public function __construct(TestNoExplicitDefine $param)
@@ -497,7 +497,7 @@ class RequiresDelegatedInterface
 
 class TestMissingDependency
 {
-    public function __construct(TypoInTypehint $class)
+    public function __construct(TypoInType $class)
     {
     }
 }
@@ -588,7 +588,7 @@ class TestNeedsDepWithProtCons
     }
 }
 
-class SimpleNoTypehintClass
+class SimpleNoTypeClass
 {
     public $testParam = 1;
 

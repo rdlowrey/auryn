@@ -52,7 +52,7 @@ class CachingReflector implements Reflector
         return $reflectedCtorParams;
     }
 
-    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param)
+    public function getParamType(\ReflectionFunctionAbstract $function, \ReflectionParameter $param)
     {
         $lowParam = strtolower($param->name);
 
@@ -67,16 +67,16 @@ class CachingReflector implements Reflector
                 : null;
         }
 
-        $typeHint = ($paramCacheKey === null) ? false : $this->cache->fetch($paramCacheKey);
+        $type = ($paramCacheKey === null) ? false : $this->cache->fetch($paramCacheKey);
 
-        if (false === $typeHint) {
-            $typeHint = $this->reflector->getParamTypeHint($function, $param);
+        if (false === $type) {
+            $type = $this->reflector->getParamType($function, $param);
             if ($paramCacheKey !== null) {
-                $this->cache->store($paramCacheKey, $typeHint);
+                $this->cache->store($paramCacheKey, $type);
             }
         }
 
-        return $typeHint;
+        return $type;
     }
 
     public function getFunction($functionName)

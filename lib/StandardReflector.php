@@ -23,7 +23,7 @@ class StandardReflector implements Reflector
             : null;
     }
 
-    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param)
+    public function getParamType(\ReflectionFunctionAbstract $function, \ReflectionParameter $param)
     {
         // php 8 deprecates getClass method
         if (PHP_VERSION_ID >= 80000) {

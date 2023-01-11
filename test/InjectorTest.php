@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class InjectorTest extends TestCase
 {
-    public function testArrayTypehintDoesNotEvaluatesAsClass()
+    public function testArrayTypeDoesNotEvaluatesAsClass()
     {
         $injector = new Injector;
         $injector->defineParam('parameter', []);
@@ -28,7 +28,7 @@ class InjectorTest extends TestCase
         $this->assertEquals(new TestNoConstructor, $injector->make('Auryn\Test\TestNoConstructor'));
     }
 
-    public function testMakeInstanceReturnsAliasInstanceOnNonConcreteTypehint()
+    public function testMakeInstanceReturnsAliasInstanceOnNonConcreteType()
     {
         $injector = new Injector;
         $injector->alias('Auryn\Test\DepInterface', 'Auryn\Test\DepImplementation');
@@ -62,7 +62,7 @@ class InjectorTest extends TestCase
         $this->assertInstanceOf('Auryn\Test\RequiresInterface', $obj);
     }
 
-    public function testMakeInstancePassesNullCtorParameterIfNoTypehintOrDefaultCanBeDetermined()
+    public function testMakeInstancePassesNullCtorParameterIfNoTypeOrDefaultCanBeDetermined()
     {
         $injector = new Injector;
         $nullCtorParamObj = $injector->make('Auryn\Test\ProvTestNoDefinitionNullDefaultClass');
@@ -128,10 +128,10 @@ class InjectorTest extends TestCase
         $obj = $injector->make('Auryn\Test\TestMultiDepsWithCtor', array('val1'=>'Auryn\Test\TestDependency'));
         $this->assertInstanceOf('Auryn\Test\TestMultiDepsWithCtor', $obj);
 
-        $obj = $injector->make('Auryn\Test\NoTypehintNoDefaultConstructorClass',
+        $obj = $injector->make('Auryn\Test\NoTypeNoDefaultConstructorClass',
             array('val1'=>'Auryn\Test\TestDependency')
         );
-        $this->assertInstanceOf('Auryn\Test\NoTypehintNoDefaultConstructorClass', $obj);
+        $this->assertInstanceOf('Auryn\Test\NoTypeNoDefaultConstructorClass', $obj);
         $this->assertNull($obj->testParam);
     }
 
@@ -147,17 +147,17 @@ class InjectorTest extends TestCase
         require_once __DIR__ . "/fixtures_5_6.php";
 
         $injector = new Injector;
-        $obj = $injector->make('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass',
+        $obj = $injector->make('Auryn\Test\NoTypeNoDefaultConstructorVariadicClass',
             array('val1'=>'Auryn\Test\TestDependency')
         );
-        $this->assertInstanceOf('Auryn\Test\NoTypehintNoDefaultConstructorVariadicClass', $obj);
+        $this->assertInstanceOf('Auryn\Test\NoTypeNoDefaultConstructorVariadicClass', $obj);
         $this->assertEquals(array(), $obj->testParam);
     }
 
     /**
      * @requires PHP 5.6
      */
-    public function testMakeInstanceUsesReflectionForUnknownParamsWithDepsAndVariadicsWithTypeHint()
+    public function testMakeInstanceUsesReflectionForUnknownParamsWithDepsAndVariadicsWithType()
     {
         if (defined('HHVM_VERSION')) {
             $this->markTestSkipped("HHVM doesn't support variadics with type declarations.");
@@ -166,38 +166,38 @@ class InjectorTest extends TestCase
         require_once __DIR__ . "/fixtures_5_6.php";
 
         $injector = new Injector;
-        $obj = $injector->make('Auryn\Test\TypehintNoDefaultConstructorVariadicClass',
+        $obj = $injector->make('Auryn\Test\TypeNoDefaultConstructorVariadicClass',
             array('arg'=>'Auryn\Test\TestDependency')
         );
-        $this->assertInstanceOf('Auryn\Test\TypehintNoDefaultConstructorVariadicClass', $obj);
+        $this->assertInstanceOf('Auryn\Test\TypeNoDefaultConstructorVariadicClass', $obj);
         $this->assertIsArray($obj->testParam);
         $this->assertInstanceOf('Auryn\Test\TestDependency', $obj->testParam[0]);
     }
 
-    public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefault()
+    public function testMakeInstanceThrowsExceptionOnUntypedParameterWithoutDefinitionOrDefault()
     {
         $this->expectException(\Auryn\InjectionException::class);
         // TODO - why does this message end with double-colon?
-        $this->expectExceptionMessage('No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::');
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypeOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypeOrDefault::');
         $this->expectExceptionCode(\Auryn\Injector::E_UNDEFINED_PARAM);
 
         $injector = new Injector;
-        $injector->make('Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault');
+        $injector->make('Auryn\Test\InjectorTestCtorParamWithNoTypeOrDefault');
     }
 
-    public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithoutDefinitionOrDefaultThroughAliasedTypehint()
+    public function testMakeInstanceThrowsExceptionOnUntypedParameterWithoutDefinitionOrDefaultThroughAliasedType()
     {
         $this->expectException(\Auryn\InjectionException::class);
         // TODO - why does this message end with double-colon?
-        $this->expectExceptionMessage('No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault::');
+        $this->expectExceptionMessage('No definition available to provision typeless parameter $val at position 0 in Auryn\Test\InjectorTestCtorParamWithNoTypeOrDefault::__construct() declared in Auryn\Test\InjectorTestCtorParamWithNoTypeOrDefault::');
         $this->expectExceptionCode(\Auryn\Injector::E_UNDEFINED_PARAM);
 
         $injector = new Injector;
-        $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefault');
-        $injector->make('Auryn\Test\InjectorTestCtorParamWithNoTypehintOrDefaultDependent');
+        $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\InjectorTestCtorParamWithNoTypeOrDefault');
+        $injector->make('Auryn\Test\InjectorTestCtorParamWithNoTypeOrDefaultDependent');
     }
 
-    public function testMakeInstanceThrowsExceptionOnUninstantiableTypehintWithoutDefinition()
+    public function testMakeInstanceThrowsExceptionOnUninstantiableTypeWithoutDefinition()
     {
         $this->expectException(\Auryn\InjectorException::class);
         $this->expectExceptionMessage("Injection definition required for interface Auryn\Test\DepInterface");
@@ -220,8 +220,8 @@ class InjectorTest extends TestCase
         $injector = new Injector;
         $injector->defineParam('val', 42);
 
-        $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefault');
-        $obj = $injector->make('Auryn\Test\ProviderTestCtorParamWithNoTypehintOrDefaultDependent');
+        $injector->alias('Auryn\Test\TestNoExplicitDefine', 'Auryn\Test\ProviderTestCtorParamWithNoTypeOrDefault');
+        $obj = $injector->make('Auryn\Test\ProviderTestCtorParamWithNoTypeOrDefaultDependent');
     }
 
     public function testMakeInstanceInjectsRawParametersDirectly()
@@ -322,7 +322,7 @@ class InjectorTest extends TestCase
         $injector->delegate('StdClass', 'SomeClassThatDefinitelyDoesNotExistForReal');
     }
 
-    public function testMakeInstanceThrowsExceptionOnUntypehintedParameterWithNoDefinition()
+    public function testMakeInstanceThrowsExceptionOnUntypedParameterWithNoDefinition()
     {
         $this->expectException(\Auryn\InjectionException::class);
         $this->expectExceptionMessage('Injection definition required for interface Auryn\Test\DepInterface');
@@ -621,10 +621,10 @@ class InjectorTest extends TestCase
     public function testMissingAlias()
     {
         $reportedClassname = 'TestMissingDependency';
-        $classname = 'Auryn\Test\TypoInTypehint';
+        $classname = 'Auryn\Test\TypoInType';
         if (PHP_VERSION_ID >= 80000) {
             $classname = "\"" . $classname . "\"";
-            $reportedClassname = 'TypoInTypehint';
+            $reportedClassname = 'TypoInType';
         }
 
         $this->expectException(\Auryn\InjectorException::class);
@@ -947,8 +947,8 @@ class InjectorTest extends TestCase
     public function testDefineWithBackslashAndMakeWithoutBackslash()
     {
         $injector = new Injector();
-        $injector->define('Auryn\Test\SimpleNoTypehintClass', array(':arg' => 'tested'));
-        $testClass = $injector->make('Auryn\Test\SimpleNoTypehintClass');
+        $injector->define('Auryn\Test\SimpleNoTypeClass', array(':arg' => 'tested'));
+        $testClass = $injector->make('Auryn\Test\SimpleNoTypeClass');
         $this->assertEquals('tested', $testClass->testParam);
     }
 
