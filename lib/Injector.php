@@ -38,6 +38,7 @@ class Injector
     const M_CYCLIC_DEPENDENCY = "Detected a cyclic dependency while provisioning %s";
     const E_MAKING_FAILED = 12;
     const M_MAKING_FAILED = "Making %s did not result in an object, instead result is of type '%s'";
+
     const E_DOUBLE_SHARE = 13;
     const M_DOUBLE_SHARE = "An instance of type %s has already been shared. Cannot share a second instance of the same type.";
 
@@ -47,14 +48,17 @@ class Injector
     const E_INVALID_DEFINE_ARGUMENT_BAD_KEYS = 13;
     const M_INVALID_DEFINE_ARGUMENT_BAD_KEYS = "Define parameters needs to be an array with contents of {0:class-string, 1:array of injector params}. %s.";
 
-    private $reflector;
+    const E_SHARED_CONTEXT_FAILED = 14;
+    const M_SHARED_CONTEXT_FAILED = "Making %s failed. Any type that is shared in an injector must have all information in that injector context. The info cannot be spread over different contexts. Original message: %s";
+
+    protected $reflector;
     private $classDefinitions = array();
     private $paramDefinitions = array();
     private $aliases = array();
     private $shares = array();
     private $prepares = array();
     private $delegates = array();
-    private $inProgressMakes = array();
+    protected $inProgressMakes = array();
 
     public function __construct(Reflector $reflector = null)
     {
@@ -64,6 +68,29 @@ class Injector
     public function __clone()
     {
         $this->inProgressMakes = array();
+    }
+
+    /**
+     * Create a new 'Injector context' so that you can add information to the
+     * injector that shouldn't be globally shared. All existing define, alias,
+     * share etc information is inherited by the separated context.
+     *
+     * All objects/types that are shared in the original context will continue to be
+     * made in/shared from the original context.
+     *
+     * A side effect of that is that all shared objects that are created by the Auryn
+     * injector need to have all their required dependencies/information in a single
+     * context. That avoids any per-context information being accidentally fixed
+     * and used across an application.
+     *
+     * You should probably use this rather than the extra args parameters to make()
+     * and execute(). Though execute could be updated to not have that problem...
+     *
+     * @return InjectorContext
+     */
+    public function separateContext(): InjectorContext
+    {
+        return new InjectorContext($this);
     }
 
     /**
@@ -347,6 +374,14 @@ class Injector
             return array();
         }
     }
+
+    public function isKnownSharedType(string $name): bool
+    {
+        list($className, $normalizedClass) = $this->resolveAlias($name);
+
+        return array_key_exists($normalizedClass, $this->shares);
+    }
+
 
     /**
      * Instantiate/provision a class instance

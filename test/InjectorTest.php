@@ -2,6 +2,7 @@
 
 namespace Auryn\Test;
 
+use Auryn\InjectionException;
 use Auryn\Injector;
 
 class InjectorTest extends BaseTest
@@ -1227,6 +1228,43 @@ class InjectorTest extends BaseTest
             echo $ie->getMessage();
             $this->fail("Auryn failed to locate the ");
         }
+    }
+
+    public function testWhySeparationINeeded()
+    {
+        $injector = new Injector();
+        $message = "shared instance has one off message";
+
+        // Declare a class as shared
+        $injector->share(SharedClassInInjector::class);
+        // Create an instance with one-off variables. The object is created.
+        $obj1 = $injector->make(SharedClassInInjector::class, [':message' => $message]);
+
+        // Create another instance... but as it is shared, the previous
+        // 'one-off' message is used.
+        $obj2 = $injector->make(SharedClassInInjector::class, [':message' => "Surprise!"]);
+
+        $this->assertSame($message, $obj1->getMessage());
+        $this->assertSame($message, $obj2->getMessage());
+    }
+
+    public function testSeparationWorks_with_shared_class()
+    {
+        $injector = new Injector();
+        $message = "shared instance has one off message";
+
+        // We're sharing the class.
+        $injector->share(SharedClassInInjector::class);
+        $next_injector = $injector->separateContext();
+        $injector->defineParam('message', $message);
+
+        $obj1 = $injector->make(SharedClassInInjector::class);
+
+        $obj2 = $next_injector->make(SharedClassInInjector::class);
+
+        $this->assertSame($message, $obj1->getMessage());
+        $this->assertSame($message, $obj2->getMessage());
+        $this->assertSame($obj1, $obj2);
     }
 
     public function testChildWithoutConstructorMissingParam()
