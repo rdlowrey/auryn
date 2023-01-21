@@ -49,3 +49,6 @@ jobs:
 
       - name: "Run tests"
         run: vendor/bin/simple-phpunit
+
+      - name: Execute benchmarks
+        run: vendor/bin/phpbench run
