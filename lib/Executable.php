@@ -42,27 +42,7 @@ class Executable
             return $reflection->invokeArgs($this->invocationObject, $args);
         }
 
-        return $this->callableReflection->isClosure()
-            ? $this->invokeClosureCompat($reflection, $args)
-            : $reflection->invokeArgs($args);
-    }
-
-    /**
-     * @TODO Remove this extra indirection when 5.3 support is dropped
-     */
-    private function invokeClosureCompat($reflection, $args)
-    {
-        if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
-            $scope = $reflection->getClosureScopeClass();
-            $closure = \Closure::bind(
-                $reflection->getClosure(),
-                $reflection->getClosureThis(),
-                $scope ? $scope->name : null
-            );
-            return call_user_func_array($closure, $args);
-        } else {
-            return $reflection->invokeArgs($args);
-        }
+        return $reflection->invokeArgs($args);
     }
 
     public function getCallableReflection()
