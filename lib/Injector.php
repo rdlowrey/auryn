@@ -374,7 +374,18 @@ class Injector
                 $reflectionFunction = $executable->getCallableReflection();
                 $args = $this->provisionFuncArgs($reflectionFunction, $args, null, $className);
                 $obj = call_user_func_array(array($executable, '__invoke'), $args);
-            } else {
+                if (!($obj instanceof $normalizedClass)) {
+                    throw new InjectionException(
+                        $this->inProgressMakes,
+                        sprintf(
+                            self::M_MAKING_FAILED,
+                            $normalizedClass,
+                            gettype($obj)
+                        ),
+                        self::E_MAKING_FAILED
+                    );
+                }
+           } else {
                 $obj = $this->provisionInstance($className, $normalizedClass, $args);
             }
 
@@ -584,6 +595,7 @@ class Injector
 
     private function prepareInstance($obj, $normalizedClass)
     {
+        // Check and call any prepares for a class.
         if (isset($this->prepares[$normalizedClass])) {
             $prepare = $this->prepares[$normalizedClass];
             $executable = $this->buildExecutable($prepare);
@@ -593,24 +605,7 @@ class Injector
             }
         }
 
-        // TODO - this is inelegant
-        if ($obj === null) {
-            $interfaces = false;
-        } else {
-            $interfaces = @class_implements($obj);
-        }
-
-        if ($interfaces === false) {
-            throw new InjectionException(
-                $this->inProgressMakes,
-                sprintf(
-                    self::M_MAKING_FAILED,
-                    $normalizedClass,
-                    gettype($obj)
-                ),
-                self::E_MAKING_FAILED
-            );
-        }
+        $interfaces = class_implements($obj);
 
         if (empty($interfaces)) {
             return $obj;
