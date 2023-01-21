@@ -622,6 +622,35 @@ var_dump($myObj->myProperty); // int(42)
 
 While the above example is contrived, the usefulness should be clear.
 
+Additionally, the prepare method is able to replace the object being prepared with another of the same or descendant type: 
+
+```php
+<?php
+
+class FooGreeter {
+    public function getMessage(): string {
+        return "Hello, I am foo.";
+    }
+}
+
+class BarGreeter extends FooGreeter {
+    public function getMessage(): string {
+        return "Hello, I am bar.";
+    }
+}
+
+$injector = new \Auryn\Injector();
+
+$injector->prepare(FooGreeter::class, function($myObj, $injector) {
+    return new BarGreeter();
+});
+
+$myObj = $injector->make(FooGreeter::class);
+echo $myObj->getMessage(); // Output is: "Hello, I am bar."
+```
+The usefulness of this is much less clear.
+
+Any value returned that is not the same or descendant type will be ignored.
 
 ### Injecting for Execution
 
