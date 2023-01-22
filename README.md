@@ -906,3 +906,41 @@ function getAurynInjector()
     return $injector;
 }
 ```
+
+### Running tests and benchmarks
+
+#### Running tests
+
+As there is no single version of PHPUnit that works on all the versions of PHP that Auryn supports, we use simple-phpunit to install an appropriate version of PHP.
+
+After running the `composer update` to get the latest dependencies, run:
+
+```
+php vendor/bin/simple-phpunit install
+```
+
+to make simple-phpunit install PHPUnit. The tests can then be with with the command:
+
+```
+php vendor/bin/simple-phpunit
+```
+
+simple-phpunit accepts PHPUnit commandline options and passes them through to PHPUnit e.g. `php php vendor/bin/simple-phpunit --group wip` to only run the tests tagged as being part of group 'wip'.
+
+#### Running benchamarks
+
+We use PHPBench to allow checking performance gains/regressions when making code changes. The simplest way to use it is as follows: 
+
+1. Create a benchmark baseline by running:
+
+```
+vendor/bin/phpbench run --tag=benchmark_original --retry-threshold=5 --iterations=10
+```
+
+2. Apply your code changes.
+
+3. Run a benchmark, and compare the results to the 'benchmark_original' by running:
+
+```
+vendor/bin/phpbench run --report=aggregate --ref=benchmark_original --retry-threshold=5 --iterations=10
+```
