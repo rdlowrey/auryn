@@ -39,6 +39,12 @@ class Injector
     const E_MAKING_FAILED = 12;
     const M_MAKING_FAILED = "Making %s did not result in an object, instead result is of type '%s'";
 
+    const E_INVALID_DEFINE_ARGUMENT_NOT_ARRAY = 12;
+    const M_INVALID_DEFINE_ARGUMENT_NOT_ARRAY = "Define parameters needs to be an array with contents of {0:class-string, 1:array of injector params}. Value passed was of type '%s'.";
+
+    const E_INVALID_DEFINE_ARGUMENT_BAD_KEYS = 13;
+    const M_INVALID_DEFINE_ARGUMENT_BAD_KEYS = "Define parameters needs to be an array with contents of {0:class-string, 1:array of injector params}. %s.";
+
     private $reflector;
     private $classDefinitions = array();
     private $paramDefinitions = array();
@@ -484,16 +490,16 @@ class Injector
     private function buildArgFromParamDefineArr($definition)
     {
         if (!is_array($definition)) {
-            throw new InjectionException(
+            throw InjectionException::fromInvalidDefineParamsNotArray(
+                $definition,
                 $this->inProgressMakes
-                // @TODO Add message
             );
         }
 
         if (!isset($definition[0], $definition[1])) {
-            throw new InjectionException(
+            throw InjectionException::fromInvalidDefineParamsBadKeys(
+                $definition,
                 $this->inProgressMakes
-                // @TODO Add message
             );
         }
 

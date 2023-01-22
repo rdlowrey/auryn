@@ -6,6 +6,7 @@
     </include>
     <report>
       <text outputFile="php://stdout"/>
+      <html outputDirectory="./test/coverage" lowUpperBound="83" highLowerBound="95"/>
     </report>
   </coverage>
   <testsuites>

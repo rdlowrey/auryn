@@ -664,6 +664,40 @@ $injector = new Auryn\Injector;
 var_dump($injector->execute('Example::myMethod', $args = [':arg2' => 42]));
 ```
 
+### Injector::make and Injector::execute custom args
+
+The args parameter in both of Injector::make($name, array $args = array()) and Injector::execute($callableOrMethodStr, array $args = array())) allow you to pass in a bespoke set of parameters to be used during the creation/execution.
+
+The rules for how those injector args are used is as follows.
+
+Given a parameter named 'foo' at parameter position 'i' which has a type of 'bar', for the thing being created/executed:
+
+1. If an integer indexed key 'i' is present (i.e. does `$args[$i]` exist?) then use the value of `$args[$i]` directly for that parameter.
+
+2. If an string indexed key 'foo' is present (i.e. does `$args['foo']` exist?) then use the value of `$args['foo']` for that parameter.
+
+3. If a string indexed key `Injector::A_DELEGATE . 'foo'` is present (i.e. does `$args['+foo']` exist?) then interpret `$args['+' . $i]` as a delegate callable to be invoked, and the return value to be used for that parameter.
+
+4. If a string indexed key `Injector::A_DEFINE . 'foo'` is present (i.e. does `$args['@foo']` exist?) then interpret `$args['+' . $i]` as an array with
+
+```
+$params = [
+    PrefixDefineDependency::class,
+    [Injector::A_RAW . 'message' => $message]
+];
+
+$object = $injector->make(
+    PrefixDefineTest::class,
+    [Injector::A_DEFINE . 'pdd' => $params]
+);
+```
+i.e. when the injector is making the class `'PrefixDefineTest` which has a dependency on the class `PrefixDefineDependency`, which is named as parameter 'pdd' in the constructor, use the values in the array `$params[1]`, to instantiate the `PrefixDefineDependency` class.
+
+
+5. If a string indexed key `Injector::A_DEFINE . '+foo'` is present (i.e. does `$args[':foo']` exist?) then interpret `$args['+' . $i]` as a value to be used a parameter defined by name. This is similar behaviour to `$injector->define('foo', 'bar');`
+
+6. Try to build the arg through the normal Auryn argument building process.
+
 
 ### Dependency Resolution
 

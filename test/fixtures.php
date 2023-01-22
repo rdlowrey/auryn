@@ -753,3 +753,73 @@ class ThrowsExceptionInConstructor {
 
 class ExtendedArrayObject extends \ArrayObject {}
 class ExtendedExtendedArrayObject extends ExtendedArrayObject {}
+
+class PrefixDelegateTestDependency {
+    private $value;
+    protected function __construct($value)
+    {
+        $this->value = $value;
+    }
+    public static function create($value)
+    {
+        return new static($value);
+    }
+
+    public function getValue()
+    {
+        return $this->value;
+    }
+}
+
+class PrefixDelegateTestDependencyInstantiable extends PrefixDelegateTestDependency
+{
+    public function __construct()
+    {
+        parent::__construct('this is the child class');
+    }
+}
+
+class PrefixDelegateTest
+{
+    private $b;
+    public function __construct(PrefixDelegateTestDependency $b)
+    {
+        $this->b = $b;
+    }
+    public function getB()
+    {
+        return $this->b;
+    }
+}
+
+class PrefixDefineDependency {
+    public $message;
+    public function __construct($message)
+    {
+        $this->message = $message;
+    }
+}
+
+class PrefixDefineTest
+{
+    private $pdd;
+    public function __construct(PrefixDefineDependency $pdd)
+    {
+        $this->pdd = $pdd;
+    }
+    public function getPdd()
+    {
+        return $this->pdd;
+    }
+}
+
+function aFunctionWithAParam($foo)
+{
+    return $foo;
+}
+
+
+class ExecutableHelper
+{
+    public function foo() {}
+}
