@@ -887,3 +887,22 @@ eliminate evil Singletons using the sharing capabilities of the auryn DIC. In th
 code, we share the request object so that any classes instantiated by the `Auryn\Injector` that ask
 for a `Request` will receive the same instance. This feature not only helps eliminate Singletons,
 but also the need for hard-to-test `static` properties.
+
+### When app-bootstrapping by Auryn is not possible
+
+Sometimes, the initialisation of the application is outside of your control. One example would be writing plugins for Wordpress, where Wordpress is initialising your plugin, not the other way round.
+
+You can still use Auryn by using a function to make a single instance of the injector:
+
+```php
+function getAurynInjector()
+{
+    static $injector = null;
+	if ($injector == null) {
+		$injector = new \Auryn\Injector();
+		// Do injector defines/shares/aliases/delegates here
+	}
+
+    return $injector;
+}
+```
