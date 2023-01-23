@@ -380,12 +380,10 @@ class Injector
             }
 
             unset($this->inProgressMakes[$normalizedClass]);
-        }
-        catch (\Throwable $exception) {
+        } catch (\Throwable $exception) {
             unset($this->inProgressMakes[$normalizedClass]);
             throw $exception;
-        }
-        catch (\Exception $exception) {
+        } catch (\Exception $exception) {
             unset($this->inProgressMakes[$normalizedClass]);
             throw $exception;
         }
@@ -596,8 +594,7 @@ class Injector
         // TODO - this is inelegant
         if ($obj === null) {
             $interfaces = false;
-        }
-        else {
+        } else {
             $interfaces = @class_implements($obj);
         }
 
