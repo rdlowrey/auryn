@@ -1448,4 +1448,16 @@ class InjectorTest extends BaseTest
             [Injector::A_DELEGATE . 'b' => 'this is not callable']
         );
     }
+
+    public function testDoubleShareClassThrows()
+    {
+        $injector = new Injector;
+        $injector->share(new \StdClass);
+
+        $this->expectExceptionCode(Injector::E_DOUBLE_SHARE);
+        $this->expectExceptionMessageMatchesTemplateString(Injector::M_DOUBLE_SHARE);
+        $this->expectExceptionMessageContains('stdclass');
+
+        $injector->share(new \StdClass);
+    }
 }

@@ -38,6 +38,8 @@ class Injector
     const M_CYCLIC_DEPENDENCY = "Detected a cyclic dependency while provisioning %s";
     const E_MAKING_FAILED = 12;
     const M_MAKING_FAILED = "Making %s did not result in an object, instead result is of type '%s'";
+    const E_DOUBLE_SHARE = 13;
+    const M_DOUBLE_SHARE = "An instance of type %s has already been shared. Cannot share a second instance of the same type.";
 
     const E_INVALID_DEFINE_ARGUMENT_NOT_ARRAY = 12;
     const M_INVALID_DEFINE_ARGUMENT_NOT_ARRAY = "Define parameters needs to be an array with contents of {0:class-string, 1:array of injector params}. Value passed was of type '%s'.";
@@ -159,6 +161,8 @@ class Injector
      */
     public function share($nameOrInstance)
     {
+
+
         if (is_string($nameOrInstance)) {
             $this->shareClass($nameOrInstance);
         } elseif (is_object($nameOrInstance)) {
@@ -208,6 +212,16 @@ class Injector
                     $this->aliases[$normalizedName]
                 ),
                 self::E_ALIASED_CANNOT_SHARE
+            );
+        }
+
+        if (isset($this->shares[$normalizedName])) {
+            throw new ConfigException(
+                sprintf(
+                    self::M_DOUBLE_SHARE,
+                    get_class($obj),
+                ),
+                self::E_DOUBLE_SHARE
             );
         }
         $this->shares[$normalizedName] = $obj;
