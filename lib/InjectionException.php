@@ -50,6 +50,12 @@ class InjectionException extends InjectorException
         );
     }
 
+    /**
+     * If PHP had package based privacy rules, this could be package private
+     * or this could be 'just' a function.
+     * @param $callableOrMethodStr
+     * @return string
+     */
     public static function getInvalidCallableMessage($callableOrMethodStr)
     {
         $callableString = null;
