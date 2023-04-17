@@ -970,6 +970,112 @@ function getAurynInjector()
 }
 ```
 
+
+## Advanced patterns
+
+### "Variadic" dependencies
+
+
+```php
+
+class Foo {
+  public function __construct(array ...$repositories) {
+  // ...
+  }
+}
+```
+
+In that scenario $repositories does not represent a single simple variable and so Auryn's ability to make life a bit easier for the programmer does not apply.
+
+Instead ...$repositories represents a complex type. This will need a more advanced technique to be able to inject. I think the two possible solutions are to either use
+
+Use a delegate method
+The simplest way to achieve what you want to do is to use a delegate function for creating objects that have this variable dependency.
+
+```php
+function createFoo(RepositoryLocator $repoLocator)
+{
+    //Or whatever code is needed to find the repos.
+    $repositories = $repoLocator->getRepos('Foo');
+
+    return new Foo($repositories);
+}
+
+$injector->delegate('Foo', 'createFoo')
+```
+
+This does what you want....however it has some limitations. In particular it can only be used for constructor injection. It cannot be used to inject the dependencies as a parameter in normal functions or methods.
+
+Refactor the code to use a context
+Using a 'context' doesn't have these limitations. Or to give it the full name, using the 'Encapsulated context patten'
+
+The trade-off is that it would require you to refactor your code a little bit. This is a good trade-off to make, in this case. In fact it's a fantastic trade-off. It makes your code far easier to reason about.
+
+// This is the context that holds the 'repositories'
+class FooRepositories {
+private $repositories;
+
+    private function __construct(RepositoryLocator $repoLocator)
+    {
+        //Or whatever code is needed to find the repos.
+        $repositories = $repoLocator->getRepos('Foo');
+    }
+}
+
+class Foo {
+public function __construct(FooRepositories $fooRepositories) {
+// ...
+}
+}
+
+There are a couple of reasons why using a context is a suprior solution:
+
+The dependency is now a named type, which means that you can see how it is used in your codebase without having to know which class it is used in.
+If some other code has a dependency on a separate set of repositories, you can create a separate context for that code. It is far easier to understand that FooRepositories is separate from BarRepositories compared to trying to reason about ...$repositories used in one place, and ...$repositories used in a separate place.
+If you're using a framework such as Tier that allows multiple levels of execution then it's much easier to create specific context types and pass them around as dependencies rather than hoping for the best by creating a generically named variadic parameter and hoping for the best when passing that around.
+TL:DR - Auryn shouldn't handle variadics at all imo. They aren't a type and so can't be reasoned about by a DIC. People should either use delegation or contexts to achieve what they're trying to do in a sane way.
+
+
+
+### Context objects and multiple instances of the same types
+
+Sometimes you might need to have
+
+
+$injector->alias('WriteDB', 'DbAdapter');
+$injector->alias('ReadDb', 'DbAdapter');
+
+Depending on the exact reason
+
+Or to give it the full name, using the 'Encapsulated context pattern'](https://hillside.net/europlop/HillsideEurope/Papers/EuroPLoP2003/2003_Kelly_EncapsulateContext.pdf).
+
+It makes your code far easier to reason about.
+
+// This is the context that holds the 'repositories'
+class FooRepositories {
+
+    private $repositories;
+
+    private function __construct(RepositoryLocator $repoLocator)
+    {
+        // Or whatever code is needed to find the repos.
+        $repositories = $repoLocator->getRepos('Foo');
+    }
+}
+
+class Foo {
+public function __construct(FooRepositories $fooRepositories) {
+// ...
+}
+}
+```
+There are a couple of reasons why using a context is a superior solution:
+
+The dependency is now a named type, which means that you can see how it is used in your codebase without having to know which class it is used in.
+
+If some other code has a dependency on a separate set of repositories, you can create a separate context for that code. It is far easier to understand that FooRepositories is separate from BarRepositories compared to trying to reason about ...$repositories used in one place, and ...$repositories used in a separate place.
+
+
 ### Running tests and benchmarks
 
 #### Running tests
