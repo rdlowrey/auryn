@@ -18,5 +18,4 @@ class ConfigException extends InjectorException
 
         return new self($message, Injector::E_INVOKABLE, $previous);
     }
-
 }
