@@ -1460,4 +1460,18 @@ class InjectorTest extends BaseTest
 
         $injector->share(new \StdClass);
     }
+
+    /**
+     * @requires PHP 8.1
+     */
+    public function testNewInIntializer()
+    {
+        require_once __DIR__ . "/fixtures_8_1.php";
+
+        $injector = new Injector;
+        $obj = $injector->make(\NewInInitializer::class);
+
+        $this->assertInstanceOf(\NewInInitializer::class, $obj);
+        $this->assertInstanceOf(\NewInInitializerDependency::class, $obj->instance);
+    }
 }
