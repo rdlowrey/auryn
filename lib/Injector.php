@@ -499,7 +499,7 @@ class Injector
             } elseif (!$arg = $this->buildArgFromType($reflFunc, $reflParam)) {
                 $arg = $this->buildArgFromReflParam($reflParam, $className);
 
-                if ($arg === null && (PHP_VERSION_ID >= 50600 && $reflParam->isVariadic() || $reflParam->isOptional())) {
+                if ($arg === null && ($reflParam->isVariadic() || $reflParam->isOptional())) {
                     // buildArgFromReflParam might return null in case the parameter is optional
                     // in case of variadics, the parameter is optional, but null might not be allowed
                     continue;
