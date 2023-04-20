@@ -49,7 +49,7 @@ class Injector
     const M_INVALID_DEFINE_ARGUMENT_BAD_KEYS = "Define parameters needs to be an array with contents of {0:class-string, 1:array of injector params}. %s.";
 
     const E_SHARED_CONTEXT_FAILED = 14;
-    const M_SHARED_CONTEXT_FAILED = "Making %s failed. Any type that is shared in an injector must have all information in that injector context. The info cannot be spread over different contexts. Original message: %s";
+    const M_SHARED_CONTEXT_FAILED = "Making %s failed. Any type that is shared in an injector must have all information in that injector context, or have inherited it from the previous injector when it was separated. The info cannot be spread over different contexts. Original message: %s";
 
     protected $reflector;
     private $classDefinitions = array();
