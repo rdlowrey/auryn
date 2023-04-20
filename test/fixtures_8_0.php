@@ -6,7 +6,7 @@ class Dependency {}
 
 class NullableDependency
 {
-    public ?Dependency $string;
+    public ?Dependency $instance;
 
     public function __construct(?Dependency $instance = null)
     {
@@ -16,7 +16,7 @@ class NullableDependency
 
 class UnionNullDependency
 {
-    public ?Dependency $string;
+    public ?Dependency $instance;
 
     public function __construct(?Dependency $instance = null)
     {
@@ -28,7 +28,7 @@ class UnionNullDependency
 
 class DefaultNullDependency
 {
-    public ?Dependency $string;
+    public ?Dependency $instance;
 
     public function __construct(Dependency $instance = null)
     {
