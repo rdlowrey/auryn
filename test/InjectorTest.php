@@ -1461,6 +1461,32 @@ class InjectorTest extends BaseTest
         $injector->share(new \StdClass);
     }
 
+
+    /**
+     * This test is duplication of other tests. It is present to check
+     * that the behaviour of three different ways of params being null-ish
+     * are consistent.
+     *
+     * @requires PHP 8.0
+     */
+    public function testNullConsistency()
+    {
+        require_once __DIR__ . "/fixtures_8_0.php";
+
+        $injector = new Injector;
+        $obj = $injector->make(\NullableDependency::class);
+        $this->assertInstanceOf(\NullableDependency::class, $obj);
+        $this->assertNull($obj->instance);
+
+        $obj = $injector->make(\UnionNullDependency::class);
+        $this->assertInstanceOf(\UnionNullDependency::class, $obj);
+        $this->assertNull($obj->instance);
+
+        $obj = $injector->make(\DefaultNullDependency::class);
+        $this->assertInstanceOf(\DefaultNullDependency::class, $obj);
+        $this->assertNull($obj->instance);
+    }
+
     /**
      * @requires PHP 8.1
      */

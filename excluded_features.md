@@ -350,3 +350,62 @@ If you wanted to see what class was going to be created for an interface, not be
 Additionally, if a second class that implements the interface was added, the injector would need to either pick one or throw an exception of "multiple available types". Either choice would be quite surprising and take more time to resolve than simply writing the explicit configuration.
 
 
+## Optional aka null default parameters
+
+Original discussion: https://github.com/rdlowrey/auryn/issues/190
+
+### Description
+
+
+When a dependency is optional and/or nullable, then Auryn will always pass null as the parameter:
+
+```php
+class NullableDependency {}
+
+class DependsOnNullableDependency
+{
+    public ?NullableDependency $string;
+
+    public function __construct(?NullableDependency $instance = null)
+    {
+        $this->instance = $instance;
+    }
+}
+```
+
+Some people might expect that the NullableDependency would be created.
+
+
+### Why the parameter is always null
+
+
+* Auryn defaults to explicit configuration. If an dependency is optional, then defaulting to not creating it, is more consistent with that principle.
+
+* Some classes are not instantiable e.g. abstract classes, or classes with uncreatable dependencies. If Auryn defaulted to attempting to create the type, we would need to add "don't create this class" rules/config.
+
+
+### Alternative solution - be explicit
+
+```php
+$injector->alias(NullableDependency::class, NullableDependency::class);
+```
+
+
+### Alternative solution - new in the initializer
+
+As of PHP 8.1, you can use create objects the initializer:
+
+
+```php
+class NullableDependency {}
+
+class DependsOnNullableDependency
+{
+    public ?NullableDependency $string;
+
+    public function __construct(?NullableDependency $instance = new NullableDependency)
+    {
+        $this->instance = $instance;
+    }
+}
+```

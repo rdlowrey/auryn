@@ -7,7 +7,7 @@ S.O.L.I.D., object-oriented PHP applications.
 
 `rdlowrey/auryn` is in low maintenance mode. i.e. new features are very unlikely to be added, and
 new releases to support new versions of PHP are not guaranteed to be timely. Notes on why some
-features were not added to Auryn are listed [here](https://github.com/rdlowrey/excluded_features.md).
+features were not added to Auryn are listed [here](excluded_features.md).
 
 There are similar libraries available at:
 
