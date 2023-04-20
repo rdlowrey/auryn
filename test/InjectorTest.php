@@ -1230,7 +1230,7 @@ class InjectorTest extends BaseTest
         }
     }
 
-    public function testWhySeparationINeeded()
+    public function testWhySeparationIsNeeded()
     {
         $injector = new Injector();
         $message = "shared instance has one off message";
