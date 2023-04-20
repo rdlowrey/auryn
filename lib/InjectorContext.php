@@ -16,6 +16,18 @@ class InjectorContext extends Injector
         parent::__construct($parentContext->reflector);
     }
 
+    /**
+     * For all types that are not shared, just pass the call through to
+     * the normal injector class.
+     *
+     * For types that are shared, wrap any exception thrown with a specific
+     * error message, that tells the user what they are probably doing wrong.
+     *
+     * @param $name
+     * @param array $args
+     * @return mixed
+     * @throws InjectionException
+     */
     public function make($name, array $args = array())
     {
         if ($this->parentContext === null || $this->parentContext->isKnownSharedType($name) === false) {

@@ -1242,7 +1242,7 @@ class InjectorTest extends BaseTest
 
         // Create another instance... but as it is shared, the previous
         // 'one-off' message is used.
-        $obj2 = $injector->make(SharedClassInInjector::class, [':message' => "Surprise!"]);
+        $obj2 = $injector->make(SharedClassInInjector::class, [':message' => "This doesn't get used"]);
 
         $this->assertSame($message, $obj1->getMessage());
         $this->assertSame($message, $obj2->getMessage());
@@ -1251,27 +1251,27 @@ class InjectorTest extends BaseTest
     public function testSeparationWorks_with_shared_class()
     {
         $injector = new Injector();
-        $message = "shared instance has one off message";
+        $message_1 = "shared instance has one off message";
+        $message_2 = "This does get used";
 
         // We're sharing the class.
-        $injector->share(SharedClassInInjector::class);
-        $next_injector = $injector->separateContext();
-        $injector->defineParam('message', $message);
+        $separated_injector_1 = $injector->separateContext();
+        $separated_injector_2 = $injector->separateContext();
+        $separated_injector_1->defineParam('message', $message_1);
+        $obj1 = $separated_injector_1->make(SharedClassInInjector::class);
 
-        $obj1 = $injector->make(SharedClassInInjector::class);
+        $separated_injector_2->defineParam('message', $message_2);
+        $obj2 = $separated_injector_2->make(SharedClassInInjector::class);
 
-        $obj2 = $next_injector->make(SharedClassInInjector::class);
-
-        $this->assertSame($message, $obj1->getMessage());
-        $this->assertSame($message, $obj2->getMessage());
-        $this->assertSame($obj1, $obj2);
+        $this->assertSame($message_1, $obj1->getMessage());
+        $this->assertSame($message_2, $obj2->getMessage());
+        $this->assertNotSame($obj1, $obj2);
     }
 
     public function testChildWithoutConstructorMissingParam()
     {
         $injector = new Injector;
         $injector->define('Auryn\Test\ParentWithConstructor', array(':foo' => 'parent'));
-
 
         $this->expectException(\Auryn\InjectionException::class);
         $this->expectExceptionMessage('No definition available to provision typeless parameter $foo at position 0 in Auryn\Test\ChildWithoutConstructor::__construct() declared in Auryn\Test\ParentWithConstructor');

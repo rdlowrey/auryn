@@ -4,9 +4,8 @@ namespace Auryn\Test;
 
 use Auryn\InjectionException;
 use Auryn\Injector;
-use PHPUnit\Framework\TestCase;
 
-class InjectorContextTest extends TestCase
+class InjectorContextTest extends BaseTest
 {
     public function testSeparationWorks_coverage()
     {
@@ -79,5 +78,24 @@ class InjectorContextTest extends TestCase
         }
     }
 
+    public function testErrorsCorrectly()
+    {
+        $injector = new Injector();
+        $message_1 = "shared instance has one off message";
+        $message_2 = "This does get used";
 
+        // We're sharing the class.
+        $injector->share(SharedClassInInjector::class);
+
+        $separated_injector_1 = $injector->separateContext();
+        $separated_injector_2 = $injector->separateContext();
+
+        $separated_injector_1->defineParam('message', $message_1);
+        $separated_injector_2->defineParam('message', $message_2);
+
+        $this->expectExceptionMessageContains('$message');
+        $this->expectExceptionMessageMatchesTemplateString(Injector::M_SHARED_CONTEXT_FAILED);
+        $this->expectExceptionCode(Injector::E_SHARED_CONTEXT_FAILED);
+        $separated_injector_1->make(SharedClassInInjector::class);
+    }
 }
