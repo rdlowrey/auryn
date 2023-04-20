@@ -219,7 +219,7 @@ class Injector
             throw new ConfigException(
                 sprintf(
                     self::M_DOUBLE_SHARE,
-                    get_class($obj),
+                    get_class($obj)
                 ),
                 self::E_DOUBLE_SHARE
             );
