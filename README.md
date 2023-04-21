@@ -973,29 +973,32 @@ function getAurynInjector()
 
 ## Advanced patterns
 
-### "Variadic" dependencies
+### "Variadic" dependencies 
 
+Sometimes your code might need a variable number of objects to be passed as a parameter.
 
 ```php
 
 class Foo {
-  public function __construct(array ...$repositories) {
-  // ...
+  public function __construct(Repository ...$repositories) {
+  // do stuff with $repositories
   }
 }
 ```
 
-In that scenario $repositories does not represent a single simple variable and so Auryn's ability to make life a bit easier for the programmer does not apply.
+In this scenario $repositories does not represent a single simple variable, instead ...$repositories represents a complex type.
 
-Instead ...$repositories represents a complex type. This will need a more advanced technique to be able to inject. I think the two possible solutions are to either use
+As Auryn works by defining rules about types, Auryn isn't able to do injection and so you'll need to use a more advanced technique to be able to inject. 
 
-Use a delegate method
-The simplest way to achieve what you want to do is to use a delegate function for creating objects that have this variable dependency.
+
+#### Variadics using delegate function
+
+The simplest way to support being able to create objects that themselves have variadic dependencies, is to use a delegate function to create it:
 
 ```php
 function createFoo(RepositoryLocator $repoLocator)
 {
-    //Or whatever code is needed to find the repos.
+    // Or whatever code is needed to find the repos.
     $repositories = $repoLocator->getRepos('Foo');
 
     return new Foo($repositories);
@@ -1004,77 +1007,122 @@ function createFoo(RepositoryLocator $repoLocator)
 $injector->delegate('Foo', 'createFoo')
 ```
 
-This does what you want....however it has some limitations. In particular it can only be used for constructor injection. It cannot be used to inject the dependencies as a parameter in normal functions or methods.
+This should only take a few moments to write the code for, but it has the downside that it moves some application logic into injector.
 
-Refactor the code to use a context
-Using a 'context' doesn't have these limitations. Or to give it the full name, using the 'Encapsulated context patten'
+#### Variadics using factory classes
 
-The trade-off is that it would require you to refactor your code a little bit. This is a good trade-off to make, in this case. In fact it's a fantastic trade-off. It makes your code far easier to reason about.
+A very slightly longer way to create objects that themselves have variadic dependencies, is to refactor them to use a factory object to get the dependencies:
 
-// This is the context that holds the 'repositories'
-class FooRepositories {
-private $repositories;
+```php
 
-    private function __construct(RepositoryLocator $repoLocator)
-    {
-        //Or whatever code is needed to find the repos.
-        $repositories = $repoLocator->getRepos('Foo');
+class RepositoryList
+{
+    /**
+    * @return Repository[]
+    */
+    public function getRelevantRepositories() {
+        // do stuff with $repositories
     }
 }
 
 class Foo {
-public function __construct(FooRepositories $fooRepositories) {
-// ...
+    public function __construct(RepositoryList $respositoryList)
+    {
+        $repositories = $respositoryList->getRelevantRepositories();
+
+        // error handling goes here
+
+        // do stuff with $repositories
+    }
 }
-}
+```
 
-There are a couple of reasons why using a context is a suprior solution:
-
-The dependency is now a named type, which means that you can see how it is used in your codebase without having to know which class it is used in.
-If some other code has a dependency on a separate set of repositories, you can create a separate context for that code. It is far easier to understand that FooRepositories is separate from BarRepositories compared to trying to reason about ...$repositories used in one place, and ...$repositories used in a separate place.
-If you're using a framework such as Tier that allows multiple levels of execution then it's much easier to create specific context types and pass them around as dependencies rather than hoping for the best by creating a generically named variadic parameter and hoping for the best when passing that around.
-TL:DR - Auryn shouldn't handle variadics at all imo. They aren't a type and so can't be reasoned about by a DIC. People should either use delegation or contexts to achieve what they're trying to do in a sane way.
-
-
+This probably a slightly better approach than using the delegate method, as it avoids business/application logic being in the dependency injector, and give you an appropriate place inside your own code to handle errors.
 
 ### Context objects and multiple instances of the same types
 
-Sometimes you might need to have
+Sometimes you might need to have multiple instances of the same type.
 
+For example, a background job that moves data from the live database, into the archive database might need to have two instances of a DB class injected  
 
-$injector->alias('WriteDB', 'DbAdapter');
-$injector->alias('ReadDb', 'DbAdapter');
+```php
 
-Depending on the exact reason
-
-Or to give it the full name, using the 'Encapsulated context pattern'](https://hillside.net/europlop/HillsideEurope/Papers/EuroPLoP2003/2003_Kelly_EncapsulateContext.pdf).
-
-It makes your code far easier to reason about.
-
-// This is the context that holds the 'repositories'
-class FooRepositories {
-
-    private $repositories;
-
-    private function __construct(RepositoryLocator $repoLocator)
+class DataArchiver
+{
+    public function __construct(private PDO $live_db, private PDO $archive_db)
     {
-        // Or whatever code is needed to find the repos.
-        $repositories = $repoLocator->getRepos('Foo');
+    }
+}
+```
+
+This _can_ be worked around by using the type system to create more specific types:
+
+```php
+class LivePDO extends PDO {}
+class ArchivePDO extends PDO {}
+
+class DataArchiver
+{
+    public function __construct(private LivePDO $live_db, private ArchivePDO $archive_db)
+    {
+    }
+}
+```
+
+The more specific types can then be created through Auryn, by configuring an appropriate delegate function for each of them
+
+This approach works, and is actually a reasonable one for small projects, there is an more comprehesive approach that is more appropriate for larger projects.
+
+#### Encapsulated contexts
+
+Or to give it the full name, using the 'Encapsulated context pattern'](https://www.allankelly.net/static/patterns/encapsulatecontext.pdf).
+
+The short description of 'Encapsulated contexts' is that you create specific types that hold all of the needed types for a particular business/domain problem, and allow you to wire them up specifically:
+
+```php
+class DataArchiverContext
+{
+    public function __construct(
+        private PDO $live_db,
+        private PDO $archive_db
+    ) {
+
+    public function get_live_db(): PDO
+    {
+        return $this->live_db;
+    }
+
+    public function get_archive_db(): PDO
+    {
+        return $this->archive_db;
     }
 }
 
-class Foo {
-public function __construct(FooRepositories $fooRepositories) {
-// ...
+class DataArchiver
+{
+    public function __construct(private DataArchiverContext $dac)
+    {
+    }
 }
+
+function createDataArchiver()
+{
+    return new DataArchiver(
+        createLiveDB(),
+        createArchiveDB()
+    );
 }
+
+$injector->delegate(DataArchiverContext::class, 'createDataArchiver');
 ```
-There are a couple of reasons why using a context is a superior solution:
 
-The dependency is now a named type, which means that you can see how it is used in your codebase without having to know which class it is used in.
+Encapsulated contexts makes your code far easier to reason about. You can see:  
 
-If some other code has a dependency on a separate set of repositories, you can create a separate context for that code. It is far easier to understand that FooRepositories is separate from BarRepositories compared to trying to reason about ...$repositories used in one place, and ...$repositories used in a separate place.
+* where a particular context is used.
+* what types are in it.
+* how it is created, including any special rules for it.
 
+This makes maintaining and reasoning about large programs much easier.
 
 ### Running tests and benchmarks
 
