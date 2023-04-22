@@ -986,7 +986,7 @@ class Foo {
 }
 ```
 
-In this scenario $repositories does not represent a single simple variable, instead ...$repositories represents a complex type.
+In this scenario `$repositories` does not represent a single simple variable, instead `$repositories` represents a complex type.
 
 As Auryn works by defining rules about types, Auryn isn't able to do injection and so you'll need to use a more advanced technique to be able to inject. 
 
@@ -1004,7 +1004,7 @@ function createFoo(RepositoryLocator $repoLocator)
     return new Foo($repositories);
 }
 
-$injector->delegate('Foo', 'createFoo')
+$injector->delegate('Foo', 'createFoo');
 ```
 
 This should only take a few moments to write the code for, but it has the downside that it moves some application logic into injector.
@@ -1071,7 +1071,7 @@ class DataArchiver
 
 The more specific types can then be created through Auryn, by configuring an appropriate delegate function for each of them
 
-This approach works, and is actually a reasonable one for small projects, there is an more comprehesive approach that is more appropriate for larger projects.
+This approach works, and is actually a reasonable one for small projects, there is an more comprehensive approach that is more appropriate for larger projects.
 
 #### Encapsulated contexts
 
@@ -1122,7 +1122,7 @@ Encapsulated contexts makes your code far easier to reason about. You can see:
 * what types are in it.
 * how it is created, including any special rules for it.
 
-This makes maintaining and reasoning about large programs much easier.
+This makes maintaining and reasoning about large programs easier.
 
 ### Running tests and benchmarks
 
