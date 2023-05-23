@@ -1,7 +1,28 @@
-# auryn [![Build Status](https://travis-ci.org/rdlowrey/auryn.svg?branch=master)](https://travis-ci.org/rdlowrey/auryn)
+# auryn [![Build Status](https://github.com/rdlowrey/Auryn/actions/workflows/ci.yml/badge.svg?branch=adding_ci)](https://github.com/rdlowrey/Auryn/actions)
 
 auryn is a recursive dependency injector. Use auryn to bootstrap and wire together
 S.O.L.I.D., object-oriented PHP applications.
+
+## Maintenance status
+
+`rdlowrey/auryn` is in low maintenance mode. i.e. new features are very unlikely to be added, and
+new releases to support new versions of PHP are not guaranteed to be timely. Notes on why some
+features were not added to Auryn are listed [here](excluded_features.md).
+
+There are similar libraries available at:
+
+* [`martin-hughes/auryn`](https://github.com/martin-hughes/auryn) is a fork from this repo
+  and maintains the current namespace and interfaces. It is unlikely to introduce significant new
+  features, instead focussing on bugfixes and testing.
+
+* [`overclokk/auryn`](https://github.com/overclokk/auryn) is a fork from this repo
+  and maintains the current namespace and interfaces. It has added the ability to lazy
+  instantiate dependencies using
+  [`Ocramius/ProxyManager`](https://github.com/Ocramius/ProxyManager). 
+
+* [`amphp/injector`](https://github.com/amphp/injector) is a significant rewrite using a new 
+  namespace and slightly different interfaces, requiring you to update your code. It  will 
+  introduce new features and diverge over time from this repo.
 
 ##### How It Works
 
@@ -70,6 +91,27 @@ composer require rdlowrey/auryn
 
 Archived tagged release versions are also available for manual download on the project
 [tags page](https://github.com/rdlowrey/auryn/tags)
+
+
+##### Running tests
+
+To allow an appropriate version of PHPUnit to be installed across all of the supported 
+versions of PHP, instead of directly depending on PHPUnit, Auryn instead depends on
+simple-phpunit. 
+
+After doing composer update, you need to tell simple-phpunit to install PHPUnit: 
+
+```bash
+vendor/bin/simple-phpunit install
+
+vendor/bin/simple-phpunit --version
+```
+
+The tests can then be run with the command:
+
+```bash
+vendor/bin/simple-phpunit
+```
 
 
 ## Basic Usage
@@ -393,7 +435,7 @@ Because we specified a global definition for `myValue`, all parameters that are 
 way defined (as below) that match the specified parameter name are auto-filled with the global value.
 If a parameter matches any of the following criteria the global value is not used:
 
-- A typehint
+- A parameter type
 - A predefined injection definition
 - A custom call time definition
 
@@ -580,6 +622,35 @@ var_dump($myObj->myProperty); // int(42)
 
 While the above example is contrived, the usefulness should be clear.
 
+Additionally, the prepare method is able to replace the object being prepared with another of the same or descendant type: 
+
+```php
+<?php
+
+class FooGreeter {
+    public function getMessage(): string {
+        return "Hello, I am foo.";
+    }
+}
+
+class BarGreeter extends FooGreeter {
+    public function getMessage(): string {
+        return "Hello, I am bar.";
+    }
+}
+
+$injector = new \Auryn\Injector();
+
+$injector->prepare(FooGreeter::class, function($myObj, $injector) {
+    return new BarGreeter();
+});
+
+$myObj = $injector->make(FooGreeter::class);
+echo $myObj->getMessage(); // Output is: "Hello, I am bar."
+```
+The usefulness of this is much less clear.
+
+Any value returned that is not the same or descendant type will be ignored.
 
 ### Injecting for Execution
 
@@ -621,6 +692,40 @@ $injector = new Auryn\Injector;
 // outputs: int(42)
 var_dump($injector->execute('Example::myMethod', $args = [':arg2' => 42]));
 ```
+
+### Injector::make and Injector::execute custom args
+
+The args parameter in both of Injector::make($name, array $args = array()) and Injector::execute($callableOrMethodStr, array $args = array())) allow you to pass in a bespoke set of parameters to be used during the creation/execution.
+
+The rules for how those injector args are used is as follows.
+
+Given a parameter named 'foo' at parameter position 'i' which has a type of 'bar', for the thing being created/executed:
+
+1. If an integer indexed key 'i' is present (i.e. does `$args[$i]` exist?) then use the value of `$args[$i]` directly for that parameter.
+
+2. If an string indexed key 'foo' is present (i.e. does `$args['foo']` exist?) then use the value of `$args['foo']` for that parameter.
+
+3. If a string indexed key `Injector::A_DELEGATE . 'foo'` is present (i.e. does `$args['+foo']` exist?) then interpret `$args['+' . $i]` as a delegate callable to be invoked, and the return value to be used for that parameter.
+
+4. If a string indexed key `Injector::A_DEFINE . 'foo'` is present (i.e. does `$args['@foo']` exist?) then interpret `$args['+' . $i]` as an array with
+
+```
+$params = [
+    PrefixDefineDependency::class,
+    [Injector::A_RAW . 'message' => $message]
+];
+
+$object = $injector->make(
+    PrefixDefineTest::class,
+    [Injector::A_DEFINE . 'pdd' => $params]
+);
+```
+i.e. when the injector is making the class `'PrefixDefineTest` which has a dependency on the class `PrefixDefineDependency`, which is named as parameter 'pdd' in the constructor, use the values in the array `$params[1]`, to instantiate the `PrefixDefineDependency` class.
+
+
+5. If a string indexed key `Injector::A_DEFINE . '+foo'` is present (i.e. does `$args[':foo']` exist?) then interpret `$args['+' . $i]` as a value to be used a parameter defined by name. This is similar behaviour to `$injector->define('foo', 'bar');`
+
+6. Try to build the arg through the normal Auryn argument building process.
 
 
 ### Dependency Resolution
@@ -845,3 +950,214 @@ eliminate evil Singletons using the sharing capabilities of the auryn DIC. In th
 code, we share the request object so that any classes instantiated by the `Auryn\Injector` that ask
 for a `Request` will receive the same instance. This feature not only helps eliminate Singletons,
 but also the need for hard-to-test `static` properties.
+
+### When app-bootstrapping by Auryn is not possible
+
+Sometimes, the initialisation of the application is outside of your control. One example would be writing plugins for Wordpress, where Wordpress is initialising your plugin, not the other way round.
+
+You can still use Auryn by using a function to make a single instance of the injector:
+
+```php
+function getAurynInjector()
+{
+    static $injector = null;
+	if ($injector == null) {
+		$injector = new \Auryn\Injector();
+		// Do injector defines/shares/aliases/delegates here
+	}
+
+    return $injector;
+}
+```
+
+
+## Advanced patterns
+
+### "Variadic" dependencies 
+
+Sometimes your code might need a variable number of objects to be passed as a parameter.
+
+```php
+
+class Foo {
+  public function __construct(Repository ...$repositories) {
+  // do stuff with $repositories
+  }
+}
+```
+
+In this scenario `$repositories` does not represent a single simple variable, instead `$repositories` represents a complex type.
+
+As Auryn works by defining rules about types, Auryn isn't able to do injection and so you'll need to use a more advanced technique to be able to inject. 
+
+
+#### Variadics using delegate function
+
+The simplest way to support being able to create objects that themselves have variadic dependencies, is to use a delegate function to create it:
+
+```php
+function createFoo(RepositoryLocator $repoLocator)
+{
+    // Or whatever code is needed to find the repos.
+    $repositories = $repoLocator->getRepos('Foo');
+
+    return new Foo($repositories);
+}
+
+$injector->delegate('Foo', 'createFoo');
+```
+
+This should only take a few moments to write the code for, but it has the downside that it moves some application logic into injector.
+
+#### Variadics using factory classes
+
+A very slightly longer way to create objects that themselves have variadic dependencies, is to refactor them to use a factory object to get the dependencies:
+
+```php
+
+class RepositoryList
+{
+    /**
+    * @return Repository[]
+    */
+    public function getRelevantRepositories() {
+        // do stuff with $repositories
+    }
+}
+
+class Foo {
+    public function __construct(RepositoryList $respositoryList)
+    {
+        $repositories = $respositoryList->getRelevantRepositories();
+
+        // error handling goes here
+
+        // do stuff with $repositories
+    }
+}
+```
+
+This probably a slightly better approach than using the delegate method, as it avoids business/application logic being in the dependency injector, and give you an appropriate place inside your own code to handle errors.
+
+### Context objects and multiple instances of the same types
+
+Sometimes you might need to have multiple instances of the same type.
+
+For example, a background job that moves data from the live database, into the archive database might need to have two instances of a DB class injected  
+
+```php
+
+class DataArchiver
+{
+    public function __construct(private PDO $live_db, private PDO $archive_db)
+    {
+    }
+}
+```
+
+This _can_ be worked around by using the type system to create more specific types:
+
+```php
+class LivePDO extends PDO {}
+class ArchivePDO extends PDO {}
+
+class DataArchiver
+{
+    public function __construct(private LivePDO $live_db, private ArchivePDO $archive_db)
+    {
+    }
+}
+```
+
+The more specific types can then be created through Auryn, by configuring an appropriate delegate function for each of them
+
+This approach works, and is actually a reasonable one for small projects, there is an more comprehensive approach that is more appropriate for larger projects.
+
+#### Encapsulated contexts
+
+Or to give it the full name, using the 'Encapsulated context pattern'](https://www.allankelly.net/static/patterns/encapsulatecontext.pdf).
+
+The short description of 'Encapsulated contexts' is that you create specific types that hold all of the needed types for a particular business/domain problem, and allow you to wire them up specifically:
+
+```php
+class DataArchiverContext
+{
+    public function __construct(
+        private PDO $live_db,
+        private PDO $archive_db
+    ) {
+
+    public function get_live_db(): PDO
+    {
+        return $this->live_db;
+    }
+
+    public function get_archive_db(): PDO
+    {
+        return $this->archive_db;
+    }
+}
+
+class DataArchiver
+{
+    public function __construct(private DataArchiverContext $dac)
+    {
+    }
+}
+
+function createDataArchiver()
+{
+    return new DataArchiver(
+        createLiveDB(),
+        createArchiveDB()
+    );
+}
+
+$injector->delegate(DataArchiverContext::class, 'createDataArchiver');
+```
+
+Encapsulated contexts makes your code far easier to reason about. You can see:  
+
+* where a particular context is used.
+* what types are in it.
+* how it is created, including any special rules for it.
+
+This makes maintaining and reasoning about large programs easier.
+
+### Running tests and benchmarks
+
+#### Running tests
+
+As there is no single version of PHPUnit that works on all the versions of PHP that Auryn supports, we use simple-phpunit to install an appropriate version of PHP.
+
+After running the `composer update` to get the latest dependencies, run:
+
+```
+php vendor/bin/simple-phpunit install
+```
+
+to make simple-phpunit install PHPUnit. The tests can then be with with the command:
+
+```
+php vendor/bin/simple-phpunit
+```
+
+simple-phpunit accepts PHPUnit commandline options and passes them through to PHPUnit e.g. `php php vendor/bin/simple-phpunit --group wip` to only run the tests tagged as being part of group 'wip'.
+
+#### Running benchamarks
+
+We use PHPBench to allow checking performance gains/regressions when making code changes. The simplest way to use it is as follows: 
+
+1. Create a benchmark baseline by running:
+
+```
+vendor/bin/phpbench run --tag=benchmark_original --retry-threshold=5 --iterations=10
+```
+
+2. Apply your code changes.
+
+3. Run a benchmark, and compare the results to the 'benchmark_original' by running:
+
+```
+vendor/bin/phpbench run --report=aggregate --ref=benchmark_original --retry-threshold=5 --iterations=10
+```

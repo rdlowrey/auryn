@@ -158,13 +158,15 @@ class SpecdTestDependency extends TestDependency
 
 class TestNeedsDep
 {
+    public $testDep;
+
     public function __construct(TestDependency $testDep)
     {
         $this->testDep = $testDep;
     }
 }
 
-class TestClassWithNoCtorTypehints
+class TestClassWithNoCtorTypes
 {
     public function __construct($val = 42)
     {
@@ -184,6 +186,7 @@ class TestMultiDepsNeeded
 
 class TestMultiDepsWithCtor
 {
+    private $testDep;
     public function __construct(TestDependency $val1, TestNeedsDep $val2)
     {
         $this->testDep = $val1;
@@ -191,7 +194,7 @@ class TestMultiDepsWithCtor
     }
 }
 
-class NoTypehintNullDefaultConstructorClass
+class NoTypeNullDefaultConstructorClass
 {
     public $testParam = 1;
     public function __construct(TestDependency $val1, $arg=42)
@@ -200,7 +203,7 @@ class NoTypehintNullDefaultConstructorClass
     }
 }
 
-class NoTypehintNoDefaultConstructorClass
+class NoTypeNoDefaultConstructorClass
 {
     public $testParam = 1;
     public function __construct(TestDependency $val1, $arg = null)
@@ -231,6 +234,7 @@ class DepImplementation implements DepInterface
 class RequiresInterface
 {
     public $dep;
+    public $testDep;
     public function __construct(DepInterface $dep)
     {
         $this->testDep = $dep;
@@ -262,6 +266,7 @@ class ClassOuter
 
 class ProvTestNoDefinitionNullDefaultClass
 {
+    public $arg;
     public function __construct($arg = null)
     {
         $this->arg = $arg;
@@ -272,7 +277,7 @@ interface TestNoExplicitDefine
 {
 }
 
-class InjectorTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine
+class InjectorTestCtorParamWithNoTypeOrDefault implements TestNoExplicitDefine
 {
     public $val = 42;
     public function __construct($val)
@@ -281,7 +286,7 @@ class InjectorTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefi
     }
 }
 
-class InjectorTestCtorParamWithNoTypehintOrDefaultDependent
+class InjectorTestCtorParamWithNoTypeOrDefaultDependent
 {
     private $param;
     public function __construct(TestNoExplicitDefine $param)
@@ -314,6 +319,7 @@ class InjectorTestRawCtorParams
 
 class InjectorTestParentClass
 {
+    public $arg1;
     public function __construct($arg1)
     {
         $this->arg1 = $arg1;
@@ -322,6 +328,8 @@ class InjectorTestParentClass
 
 class InjectorTestChildClass extends InjectorTestParentClass
 {
+    public $arg1;
+    public $arg2;
     public function __construct($arg1, $arg2)
     {
         parent::__construct($arg1);
@@ -336,7 +344,7 @@ class CallableMock
     }
 }
 
-class ProviderTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefine
+class ProviderTestCtorParamWithNoTypeOrDefault implements TestNoExplicitDefine
 {
     public $val = 42;
     public function __construct($val)
@@ -345,7 +353,7 @@ class ProviderTestCtorParamWithNoTypehintOrDefault implements TestNoExplicitDefi
     }
 }
 
-class ProviderTestCtorParamWithNoTypehintOrDefaultDependent
+class ProviderTestCtorParamWithNoTypeOrDefaultDependent
 {
     private $param;
     public function __construct(TestNoExplicitDefine $param)
@@ -489,7 +497,7 @@ class RequiresDelegatedInterface
 
 class TestMissingDependency
 {
-    public function __construct(TypoInTypehint $class)
+    public function __construct(TypoInType $class)
     {
     }
 }
@@ -573,13 +581,14 @@ class TestDependencyWithProtectedConstructor
 
 class TestNeedsDepWithProtCons
 {
+    public $dep;
     public function __construct(TestDependencyWithProtectedConstructor $dep)
     {
         $this->dep = $dep;
     }
 }
 
-class SimpleNoTypehintClass
+class SimpleNoTypeClass
 {
     public $testParam = 1;
 
@@ -595,12 +604,12 @@ class SomeClassName
 
 class TestDelegationSimple
 {
-    public $delgateCalled = false;
+    public $delegateCalled = false;
 }
 
 class TestDelegationDependency
 {
-    public $delgateCalled = false;
+    public $delegateCalled = false;
     public function __construct(TestDelegationSimple $testDelegationSimple)
     {
     }
@@ -721,6 +730,7 @@ class ChildWithoutConstructor extends ParentWithConstructor {
 
 class DelegateA {}
 class DelegatingInstanceA {
+    public $a;
     public function __construct(DelegateA $a) {
         $this->a = $a;
     }
@@ -728,13 +738,88 @@ class DelegatingInstanceA {
 
 class DelegateB {}
 class DelegatingInstanceB {
+    public $b;
     public function __construct(DelegateB $b) {
         $this->b = $b;
     }
 }
 
+
 class ThrowsExceptionInConstructor {
     public function __construct() {
         throw new \Exception('Exception in constructor');
     }
+}
+
+class ExtendedArrayObject extends \ArrayObject {}
+class ExtendedExtendedArrayObject extends ExtendedArrayObject {}
+
+class PrefixDelegateTestDependency {
+    private $value;
+    protected function __construct($value)
+    {
+        $this->value = $value;
+    }
+    public static function create($value)
+    {
+        return new static($value);
+    }
+
+    public function getValue()
+    {
+        return $this->value;
+    }
+}
+
+class PrefixDelegateTestDependencyInstantiable extends PrefixDelegateTestDependency
+{
+    public function __construct()
+    {
+        parent::__construct('this is the child class');
+    }
+}
+
+class PrefixDelegateTest
+{
+    private $b;
+    public function __construct(PrefixDelegateTestDependency $b)
+    {
+        $this->b = $b;
+    }
+    public function getB()
+    {
+        return $this->b;
+    }
+}
+
+class PrefixDefineDependency {
+    public $message;
+    public function __construct($message)
+    {
+        $this->message = $message;
+    }
+}
+
+class PrefixDefineTest
+{
+    private $pdd;
+    public function __construct(PrefixDefineDependency $pdd)
+    {
+        $this->pdd = $pdd;
+    }
+    public function getPdd()
+    {
+        return $this->pdd;
+    }
+}
+
+function aFunctionWithAParam($foo)
+{
+    return $foo;
+}
+
+
+class ExecutableHelper
+{
+    public function foo() {}
 }

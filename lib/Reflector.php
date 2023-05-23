@@ -40,7 +40,7 @@ interface Reflector
      * @param \ReflectionFunctionAbstract $function
      * @param \ReflectionParameter $param
      */
-    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param);
+    public function getParamType(\ReflectionFunctionAbstract $function, \ReflectionParameter $param);
 
     /**
      * Retrieves and caches a reflection for the specified function

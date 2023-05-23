@@ -1,34 +1,22 @@
-<phpunit backupGlobals="false"
-         backupStaticAttributes="false"
-         colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         processIsolation="false"
-         stopOnFailure="false"
-         syntaxCheck="false"
-         bootstrap="vendor/autoload.php"
-        >
-    <testsuites>
-        <testsuite name="Unit-Tests">
-            <directory>./test</directory>
-        </testsuite>
-    </testsuites>
-    <filter>
-        <whitelist addUncoveredFilesFromWhitelist="true">
-            <directory>./lib</directory>
-        </whitelist>
-    </filter>
-    
-    <logging>
-        <log
-            type="coverage-text"
-            target="php://stdout"
-            lowUpperBound="35"
-            highLowerBound="75"
-        />
-        <!-- uncomment below to generate HTML code coverage reports in ./test/coverage -->
-        <!--
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd" backupGlobals="false" backupStaticAttributes="false" colors="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true" processIsolation="false" stopOnFailure="false" beStrictAboutTestsThatDoNotTestAnything="false" bootstrap="vendor/autoload.php">
+  <coverage includeUncoveredFiles="true">
+    <include>
+      <directory>./lib</directory>
+    </include>
+    <report>
+      <text outputFile="php://stdout"/>
+      <html outputDirectory="./test/coverage" lowUpperBound="83" highLowerBound="95"/>
+    </report>
+  </coverage>
+  <testsuites>
+    <testsuite name="Unit-Tests">
+      <directory>./test</directory>
+    </testsuite>
+  </testsuites>
+  <logging>
+    <!-- uncomment below to generate HTML code coverage reports in ./test/coverage -->
+    <!--
         <log
             type="coverage-html"
             target="./test/coverage"
@@ -39,5 +27,5 @@
             showUncoveredFiles="true"
         />
         -->
-    </logging>
+  </logging>
 </phpunit>

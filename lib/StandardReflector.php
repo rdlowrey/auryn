@@ -23,7 +23,7 @@ class StandardReflector implements Reflector
             : null;
     }
 
-    public function getParamTypeHint(\ReflectionFunctionAbstract $function, \ReflectionParameter $param)
+    public function getParamType(\ReflectionFunctionAbstract $function, \ReflectionParameter $param)
     {
         // php 8 deprecates getClass method
         if (PHP_VERSION_ID >= 80000) {
@@ -34,6 +34,8 @@ class StandardReflector implements Reflector
 
             return $type ? (string) $type : null;
         } else {
+            // @codeCoverageIgnoreStart
+            // Can't be tested on PHP 8
             /** @var ?\ReflectionClass $reflectionClass */
             $reflectionClass = $param->getClass();
             if ($reflectionClass) {
@@ -41,6 +43,7 @@ class StandardReflector implements Reflector
             }
 
             return null;
+            // @codeCoverageIgnoreEnd
         }
     }
 

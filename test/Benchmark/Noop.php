@@ -14,7 +14,7 @@ class Noop
         // call-target, intenionally left empty
     }
     
-    public function typehintedNoop(noop $noop)
+    public function typedNoop(noop $noop)
     {
         // call-target, intenionally left empty
     }

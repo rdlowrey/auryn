@@ -38,6 +38,14 @@ class Injector
     const M_CYCLIC_DEPENDENCY = "Detected a cyclic dependency while provisioning %s";
     const E_MAKING_FAILED = 12;
     const M_MAKING_FAILED = "Making %s did not result in an object, instead result is of type '%s'";
+    const E_DOUBLE_SHARE = 13;
+    const M_DOUBLE_SHARE = "An instance of type %s has already been shared. Cannot share a second instance of the same type.";
+
+    const E_INVALID_DEFINE_ARGUMENT_NOT_ARRAY = 12;
+    const M_INVALID_DEFINE_ARGUMENT_NOT_ARRAY = "Define parameters needs to be an array with contents of {0:class-string, 1:array of injector params}. Value passed was of type '%s'.";
+
+    const E_INVALID_DEFINE_ARGUMENT_BAD_KEYS = 13;
+    const M_INVALID_DEFINE_ARGUMENT_BAD_KEYS = "Define parameters needs to be an array with contents of {0:class-string, 1:array of injector params}. %s.";
 
     private $reflector;
     private $classDefinitions = array();
@@ -76,7 +84,7 @@ class Injector
     /**
      * Assign a global default value for all parameters named $paramName
      *
-     * Global parameter definitions are only used for parameters with no typehint, pre-defined or
+     * Global parameter definitions are only used for parameters with no type, pre-defined or
      * call-time definition.
      *
      * @param string $paramName The parameter name for which this value applies
@@ -91,11 +99,11 @@ class Injector
     }
 
     /**
-     * Define an alias for all occurrences of a given typehint
+     * Define an alias for all occurrences of a given type
      *
-     * Use this method to specify implementation classes for interface and abstract class typehints.
+     * Use this method to specify implementation classes for interface and abstract class types.
      *
-     * @param string $original The typehint to replace
+     * @param string $original The type to replace
      * @param string $alias The implementation name
      * @throws ConfigException if any argument is empty or not a string
      * @return self
@@ -141,7 +149,7 @@ class Injector
 
     private function normalizeName($className)
     {
-        return ltrim(strtolower($className), '\\');
+        return ltrim(strtolower($className), '?\\');
     }
 
     /**
@@ -153,6 +161,8 @@ class Injector
      */
     public function share($nameOrInstance)
     {
+
+
         if (is_string($nameOrInstance)) {
             $this->shareClass($nameOrInstance);
         } elseif (is_object($nameOrInstance)) {
@@ -204,6 +214,16 @@ class Injector
                 self::E_ALIASED_CANNOT_SHARE
             );
         }
+
+        if (isset($this->shares[$normalizedName])) {
+            throw new ConfigException(
+                sprintf(
+                    self::M_DOUBLE_SHARE,
+                    get_class($obj)
+                ),
+                self::E_DOUBLE_SHARE
+            );
+        }
         $this->shares[$normalizedName] = $obj;
     }
 
@@ -215,15 +235,14 @@ class Injector
      *
      * @param string $name
      * @param mixed $callableOrMethodStr Any callable or provisionable invokable method
-     * @throws InjectionException if $callableOrMethodStr is not a callable.
-     *                            See https://github.com/rdlowrey/auryn#injecting-for-execution
+     * @throws ConfigException if $callableOrMethodStr is not a callable.
+     *
      * @return self
      */
     public function prepare($name, $callableOrMethodStr)
     {
         if ($this->isExecutable($callableOrMethodStr) === false) {
-            throw InjectionException::fromInvalidCallable(
-                $this->inProgressMakes,
+            throw ConfigException::fromInvalidCallable(
                 $callableOrMethodStr
             );
         }
@@ -369,7 +388,18 @@ class Injector
                 $reflectionFunction = $executable->getCallableReflection();
                 $args = $this->provisionFuncArgs($reflectionFunction, $args, null, $className);
                 $obj = call_user_func_array(array($executable, '__invoke'), $args);
-            } else {
+                if (!($obj instanceof $normalizedClass)) {
+                    throw new InjectionException(
+                        $this->inProgressMakes,
+                        sprintf(
+                            self::M_MAKING_FAILED,
+                            $normalizedClass,
+                            gettype($obj)
+                        ),
+                        self::E_MAKING_FAILED
+                    );
+                }
+           } else {
                 $obj = $this->provisionInstance($className, $normalizedClass, $args);
             }
 
@@ -380,12 +410,7 @@ class Injector
             }
 
             unset($this->inProgressMakes[$normalizedClass]);
-        }
-        catch (\Throwable $exception) {
-            unset($this->inProgressMakes[$normalizedClass]);
-            throw $exception;
-        }
-        catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             unset($this->inProgressMakes[$normalizedClass]);
             throw $exception;
         }
@@ -471,10 +496,10 @@ class Injector
             } elseif (($prefix = self::A_DEFINE . $name) && isset($definition[$prefix])) {
                 // interpret the param as a class definition
                 $arg = $this->buildArgFromParamDefineArr($definition[$prefix]);
-            } elseif (!$arg = $this->buildArgFromTypeHint($reflFunc, $reflParam)) {
+            } elseif (!$arg = $this->buildArgFromType($reflFunc, $reflParam)) {
                 $arg = $this->buildArgFromReflParam($reflParam, $className);
 
-                if ($arg === null && PHP_VERSION_ID >= 50600 && $reflParam->isVariadic()) {
+                if ($arg === null && ($reflParam->isVariadic() || $reflParam->isOptional())) {
                     // buildArgFromReflParam might return null in case the parameter is optional
                     // in case of variadics, the parameter is optional, but null might not be allowed
                     continue;
@@ -490,16 +515,16 @@ class Injector
     private function buildArgFromParamDefineArr($definition)
     {
         if (!is_array($definition)) {
-            throw new InjectionException(
+            throw InjectionException::fromInvalidDefineParamsNotArray(
+                $definition,
                 $this->inProgressMakes
-                // @TODO Add message
             );
         }
 
         if (!isset($definition[0], $definition[1])) {
-            throw new InjectionException(
+            throw InjectionException::fromInvalidDefineParamsBadKeys(
+                $definition,
                 $this->inProgressMakes
-                // @TODO Add message
             );
         }
 
@@ -522,24 +547,24 @@ class Injector
         return $executable($paramName, $this);
     }
 
-    private function buildArgFromTypeHint(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam)
+    private function buildArgFromType(\ReflectionFunctionAbstract $reflFunc, \ReflectionParameter $reflParam)
     {
-        $typeHint = $this->reflector->getParamTypeHint($reflFunc, $reflParam);
+        $type = $this->reflector->getParamType($reflFunc, $reflParam);
 
-        if (!$typeHint) {
+        if (!$type) {
             $obj = null;
         } elseif ($reflParam->isDefaultValueAvailable()) {
-            $normalizedName = $this->normalizeName($typeHint);
+            $normalizedName = $this->normalizeName($type);
             // Injector has been told explicitly how to make this type
             if (isset($this->aliases[$normalizedName]) ||
                 isset($this->delegates[$normalizedName]) ||
                 isset($this->shares[$normalizedName])) {
-                $obj = $this->make($typeHint);
+                $obj = $this->make($type);
             } else {
                 $obj = $reflParam->getDefaultValue();
             }
         } else {
-            $obj = $this->make($typeHint);
+            $obj = $this->make($type);
         }
 
         return $obj;
@@ -584,6 +609,7 @@ class Injector
 
     private function prepareInstance($obj, $normalizedClass)
     {
+        // Check and call any prepares for a class.
         if (isset($this->prepares[$normalizedClass])) {
             $prepare = $this->prepares[$normalizedClass];
             $executable = $this->buildExecutable($prepare);
@@ -593,19 +619,7 @@ class Injector
             }
         }
 
-        $interfaces = @class_implements($obj);
-
-        if ($interfaces === false) {
-            throw new InjectionException(
-                $this->inProgressMakes,
-                sprintf(
-                    self::M_MAKING_FAILED,
-                    $normalizedClass,
-                    gettype($obj)
-                ),
-                self::E_MAKING_FAILED
-            );
-        }
+        $interfaces = class_implements($obj);
 
         if (empty($interfaces)) {
             return $obj;
