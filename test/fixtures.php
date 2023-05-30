@@ -14,6 +14,29 @@ class InaccessibleExecutableClassMethod
     }
 }
 
+interface SharedClassInterface
+{
+
+}
+
+class SharedClassInInjector implements SharedClassInterface
+{
+    private $message;
+
+    public function __construct(string $message)
+    {
+        $this->message = $message;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMessage(): string
+    {
+        return $this->message;
+    }
+}
+
 class InaccessibleStaticExecutableClassMethod
 {
     private static function doSomethingPrivate()
