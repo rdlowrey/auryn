@@ -141,7 +141,7 @@ class Injector
 
     private function normalizeName($className)
     {
-        return ltrim(strtolower($className), '\\');
+        return ltrim(strtolower($className), '\\?');
     }
 
     /**
