@@ -48,7 +48,7 @@ class Injector
     private $delegates = array();
     private $inProgressMakes = array();
 
-    public function __construct(Reflector $reflector = null)
+    public function __construct(?Reflector $reflector = null)
     {
         $this->reflector = $reflector ?: new CachingReflector;
     }
@@ -444,7 +444,7 @@ class Injector
         return new $className;
     }
 
-    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition, array $reflParams = null, $className = null)
+    private function provisionFuncArgs(\ReflectionFunctionAbstract $reflFunc, array $definition, ?array $reflParams = null, $className = null)
     {
         $args = array();
 
