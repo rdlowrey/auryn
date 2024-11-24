@@ -7,7 +7,7 @@ class ReflectionCacheApc implements ReflectionCache
     private $localCache;
     private $timeToLive = 5;
 
-    public function __construct(ReflectionCache $localCache = null)
+    public function __construct(?ReflectionCache $localCache = null)
     {
         $this->localCache = $localCache ?: new ReflectionCacheArray;
     }
