@@ -39,7 +39,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Auryn\\Test\\": "test/"
+            "Auryn\\": "test/"
         },
         "files": ["test/fixtures.php"]
     }

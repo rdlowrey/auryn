@@ -1,6 +1,6 @@
 <?php
 
-namespace Auryn\Test\Benchmark;
+namespace Auryn\Benchmark;
 
 use Athletic\AthleticEvent;
 use Auryn\Injector;
