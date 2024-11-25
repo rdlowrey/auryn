@@ -1,6 +1,6 @@
 <?php
 
-namespace Auryn\Test;
+namespace Auryn;
 
 class InaccessibleExecutableClassMethod
 {
@@ -158,6 +158,7 @@ class SpecdTestDependency extends TestDependency
 
 class TestNeedsDep
 {
+    public $testDep;
     public function __construct(TestDependency $testDep)
     {
         $this->testDep = $testDep;
@@ -174,6 +175,8 @@ class TestClassWithNoCtorTypehints
 
 class TestMultiDepsNeeded
 {
+    public $testDep;
+
     public function __construct(TestDependency $val1, TestDependency2 $val2)
     {
         $this->testDep = $val1;
@@ -184,6 +187,8 @@ class TestMultiDepsNeeded
 
 class TestMultiDepsWithCtor
 {
+    public $testDep;
+
     public function __construct(TestDependency $val1, TestNeedsDep $val2)
     {
         $this->testDep = $val1;
